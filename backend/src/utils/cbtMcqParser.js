@@ -1,60 +1,75 @@
 /**
  * CBT MCQ Parser & Question Extractor Utility
  * Parses raw text extracted from PDF or pasted question papers into structured MCQs.
- * Supports English and Gujarati formats, inline options, bottom answer keys, and various numbering schemes.
+ * Handles single/multi-column options, multi-line questions, Gujarati formats,
+ * table/grid answer keys, and removes PDF page artifacts & footers.
  */
+
+const gujOptionMap = { 'અ': 'A', 'બ': 'B', 'ક': 'C', 'ડ': 'D' };
 
 function parseMcqText(rawText, defaultSubject = 'Physics', marks = 4, negativeMarks = 1) {
   if (!rawText || typeof rawText !== 'string') return [];
 
-  // Normalize line endings and whitespace
-  const lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  // 1. Separate Answer Key section if present at the end of the text
+  let questionsText = rawText;
+  let answerKeyText = '';
+
+  const akMarkerRegex = /(?:ANSWER\s*KEY|ANSWERS|KEY\s*SHEET|SOLUTION\s*KEY|ઉત્તરવહી|ઉત્તરો)[\s\S]*/i;
+  const akMatch = rawText.match(akMarkerRegex);
+  if (akMatch) {
+    answerKeyText = akMatch[0];
+    questionsText = rawText.substring(0, akMatch.index);
+  }
+
+  // Parse Answer Key Map from answerKeyText or full rawText
+  const answerKeyMap = extractAnswerKeyBlock(answerKeyText || rawText);
+
+  // 2. Clean lines by removing headers, footers, page counters, and school titles
+  const rawLines = questionsText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const cleanLines = [];
+
+  for (let line of rawLines) {
+    // Ignore footer/header noise from PDFs
+    if (/Page\s*\d+\s*of\s*\d+/i.test(line) || /--\s*\d+\s*of\s*\d+\s*--/i.test(line) || /Page\s*\d+\s*$/i.test(line)) {
+      continue;
+    }
+    if (/^(?:Class\s*X|Time\s*:\s*\d+|Max(?:imum)?\s*Marks\s*:)/i.test(line)) {
+      continue;
+    }
+    if (/(?:Collegiate\s*Academy|International\s*School|High\s*School|Vidhyalaya).*Page/i.test(line)) {
+      continue;
+    }
+    cleanLines.push(line);
+  }
+
   const questions = [];
-
-  // Question start regex:
-  // e.g. "1.", "1)", "1-", "Q1.", "Q.1", "Q 1.", "Question 1:", "પ્રશ્ન 1.", "પ્રશ્ન ૧.", "(1)", "[1]"
-  const qStartRegex = /^(?:Q(?:uestion|\.)?\s*(\d+)[\.\:\)]?|(?:પ્રશ્ન\s*)?(\d+)[\.\)\:\-]|(?:પ્રશ્ન\s*)?([૦-૯]+)[\.\)\:\-]|(?:\(|\[)(\d+)(?:\)|\])\.?|(\d+)\.\s)/i;
-
-  // Single option line regex:
-  // e.g. "(A) text", "A. text", "A) text", "A: text", "(a) text", "a. text", "(અ) text", "(1) text"
-  const optionRegex = /^(?:\(?([A-Da-d])[\.\)\:\-]|([A-Da-d])\s*[\.\:\)])\s*(.*)$/;
-  const gujaratiOptRegex = /^(?:\(?([અબકડ])[\.\)\:\-]|\b([અબકડ])\s*[\.\:\)])\s*(.*)$/;
-
-  // Gujarati to English option key mapping
-  const gujMap = { 'અ': 'A', 'બ': 'B', 'ક': 'C', 'ડ': 'D' };
-
-  // Answer Key inside question regex:
-  // e.g. "Ans: A", "Answer: (B)", "Correct: C", "Correct Option: D", "ઉત્તર: A", "Key: B", "Ans - C"
-  const ansRegex = /(?:Ans(?:wer)?|Correct(?:\s*Option)?|ઉત્તર|Key)\s*[\:\-\=]?\s*\(?([A-Da-dઅબકડ])\)?/i;
-
   let currentQ = null;
   let optionMap = {};
   let currentOptKey = null;
 
   function finalizeCurrentQ() {
-    if (currentQ && currentQ.questionText && currentQ.questionText.trim().length > 3) {
-      // Ensure exactly 4 options A, B, C, D
-      const optA = optionMap['A'] || 'Option A';
-      const optB = optionMap['B'] || 'Option B';
-      const optC = optionMap['C'] || 'Option C';
-      const optD = optionMap['D'] || 'Option D';
+    if (currentQ && currentQ.questionText && currentQ.questionText.trim().length > 2) {
+      const qNum = currentQ.questionNo || (questions.length + 1);
 
-      const validOptions = [optA, optB, optC, optD];
+      // Clean options
+      const optA = (optionMap['A'] || '').replace(/^[A-Da-dઅબકડ][\.\)\:\-]\s*/, '').trim() || 'Option A';
+      const optB = (optionMap['B'] || '').replace(/^[A-Da-dઅબકડ][\.\)\:\-]\s*/, '').trim() || 'Option B';
+      const optC = (optionMap['C'] || '').replace(/^[A-Da-dઅબકડ][\.\)\:\-]\s*/, '').trim() || 'Option C';
+      const optD = (optionMap['D'] || '').replace(/^[A-Da-dઅબકડ][\.\)\:\-]\s*/, '').trim() || 'Option D';
 
-      let finalCorrect = (currentQ.correctAnswer || 'A').toUpperCase();
-      if (!['A', 'B', 'C', 'D'].includes(finalCorrect)) {
-        finalCorrect = 'A';
-      }
+      let correct = currentQ.correctAnswer || answerKeyMap[qNum] || answerKeyMap[questions.length + 1] || 'A';
+      correct = correct.toUpperCase();
+      if (!['A', 'B', 'C', 'D'].includes(correct)) correct = 'A';
 
       questions.push({
-        id: `q_${currentQ.subject ? currentQ.subject.toLowerCase() : 'gen'}_${questions.length + 1}_${Date.now()}`,
+        id: `q_${(currentQ.subject || defaultSubject).toLowerCase()}_${qNum}_${Date.now()}`,
         subject: currentQ.subject || defaultSubject,
-        questionNo: questions.length + 1,
+        questionNo: qNum,
         marks: Number(marks) || 4,
         negativeMarks: Number(negativeMarks) || 1,
         questionText: currentQ.questionText.trim(),
-        options: validOptions,
-        correctAnswer: finalCorrect,
+        options: [optA, optB, optC, optD],
+        correctAnswer: correct,
         explanation: currentQ.explanation || '',
       });
     }
@@ -63,61 +78,38 @@ function parseMcqText(rawText, defaultSubject = 'Physics', marks = 4, negativeMa
     currentOptKey = null;
   }
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i];
+  // Question start regex:
+  // e.g. "1.", "1)", "1-", "Q1.", "Q.1", "Q 1.", "Question 1:", "પ્રશ્ન 1.", "પ્રશ્ન ૧.", "(1)", "[1]"
+  const qStartRegex = /^(?:Q(?:uestion|\.)?\s*(\d+)[\.\:\)]?|(?:પ્રશ્ન\s*)?(\d+)[\.\)\:\-]|(?:પ્રશ્ન\s*)?([૦-૯]+)[\.\)\:\-]|(?:\(|\[)(\d+)(?:\)|\])\.?|(\d+)\.\s*)/i;
 
-    // Check if line contains an Answer Key
-    const ansMatch = line.match(ansRegex);
-    if (ansMatch && currentQ) {
-      let matchedKey = ansMatch[1].toUpperCase();
-      if (gujMap[matchedKey]) matchedKey = gujMap[matchedKey];
-      currentQ.correctAnswer = matchedKey;
-      continue;
-    }
+  for (let line of cleanLines) {
+    // Check if line contains one or more options
+    // Must contain (A), (B), (C), (D) or A., B., C., D.
+    const hasOptions = /(?:\(?([A-Da-dઅબકડ])[\.\)]|\b([A-Da-dઅબકડ])[\.\)])\s*/.test(line);
 
-    // Check if line has multiple inline options:
-    // e.g. "(A) 10 m/s   (B) 20 m/s   (C) 30 m/s   (D) 40 m/s" or "A. Option A  B. Option B"
-    if (currentQ && (/\(A\).+\(B\)/i.test(line) || /\bA[\.\)].+\bB[\.\)]/i.test(line))) {
-      const parts = line.split(/(?=\([A-Da-d]\)|(?:\b[A-Da-d][\.\)]\s))/i);
-      let matchedAny = false;
-      parts.forEach(part => {
-        const m = part.match(/^(?:\(?([A-Da-d])[\.\)]|\b([A-Da-d])[\.\)])\s*(.*)$/i);
+    if (currentQ && hasOptions && !qStartRegex.test(line)) {
+      const chunks = line.split(/(?=\([A-Da-dઅબકડ]\)|(?:\b[A-Da-dઅબકડ][\.\)]\s*))/);
+      let matchedInLine = 0;
+
+      for (let chunk of chunks) {
+        const m = chunk.trim().match(/^(?:\(?([A-Da-dઅબકડ])[\.\)]|([A-Da-dઅબકડ])[\.\)])\s*(.*)$/);
         if (m) {
-          const k = (m[1] || m[2]).toUpperCase();
-          if (['A', 'B', 'C', 'D'].includes(k)) {
-            optionMap[k] = m[3].trim();
-            matchedAny = true;
+          const rawKey = (m[1] || m[2]).toUpperCase();
+          const key = gujOptionMap[rawKey] || rawKey;
+          if (['A', 'B', 'C', 'D'].includes(key)) {
+            currentOptKey = key;
+            optionMap[key] = (m[3] || '').trim();
+            matchedInLine++;
           }
         }
-      });
-      if (matchedAny) {
-        currentOptKey = null;
+      }
+
+      if (matchedInLine > 0) {
         continue;
       }
     }
 
-    // Check for single English option line (A, B, C, D)
-    const optMatch = line.match(optionRegex);
-    if (optMatch && currentQ) {
-      const key = (optMatch[1] || optMatch[2]).toUpperCase();
-      if (['A', 'B', 'C', 'D'].includes(key)) {
-        currentOptKey = key;
-        optionMap[key] = (optMatch[3] || '').trim();
-        continue;
-      }
-    }
-
-    // Check for single Gujarati option line (અ, બ, ક, ડ)
-    const gujOptMatch = line.match(gujaratiOptRegex);
-    if (gujOptMatch && currentQ) {
-      const rawKey = gujOptMatch[1] || gujOptMatch[2];
-      const key = gujMap[rawKey] || 'A';
-      currentOptKey = key;
-      optionMap[key] = (gujOptMatch[3] || '').trim();
-      continue;
-    }
-
-    // Check if line starts a new Question
+    // Check Question Start
     const qMatch = line.match(qStartRegex);
     if (qMatch) {
       finalizeCurrentQ();
@@ -126,14 +118,22 @@ function parseMcqText(rawText, defaultSubject = 'Physics', marks = 4, negativeMa
       currentQ = {
         subject: defaultSubject,
         questionNo: parseInt(rawQNum, 10) || (questions.length + 1),
-        questionText: remainingText || 'Question statement',
-        correctAnswer: 'A',
+        questionText: remainingText,
+        correctAnswer: null,
       };
       currentOptKey = null;
       continue;
     }
 
-    // Otherwise append line text to active option or question text
+    // Check inline answer in question
+    const ansMatch = line.match(/(?:Ans(?:wer)?|Correct(?:\s*Option)?|ઉત્તર|Key)\s*[\:\-\=]?\s*\(?([A-Da-dઅબકડ])\)?/i);
+    if (ansMatch && currentQ) {
+      const k = ansMatch[1].toUpperCase();
+      currentQ.correctAnswer = gujOptionMap[k] || k;
+      continue;
+    }
+
+    // Continued line
     if (currentOptKey && optionMap[currentOptKey] !== undefined) {
       optionMap[currentOptKey] += ' ' + line;
     } else if (currentQ) {
@@ -142,48 +142,60 @@ function parseMcqText(rawText, defaultSubject = 'Physics', marks = 4, negativeMa
   }
 
   finalizeCurrentQ();
-
-  // If questions were parsed without inline answers, check for bottom answer key block
-  const answerKeyMap = extractAnswerKeyBlock(rawText);
-  if (Object.keys(answerKeyMap).length > 0) {
-    questions.forEach((q, idx) => {
-      const qIndex = idx + 1;
-      if (answerKeyMap[qIndex]) {
-        q.correctAnswer = answerKeyMap[qIndex];
-      }
-    });
-  }
-
   return questions;
 }
 
 /**
- * Extracts Answer Key block from the end of question paper
- * e.g.:
- * Answer Key:
- * 1-A, 2-B, 3-C, 4-D
- * or
- * 1. (A)  2. (C)  3. (D)
+ * Extracts Answer Key block from raw text
+ * Supports table format (Q1 Q2 Q3 ... with B C B ...),
+ * pairs like 1-A, 2-B, and bullet formats.
  */
 function extractAnswerKeyBlock(rawText) {
   const map = {};
   if (!rawText || typeof rawText !== 'string') return map;
 
-  const keyBlockRegex = /(?:Answer\s*Key|ઉત્તરવહી|Key\s*Sheet|ANSWERS|KEYS)[\s\S]*$/i;
+  const keyBlockRegex = /(?:Answer\s*Key|ઉત્તરવહી|Key\s*Sheet|ANSWERS|KEYS|SOLUTION\s*KEY)[\s\S]*$/i;
   const match = rawText.match(keyBlockRegex);
-  if (!match) return map;
+  const targetText = match ? match[0] : rawText;
 
-  const keyText = match[0];
-  const pairRegex = /(\d+)\s*[\.\:\-\)\=]\s*\(?([A-Da-dઅબકડ])\)?/g;
-  const gujMap = { 'અ': 'A', 'બ': 'B', 'ક': 'C', 'ડ': 'D' };
+  const lines = targetText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
 
-  let m;
-  while ((m = pairRegex.exec(keyText)) !== null) {
-    const qNum = parseInt(m[1], 10);
-    let ans = m[2].toUpperCase();
-    if (gujMap[ans]) ans = gujMap[ans];
-    map[qNum] = ans;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Check for tabular format e.g. Q1 \t Q2 \t Q3 ...
+    const qCols = line.split(/[\t\s]{2,}|\t/).map(c => c.trim()).filter(Boolean);
+    const isQHeaderRow = qCols.length >= 2 && qCols.every(c => /^Q?\d+$/i.test(c));
+
+    if (isQHeaderRow && i + 1 < lines.length) {
+      const nextLine = lines[i + 1];
+      const aCols = nextLine.split(/[\t\s]{2,}|\t/).map(c => c.trim()).filter(Boolean);
+      if (aCols.length >= 2) {
+        qCols.forEach((col, idx) => {
+          const qNum = parseInt(col.replace(/\D/g, ''), 10);
+          if (qNum && aCols[idx]) {
+            const ansMatch = aCols[idx].match(/\(?([A-Da-dઅબકડ])\)?/);
+            if (ansMatch) {
+              const k = ansMatch[1].toUpperCase();
+              map[qNum] = gujOptionMap[k] || k;
+            }
+          }
+        });
+        i++; // skip nextLine
+        continue;
+      }
+    }
+
+    // Match pairs like: "1.(B)", "1. B", "1-B", "Q1: B", "1: (B)", "Q1\tB"
+    const pairRegex = /(?:Q\s*)?(\d+)[\.\:\-\s\=\)]+\(?([A-Da-dઅબકડ])\)?/gi;
+    let m;
+    while ((m = pairRegex.exec(line)) !== null) {
+      const qNum = parseInt(m[1], 10);
+      let ans = m[2].toUpperCase();
+      map[qNum] = gujOptionMap[ans] || ans;
+    }
   }
+
   return map;
 }
 

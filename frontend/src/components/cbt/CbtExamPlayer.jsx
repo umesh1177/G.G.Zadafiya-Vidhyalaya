@@ -335,7 +335,32 @@ export default function CbtExamPlayer({
       ? questions
       : questions.filter((q) => q.subject === selectedSubject);
 
-  // Status helper for question palette buttons
+  // Safe navigation between questions, marking visited questions as NOT_ANSWERED if unanswered
+  const handleNavigateToQuestion = (targetIndex) => {
+    if (targetIndex === currentIndex || targetIndex < 0 || targetIndex >= questions.length) return;
+
+    setAnswers((prev) => {
+      const currentAns = prev.find((a) => a.questionId === currentQ?.id);
+      if (!currentAns) {
+        return [
+          ...prev,
+          {
+            questionId: currentQ.id,
+            selectedOption: null,
+            status: 'NOT_ANSWERED',
+            timeSpentSeconds: 0,
+          },
+        ];
+      } else if (!currentAns.selectedOption && currentAns.status !== 'MARKED_FOR_REVIEW') {
+        return prev.map((a) =>
+          a.questionId === currentQ.id ? { ...a, status: 'NOT_ANSWERED' } : a
+        );
+      }
+      return prev;
+    });
+
+    setCurrentIndex(targetIndex);
+  };
   const getQuestionPaletteClass = (q, indexInFullList) => {
     const isCurrent = indexInFullList === currentIndex;
     const ans = answers.find((a) => a.questionId === q.id);
@@ -458,56 +483,61 @@ export default function CbtExamPlayer({
       <div className="cbt-player-main-layout">
         {/* LEFT / CENTER PANEL: Question Display matching Photo 2 */}
         <div className="cbt-player-left-panel">
-          {/* Question Metadata Bar */}
-          <div className="cbt-q-header-bar">
-            <div className="flex items-center gap-2">
-              <span className="cbt-qnum-tag">
-                Q{currentQ?.displayQuestionNo || currentIndex + 1}
+          <div className="cbt-player-q-content">
+            {/* Question Metadata Bar */}
+            <div className="cbt-q-header-bar">
+              <div className="flex items-center gap-2">
+                <span className="cbt-qnum-tag">
+                  Q{currentQ?.displayQuestionNo || currentIndex + 1}
+                </span>
+                <span className="cbt-marks-tag">{currentQ?.marks || 4} marks</span>
+              </div>
+              <span className="cbt-mcq-badge">
+                <HelpCircle size={13} />
+                MCQ
               </span>
-              <span className="cbt-marks-tag">{currentQ?.marks || 4} marks</span>
             </div>
-            <span className="cbt-mcq-badge">
-              <HelpCircle size={13} />
-              MCQ
-            </span>
+
+            {/* Question Text Box (No huge empty gap below) */}
+            <div className="cbt-question-statement-box">
+              <p className="cbt-statement-en">{currentQ?.questionText}</p>
+              {currentQ?.questionTextGujarati && (
+                <p className="cbt-statement-gu mt-2 text-slate-700 font-gujarati">
+                  {currentQ.questionTextGujarati}
+                </p>
+              )}
+            </div>
+
+            {/* Options A, B, C, D directly below question statement matching Photo 2 */}
+            <div className="cbt-options-list">
+              {currentQ?.options?.map((optText, optIdx) => {
+                const optKey = ['A', 'B', 'C', 'D'][optIdx];
+                const isSelected = selectedOption === optKey;
+                const cleanText = typeof optText === 'string'
+                  ? optText.replace(/^(?:\(?([A-Da-dઅબકડ])[\.\)\:\-]|\b([A-Da-dઅબકડ])[\.\)])\s*/, '').trim()
+                  : String(optText || '');
+
+                return (
+                  <div
+                    key={optKey}
+                    className={`cbt-option-card ${isSelected ? 'is-selected' : ''}`}
+                    onClick={() => handleSelectOption(optKey)}
+                  >
+                    <span className="cbt-option-letter">{optKey}.</span>
+                    <span className="cbt-option-text">{cleanText}</span>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Question Text */}
-          <div className="cbt-question-statement-box">
-            <p className="cbt-statement-en">{currentQ?.questionText}</p>
-            {currentQ?.questionTextGujarati && (
-              <p className="cbt-statement-gu mt-2 text-slate-700 font-gujarati">
-                {currentQ.questionTextGujarati}
-              </p>
-            )}
-          </div>
-
-          {/* Options A, B, C, D matching Photo 2 */}
-          <div className="cbt-options-list">
-            {currentQ?.options?.map((optText, optIdx) => {
-              const optKey = ['A', 'B', 'C', 'D'][optIdx];
-              const isSelected = selectedOption === optKey;
-
-              return (
-                <div
-                  key={optKey}
-                  className={`cbt-option-card ${isSelected ? 'is-selected' : ''}`}
-                  onClick={() => handleSelectOption(optKey)}
-                >
-                  <span className="cbt-option-letter">{optKey}.</span>
-                  <span className="cbt-option-text">{optText}</span>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Bottom Action Controls matching Photo 2 */}
+          {/* Bottom Action Controls anchored at bottom matching Photo 2 */}
           <div className="cbt-player-bottom-bar">
             <div className="flex items-center gap-3">
               <button
                 className="cbt-btn-nav-prev"
                 disabled={currentIndex === 0}
-                onClick={() => setCurrentIndex((prev) => Math.max(0, prev - 1))}
+                onClick={() => handleNavigateToQuestion(Math.max(0, currentIndex - 1))}
               >
                 <ChevronLeft size={16} />
                 Prev
@@ -527,7 +557,7 @@ export default function CbtExamPlayer({
                 className="cbt-btn-nav-next"
                 disabled={currentIndex === questions.length - 1}
                 onClick={() =>
-                  setCurrentIndex((prev) => Math.min(questions.length - 1, prev + 1))
+                  handleNavigateToQuestion(Math.min(questions.length - 1, currentIndex + 1))
                 }
               >
                 Next
@@ -551,41 +581,33 @@ export default function CbtExamPlayer({
         <aside className="cbt-player-right-panel">
           <h3 className="cbt-navigator-title">Question Navigator</h3>
 
-          {/* Section / Subject Header Tabs matching Photo 2 */}
-          {subjects.length > 1 && (
-            <div className="cbt-subj-tabs-row">
-              <button
-                className={`cbt-subj-tab-btn ${selectedSubject === 'ALL' ? 'is-active' : ''}`}
-                onClick={() => setSelectedSubject('ALL')}
-              >
-                All
-              </button>
-              {subjects.map((sub) => (
-                <button
-                  key={sub}
-                  className={`cbt-subj-tab-btn ${selectedSubject === sub ? 'is-active' : ''}`}
-                  onClick={() => setSelectedSubject(sub)}
-                >
-                  {sub}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Question Grid Buttons (5 per row matching Photo 2) */}
-          <div className="cbt-palette-grid">
-            {filteredQuestions.map((q) => {
-              const fullIndex = questions.findIndex((item) => item.id === q.id);
-              const buttonClass = getQuestionPaletteClass(q, fullIndex);
+          {/* Group questions by Subject/Section with 5-column grid matching Photo 2 */}
+          <div className="cbt-navigator-scroll-area">
+            {subjects.map((subj) => {
+              const subjQuestions = questions.filter((q) => q.subject === subj);
+              if (subjQuestions.length === 0) return null;
 
               return (
-                <button
-                  key={q.id}
-                  className={`cbt-palette-btn ${buttonClass}`}
-                  onClick={() => setCurrentIndex(fullIndex)}
-                >
-                  {q.displayQuestionNo || fullIndex + 1}
-                </button>
+                <div key={subj} className="cbt-navigator-section mb-3">
+                  <div className="cbt-navigator-subject-name">{subj}</div>
+                  <div className="cbt-palette-grid">
+                    {subjQuestions.map((q) => {
+                      const fullIndex = questions.findIndex((item) => item.id === q.id);
+                      const buttonClass = getQuestionPaletteClass(q, fullIndex);
+
+                      return (
+                        <button
+                          key={q.id}
+                          className={`cbt-palette-btn ${buttonClass}`}
+                          onClick={() => handleNavigateToQuestion(fullIndex)}
+                          title={`Go to Question ${q.displayQuestionNo || fullIndex + 1} (${subj})`}
+                        >
+                          {q.displayQuestionNo || fullIndex + 1}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               );
             })}
           </div>

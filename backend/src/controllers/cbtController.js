@@ -332,24 +332,43 @@ exports.startExam = async (req, res) => {
     // Build the questions array ordered by this student's specific questionOrder
     // Strip `correctAnswer` for security during test taking!
     const questionMap = {};
-    (exam.questions || []).forEach(q => {
-      questionMap[q.id] = {
-        id: q.id,
-        subject: q.subject,
+    (exam.questions || []).forEach((q, idx) => {
+      const qId = q.id || (q._id ? q._id.toString() : `q_${idx + 1}`);
+
+      // Ensure 4 clean options without duplicate prefix letters
+      let cleanOpts = Array.isArray(q.options) && q.options.length > 0 ? [...q.options] : [];
+      cleanOpts = cleanOpts.map(opt =>
+        typeof opt === 'string'
+          ? opt.replace(/^(?:\(?([A-Da-dઅબકડ])[\.\)\:\-]|\b([A-Da-dઅબકડ])[\.\)])\s*/, '').trim()
+          : String(opt || '')
+      );
+      while (cleanOpts.length < 4) {
+        cleanOpts.push(`Option ${['A', 'B', 'C', 'D'][cleanOpts.length]}`);
+      }
+      cleanOpts = cleanOpts.slice(0, 4);
+
+      const qObj = {
+        id: qId,
+        subject: q.subject || 'General',
         marks: q.marks || exam.marksPerQuestion || 4,
         negativeMarks: q.negativeMarks || exam.negativeMarks || 1,
-        questionText: q.questionText,
+        questionText: q.questionText || q.question || q.text || `Question ${idx + 1}`,
         questionTextGujarati: q.questionTextGujarati || '',
-        options: q.options && q.options.length === 4 ? q.options : ['Option A', 'Option B', 'Option C', 'Option D'],
+        options: cleanOpts,
         // correctAnswer is withheld!
       };
+
+      questionMap[qId] = qObj;
+      if (q.id) questionMap[q.id] = qObj;
+      if (q._id) questionMap[q._id.toString()] = qObj;
+      questionMap[`idx_${idx}`] = qObj;
     });
 
     let orderedQuestions = [];
     if (attempt.questionOrder && Array.isArray(attempt.questionOrder) && attempt.questionOrder.length > 0) {
       orderedQuestions = attempt.questionOrder
         .map((qId, idx) => {
-          const q = questionMap[qId];
+          const q = questionMap[qId] || questionMap[`idx_${idx}`];
           return q ? { ...q, displayQuestionNo: idx + 1 } : null;
         })
         .filter(Boolean);
@@ -357,16 +376,27 @@ exports.startExam = async (req, res) => {
 
     // Safety fallback: ensure questions are ALWAYS shown in exam player!
     if (orderedQuestions.length === 0 && exam.questions && exam.questions.length > 0) {
-      orderedQuestions = exam.questions.map((q, idx) => ({
-        id: q.id || `q_${idx + 1}`,
-        subject: q.subject || 'General',
-        marks: q.marks || exam.marksPerQuestion || 4,
-        negativeMarks: q.negativeMarks || exam.negativeMarks || 1,
-        questionText: q.questionText,
-        questionTextGujarati: q.questionTextGujarati || '',
-        options: q.options && q.options.length === 4 ? q.options : ['Option A', 'Option B', 'Option C', 'Option D'],
-        displayQuestionNo: idx + 1,
-      }));
+      orderedQuestions = exam.questions.map((q, idx) => {
+        let cleanOpts = Array.isArray(q.options) && q.options.length > 0 ? [...q.options] : [];
+        cleanOpts = cleanOpts.map(opt =>
+          typeof opt === 'string'
+            ? opt.replace(/^(?:\(?([A-Da-dઅબકડ])[\.\)\:\-]|\b([A-Da-dઅબકડ])[\.\)])\s*/, '').trim()
+            : String(opt || '')
+        );
+        while (cleanOpts.length < 4) {
+          cleanOpts.push(`Option ${['A', 'B', 'C', 'D'][cleanOpts.length]}`);
+        }
+        return {
+          id: q.id || (q._id ? q._id.toString() : `q_${idx + 1}`),
+          subject: q.subject || 'General',
+          marks: q.marks || exam.marksPerQuestion || 4,
+          negativeMarks: q.negativeMarks || exam.negativeMarks || 1,
+          questionText: q.questionText || q.question || q.text || `Question ${idx + 1}`,
+          questionTextGujarati: q.questionTextGujarati || '',
+          options: cleanOpts.slice(0, 4),
+          displayQuestionNo: idx + 1,
+        };
+      });
     }
 
     // Calculate remaining seconds

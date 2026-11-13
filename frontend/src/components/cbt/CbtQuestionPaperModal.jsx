@@ -187,6 +187,9 @@ export default function CbtQuestionPaperModal({ exam, onClose }) {
                   {q.options?.map((opt, oIdx) => {
                     const optKey = ['A', 'B', 'C', 'D'][oIdx];
                     const isCorrect = optKey === (q.correctAnswer || '').toUpperCase();
+                    const cleanOpt = typeof opt === 'string'
+                      ? opt.replace(/^(?:\(?([A-Da-dઅબકડ])[\.\)\:\-]|\b([A-Da-dઅબકડ])[\.\)])\s*/, '').trim()
+                      : String(opt || '');
 
                     return (
                       <div
@@ -204,7 +207,7 @@ export default function CbtQuestionPaperModal({ exam, onClose }) {
                         >
                           {optKey}
                         </span>
-                        <span className="flex-1 mt-0.5">{opt}</span>
+                        <span className="flex-1 mt-0.5">{cleanOpt}</span>
                         {isCorrect && (
                           <span className="text-[10px] font-bold text-emerald-700 uppercase bg-emerald-100/80 px-1.5 py-0.5 rounded">
                             Key
@@ -238,3 +241,4 @@ export default function CbtQuestionPaperModal({ exam, onClose }) {
     </div>
   );
 }
+
