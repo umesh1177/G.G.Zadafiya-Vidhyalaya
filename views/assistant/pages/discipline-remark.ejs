@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head', { title: 'Discipline Remark' }) %>
+</head>
+<body>
+  <div class="app">
+    <%- include('../partials/sidebar', { active: 'discipline', data: data }) %>
+
+    <div class="main">
+      <%- include('../partials/topbar', { title: 'Discipline Remark', subtitle: 'Log an incident and review past records', data: data }) %>
+
+      <div class="content">
+
+        <div class="card">
+          <div class="card__title" style="margin-bottom:16px;">Discipline Form</div>
+          <form class="form-grid" onsubmit="return false;">
+            <div><label class="field-label">Roll No</label><input class="field-input w-full" placeholder="e.g. 3"></div>
+            <div><label class="field-label">Name</label><input class="field-input w-full" placeholder="Student name"></div>
+            <div><label class="field-label">Standard</label><select class="filter-select w-full"><option>11</option><option>12</option></select></div>
+            <div><label class="field-label">Division</label><select class="filter-select w-full"><option>A</option><option>B</option></select></div>
+            <div><label class="field-label">Type</label>
+              <select class="filter-select w-full"><option>Come late</option><option>Long hair</option><option>Long nail</option><option>Uniform issue</option></select>
+            </div>
+            <div><label class="field-label">Date</label><input class="field-input w-full" placeholder="DD-MM-YYYY"></div>
+            <div class="span-2"><label class="field-label">Message</label><textarea class="field-input w-full" rows="3" placeholder="Describe the incident…"></textarea></div>
+            <div><label class="field-label">Noted By</label><input class="field-input w-full" value="<%= data.assistant.name %>" readonly></div>
+            <div class="span-2"><button class="btn btn-primary btn-block" type="submit">Submit</button></div>
+          </form>
+        </div>
+
+        <div class="card">
+          <div class="card__head"><div class="card__title">History</div></div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Roll No</th><th>Standard</th><th>Name</th><th>Type</th><th>Action</th></tr></thead>
+              <tbody>
+                <% data.disciplineHistory.forEach(function(d){ %>
+                  <tr>
+                    <td class="num"><%= d.rollNo %></td><td class="num"><%= d.standard %></td><td><%= d.name %></td>
+                    <td><span class="chip chip-warning"><%= d.type %></span></td>
+                    <td><button class="btn btn-ghost btn-sm" data-modal-open="discModal<%= d.rollNo %>">View Full</button></td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <% data.disciplineHistory.forEach(function(d){ %>
+    <div class="modal-overlay" id="discModal<%= d.rollNo %>" data-modal>
+      <div class="modal-box">
+        <div class="modal-box__head">
+          <div><div class="card__title"><%= d.name %></div><div class="card__desc">Roll No <%= d.rollNo %> · Standard <%= d.standard %></div></div>
+          <button class="modal-close" data-modal-close>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+          </button>
+        </div>
+        <div class="detail-panel__row"><span>Type</span><span><%= d.type %></span></div>
+        <div class="detail-panel__row"><span>Date</span><span class="num"><%= d.date %></span></div>
+        <div class="detail-panel__row"><span>Noted By</span><span><%= d.notedBy %></span></div>
+        <div style="margin-top:10px; padding-top:10px; border-top:1px solid var(--line);">
+          <div class="text-slate" style="font-size:11.5px; font-weight:700; margin-bottom:6px;">MESSAGE</div>
+          <p style="font-size:13.4px;"><%= d.message %></p>
+        </div>
+      </div>
+    </div>
+  <% }) %>
+
+  <%- include('../partials/scripts') %>
+</body>
+</html>
+

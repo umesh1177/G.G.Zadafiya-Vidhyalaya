@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head', { title: 'View Marks — Exam #' + examId }) %>
+  <style>
+    .exam-group-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      background: var(--surface-muted);
+      padding: 6px;
+      border-radius: var(--radius-md);
+      max-width: fit-content;
+    }
+    .exam-group-btn {
+      padding: 8px 24px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--slate);
+      transition: all 0.2s ease;
+    }
+    .exam-group-btn.is-active {
+      background: var(--surface);
+      color: var(--indigo);
+      box-shadow: var(--shadow-sm);
+    }
+    .mark-input {
+      width: 100%;
+      text-align: center;
+      padding: 8px 10px;
+      border: 1.5px solid #8e9bb0; /* Visible border */
+      border-radius: var(--radius-sm);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      background: #fff;
+      color: var(--ink);
+    }
+    .mark-input:disabled {
+      background: #f1f5f9;
+      color: #94a3b8;
+      border-color: #cbd5e1;
+    }
+    /* AB Button inside Modal */
+    .btn-ab {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 16px;
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: var(--radius-sm);
+      border: 1.5px solid #8e9bb0;
+      background: #fff;
+      color: var(--ink-soft);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+    .btn-ab.is-active {
+      background: var(--danger) !important;
+      color: #fff !important;
+      border-color: var(--danger) !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <%- include('../partials/sidebar', { active: 'exam', data: data }) %>
+
+    <div class="main">
+      <%
+        var ex = data.examCompleted.find(e => e.examNo === examId);
+        var subjectDisplay = ex ? ex.subject : 'Chemistry';
+        var typeDisplay = ex ? ex.type : 'Board';
+        var standardDisplay = ex ? ex.standard : '11-A';
+
+        // Format subject display
+        if (ex) {
+          if (ex.type === 'JEE') subjectDisplay = 'PCM';
+          else if (ex.type === 'NEET') subjectDisplay = 'PCB';
+          else if (ex.type === 'GUJCET') subjectDisplay = 'PCMB';
+        }
+      %>
+
+      <%- include('../partials/topbar', {
+        title: 'View Marks — Exam #' + examId,
+        subtitle: 'Student marks records for ' + typeDisplay + ' Exam (' + subjectDisplay + ', Std ' + standardDisplay + ')',
+        data: data
+      }) %>
+
+      <div class="content">
+        <div style="margin-bottom:20px;">
+          <button onclick="window.close();" class="btn btn-ghost btn-sm">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;margin-right:6px;"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            Close Tab
+          </button>
+        </div>
+
+        <% if (ex) { %>
+          <% if (ex.type === 'GUJCET') { %>
+            <!-- GUJCET Group Selector -->
+            <div class="exam-group-tabs">
+              <button class="exam-group-btn is-active" id="btnGroupA">Group A (Maths)</button>
+              <button class="exam-group-btn" id="btnGroupB">Group B (Biology)</button>
+            </div>
+
+            <!-- Group A Card -->
+            <div class="card" id="cardGroupA">
+              <div class="card__title" style="margin-bottom:14px;">Group A Student Marks List</div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Roll No</th>
+                      <th>Name</th>
+                      <th>Physics</th>
+                      <th>Chemistry</th>
+                      <th>Maths</th>
+                      <th>Total</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% data.examMarksStudents.forEach(function(s, index){ %>
+                      <tr>
+                        <td class="num"><%= s.rollNo %></td>
+                        <td><%= s.name %></td>
+                        <td class="num">82</td>
+                        <td class="num">79</td>
+                        <td class="num">88</td>
+                        <td class="num" style="font-weight:700;">249</td>
+                        <td><span class="chip chip-success">Present</span></td>
+                        <td>
+                          <button class="btn btn-ghost btn-sm" data-modal-open="editMarkModal-A-<%= s.rollNo %>">
+                            Edit Mark
+                          </button>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Group B Card -->
+            <div class="card" id="cardGroupB" style="display:none;">
+              <div class="card__title" style="margin-bottom:14px;">Group B Student Marks List</div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Roll No</th>
+                      <th>Name</th>
+                      <th>Physics</th>
+                      <th>Chemistry</th>
+                      <th>Biology</th>
+                      <th>Total</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% data.examMarksStudents.forEach(function(s, index){ %>
+                      <tr>
+                        <td class="num"><%= s.rollNo %></td>
+                        <td><%= s.name %></td>
+                        <% if (index === 2) { %>
+                          <td class="num">—</td>
+                          <td class="num">—</td>
+                          <td class="num">—</td>
+                          <td class="num" style="font-weight:700;">0</td>
+                          <td><span class="chip chip-danger">AB</span></td>
+                        <% } else { %>
+                          <td class="num">78</td>
+                          <td class="num">82</td>
+                          <td class="num">85</td>
+                          <td class="num" style="font-weight:700;">245</td>
+                          <td><span class="chip chip-success">Present</span></td>
+                        <% } %>
+                        <td>
+                          <button class="btn btn-ghost btn-sm" data-modal-open="editMarkModal-B-<%= s.rollNo %>">
+                            Edit Mark
+                          </button>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          <% } else if (ex.type === 'JEE' || ex.type === 'NEET') { %>
+            <div class="card">
+              <div class="card__title" style="margin-bottom:14px;">Student Marks List</div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Roll No</th>
+                      <th>Name</th>
+                      <th>Physics</th>
+                      <th>Chemistry</th>
+                      <th><%= ex.type === 'JEE' ? 'Maths' : 'Biology' %></th>
+                      <th>Total</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% data.examMarksStudents.forEach(function(s, index){ %>
+                      <tr>
+                        <td class="num"><%= s.rollNo %></td>
+                        <td><%= s.name %></td>
+                        <% if (index === 1) { %>
+                          <td class="num">—</td>
+                          <td class="num">—</td>
+                          <td class="num">—</td>
+                          <td class="num" style="font-weight:700;">0</td>
+                          <td><span class="chip chip-danger">AB</span></td>
+                        <% } else { %>
+                          <td class="num">85</td>
+                          <td class="num">90</td>
+                          <td class="num">87</td>
+                          <td class="num" style="font-weight:700;">262</td>
+                          <td><span class="chip chip-success">Present</span></td>
+                        <% } %>
+                        <td>
+                          <button class="btn btn-ghost btn-sm" data-modal-open="editMarkModal-<%= s.rollNo %>">
+                            Edit Mark
+                          </button>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          <% } else { %>
+            <!-- Board or standard single-subject Exam -->
+            <div class="card">
+              <div class="card__title" style="margin-bottom:14px;">Student Marks List</div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Roll No</th>
+                      <th>Name</th>
+                      <th>Marks</th>
+                      <th>Status</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% data.examMarksStudents.forEach(function(s, index){ %>
+                      <tr>
+                        <td class="num"><%= s.rollNo %></td>
+                        <td><%= s.name %></td>
+                        <% if (index === 3) { %>
+                          <td class="num">—</td>
+                          <td><span class="chip chip-danger">AB</span></td>
+                        <% } else { %>
+                          <td class="num">82</td>
+                          <td><span class="chip chip-success">Present</span></td>
+                        <% } %>
+                        <td>
+                          <button class="btn btn-ghost btn-sm" data-modal-open="editMarkModal-<%= s.rollNo %>">
+                            Edit Mark
+                          </button>
+                        </td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          <% } %>
+        <% } %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modals for editing marks -->
+  <% if (ex) { %>
+    <% if (ex.type === 'GUJCET') { %>
+      <!-- Group A modals -->
+      <% data.examMarksStudents.forEach(function(s){ %>
+        <div class="modal-overlay" id="editMarkModal-A-<%= s.rollNo %>" data-modal>
+          <div class="modal-box">
+            <div class="modal-box__head">
+              <div>
+                <div class="card__title">Edit Marks — <%= s.name %></div>
+                <div class="card__desc">GUJCET Group A &nbsp;·&nbsp; Roll No <span class="num"><%= s.rollNo %></span></div>
+              </div>
+              <button class="modal-close" data-modal-close>✕</button>
+            </div>
+            <div class="student-row-edit" style="display:flex; flex-direction:column; gap:14px; margin-bottom:20px;">
+              <div><label class="field-label">Physics</label><input type="number" class="mark-input p-input" value="82" min="0" max="100"></div>
+              <div><label class="field-label">Chemistry</label><input type="number" class="mark-input c-input" value="79" min="0" max="100"></div>
+              <div><label class="field-label">Maths</label><input type="number" class="mark-input m-input" value="88" min="0" max="100"></div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+                <div><label class="field-label" style="margin-bottom:0;">Total Score: <span class="total-display num" style="font-weight:700; color:var(--indigo);">249</span></label></div>
+                <button type="button" class="btn-ab" data-btn-ab>AB</button>
+                <input type="checkbox" style="display:none;" class="ab-checkbox">
+              </div>
+            </div>
+            <button class="btn btn-primary btn-block" data-modal-close onclick="alert('Marks updated successfully!')">Save Changes</button>
+          </div>
+        </div>
+
+        <!-- Group B modals -->
+        <div class="modal-overlay" id="editMarkModal-B-<%= s.rollNo %>" data-modal>
+          <div class="modal-box">
+            <div class="modal-box__head">
+              <div>
+                <div class="card__title">Edit Marks — <%= s.name %></div>
+                <div class="card__desc">GUJCET Group B &nbsp;·&nbsp; Roll No <span class="num"><%= s.rollNo %></span></div>
+              </div>
+              <button class="modal-close" data-modal-close>✕</button>
+            </div>
+            <div class="student-row-edit" style="display:flex; flex-direction:column; gap:14px; margin-bottom:20px;">
+              <div><label class="field-label">Physics</label><input type="number" class="mark-input p-input" value="78" min="0" max="100"></div>
+              <div><label class="field-label">Chemistry</label><input type="number" class="mark-input c-input" value="82" min="0" max="100"></div>
+              <div><label class="field-label">Biology</label><input type="number" class="mark-input b-input" value="85" min="0" max="100"></div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+                <div><label class="field-label" style="margin-bottom:0;">Total Score: <span class="total-display num" style="font-weight:700; color:var(--indigo);">245</span></label></div>
+                <button type="button" class="btn-ab" data-btn-ab>AB</button>
+                <input type="checkbox" style="display:none;" class="ab-checkbox">
+              </div>
+            </div>
+            <button class="btn btn-primary btn-block" data-modal-close onclick="alert('Marks updated successfully!')">Save Changes</button>
+          </div>
+        </div>
+      <% }) %>
+
+    <% } else if (ex.type === 'JEE' || ex.type === 'NEET') { %>
+      <% data.examMarksStudents.forEach(function(s){ %>
+        <div class="modal-overlay" id="editMarkModal-<%= s.rollNo %>" data-modal>
+          <div class="modal-box">
+            <div class="modal-box__head">
+              <div>
+                <div class="card__title">Edit Marks — <%= s.name %></div>
+                <div class="card__desc"><%= ex.type %> &nbsp;·&nbsp; Roll No <span class="num"><%= s.rollNo %></span></div>
+              </div>
+              <button class="modal-close" data-modal-close>✕</button>
+            </div>
+            <div class="student-row-edit" style="display:flex; flex-direction:column; gap:14px; margin-bottom:20px;">
+              <div><label class="field-label">Physics</label><input type="number" class="mark-input p-input" value="85" min="0" max="100"></div>
+              <div><label class="field-label">Chemistry</label><input type="number" class="mark-input c-input" value="90" min="0" max="100"></div>
+              <div><label class="field-label"><%= ex.type === 'JEE' ? 'Maths' : 'Biology' %></label><input type="number" class="mark-input m-input" value="87" min="0" max="100"></div>
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+                <div><label class="field-label" style="margin-bottom:0;">Total Score: <span class="total-display num" style="font-weight:700; color:var(--indigo);">262</span></label></div>
+                <button type="button" class="btn-ab" data-btn-ab>AB</button>
+                <input type="checkbox" style="display:none;" class="ab-checkbox">
+              </div>
+            </div>
+            <button class="btn btn-primary btn-block" data-modal-close onclick="alert('Marks updated successfully!')">Save Changes</button>
+          </div>
+        </div>
+      <% }) %>
+
+    <% } else { %>
+      <% data.examMarksStudents.forEach(function(s){ %>
+        <div class="modal-overlay" id="editMarkModal-<%= s.rollNo %>" data-modal>
+          <div class="modal-box">
+            <div class="modal-box__head">
+              <div>
+                <div class="card__title">Edit Marks — <%= s.name %></div>
+                <div class="card__desc">Board Exam &nbsp;·&nbsp; Roll No <span class="num"><%= s.rollNo %></span></div>
+              </div>
+              <button class="modal-close" data-modal-close>✕</button>
+            </div>
+            <div class="student-row-edit" style="display:flex; flex-direction:column; gap:14px; margin-bottom:20px;">
+              <div><label class="field-label">Marks Obtained</label><input type="number" class="mark-input single-mark-input" value="82" min="0" max="100"></div>
+              <div style="display:flex; justify-content:flex-end; align-items:center; margin-top:6px;">
+                <button type="button" class="btn-ab" data-btn-ab>AB</button>
+                <input type="checkbox" style="display:none;" class="ab-checkbox">
+              </div>
+            </div>
+            <button class="btn btn-primary btn-block" data-modal-close onclick="alert('Marks updated successfully!')">Save Changes</button>
+          </div>
+        </div>
+      <% }) %>
+    <% } %>
+  <% } %>
+
+  <%- include('../partials/scripts') %>
+  <script>
+    // Tab switching for GUJCET (Group A / Group B)
+    var btnA = document.getElementById('btnGroupA');
+    var btnB = document.getElementById('btnGroupB');
+    var cardA = document.getElementById('cardGroupA');
+    var cardB = document.getElementById('cardGroupB');
+
+    if (btnA && btnB) {
+      btnA.addEventListener('click', function() {
+        btnA.classList.add('is-active');
+        btnB.classList.remove('is-active');
+        cardA.style.display = 'block';
+        cardB.style.display = 'none';
+      });
+      btnB.addEventListener('click', function() {
+        btnB.classList.add('is-active');
+        btnA.classList.remove('is-active');
+        cardB.style.display = 'block';
+        cardA.style.display = 'none';
+      });
+    }
+
+    // Modal Edit Mode Calculations & AB logic
+    document.querySelectorAll('.student-row-edit').forEach(function(row) {
+      var inputs = row.querySelectorAll('input[type="number"]:not(.total-input)');
+      var totalDisp = row.querySelector('.total-display');
+      var abBtn = row.querySelector('[data-btn-ab]');
+      var abCheck = row.querySelector('.ab-checkbox');
+
+      function calculateTotal() {
+        if (!totalDisp) return;
+        var sum = 0;
+        var hasValue = false;
+        inputs.forEach(function(inp) {
+          var val = parseFloat(inp.value);
+          if (!isNaN(val)) {
+            sum += val;
+            hasValue = true;
+          }
+        });
+        totalDisp.textContent = hasValue ? sum : '0';
+      }
+
+      inputs.forEach(function(inp) {
+        inp.addEventListener('input', calculateTotal);
+      });
+
+      if (abBtn && abCheck) {
+        abBtn.addEventListener('click', function() {
+          var isAb = !abCheck.checked;
+          abCheck.checked = isAb;
+          
+          if (isAb) {
+            abBtn.classList.add('is-active');
+          } else {
+            abBtn.classList.remove('is-active');
+          }
+
+          inputs.forEach(function(inp) {
+            inp.disabled = isAb;
+            if (isAb) inp.value = '';
+          });
+
+          if (totalDisp) {
+            totalDisp.textContent = isAb ? '0' : '0';
+          }
+
+          var singleInp = row.querySelector('.single-mark-input');
+          if (singleInp) {
+            singleInp.disabled = isAb;
+            if (isAb) singleInp.value = '';
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>
+

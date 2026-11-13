@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <%- include('../partials/head', { title: 'Faculty Management' }) %>
+</head>
+
+<body>
+  <div class="app">
+    <%- include('../partials/sidebar', { active: 'faculty' , data: data }) %>
+
+      <div class="main">
+        <%- include('../partials/topbar', { title: 'Faculty Management' ,
+          subtitle: 'Subject Faculty & Assistant Faculty records' , data: data }) %>
+
+          <div class="content">
+
+            <div class="kpi-grid">
+              <div class="kpi-card">
+                <div class="kpi-card__label">Total Faculty</div>
+                <div class="kpi-card__value num">
+                  <%= data.facultyStats.total %>
+                </div>
+              </div>
+              <div class="kpi-card is-success">
+                <div class="kpi-card__label">Subject Faculty</div>
+                <div class="kpi-card__value num">
+                  <%= data.facultyStats.subjectFaculty %>
+                </div>
+              </div>
+              <div class="kpi-card is-warning">
+                <div class="kpi-card__label">Assistant Faculty</div>
+                <div class="kpi-card__value num">
+                  <%= data.facultyStats.assistantFaculty %>
+                </div>
+              </div>
+            </div>
+
+            <div class="tabs" id="facultyTabs">
+              <button class="tab-btn is-active" data-target="active-faculty">Active Faculty</button>
+              <button class="tab-btn" data-target="deactive-faculty">Deactive Faculty</button>
+              <button class="tab-btn" data-target="add-faculty">+ Add New Faculty</button>
+            </div>
+
+            <div class="tab-panel is-active" id="panel-active-faculty">
+
+              <div class="card" style="padding: 14px 20px; margin-bottom: 16px;">
+                <div class="filters-wrapper">
+                  <div class="search-bar-container" style="flex: 1; min-width: 240px;">
+                    <input type="text" id="facultySearch" class="field-input w-full"
+                      placeholder="Search faculty by name or email Address...">
+                  </div>
+                  <div class="filters" style="margin-bottom: 0; gap: 12px;">
+                    <select id="filterSubject" class="filter-select">
+                      <option value="">All Subjects</option>
+                      <option value="Physics">Physics</option>
+                      <option value="Chemistry">Chemistry</option>
+                      <option value="Mathematics">Mathematics</option>
+                      <option value="Biology">Biology</option>
+                      <option value="Computer Science">Computer Science</option>
+                    </select>
+                    <select id="filterRole" class="filter-select">
+                      <option value="">All Roles</option>
+                      <option value="Subject Faculty">Subject Faculty</option>
+                      <option value="Assistant Faculty">Assistant Faculty</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card">
+                <div class="card__title" style="margin-bottom:14px;">Active Faculty</div>
+                <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>S.No</th>
+                        <th>Name</th>
+                        <th>Subject Taken</th>
+                        <th>Role</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% data.faculty.forEach(function(f){ %>
+                        <tr class="faculty-row" data-name="<%= f.name.toLowerCase() %>"
+                          data-email="<%= f.email ? f.email.toLowerCase() : '' %>" data-subject="<%= f.subject %>"
+                          data-role="<%= f.role %>">
+                          <td class="num">
+                            <%= f.sNo %>
+                          </td>
+                          <td>
+                            <%= f.name %>
+                          </td>
+                          <td>
+                            <%= f.subject %>
+                          </td>
+                          <td><span
+                              class="chip <%= f.role === 'Subject Faculty' ? 'chip-neutral' : 'chip-success' %>">
+                              <%= f.role %>
+                            </span></td>
+                          <td>
+                            <button class="btn btn-ghost btn-sm view-details-trigger" data-modal-open="facultyDetailModal" data-name="<%= f.name %>"
+                              data-subject="<%= f.subject %>" data-contact="<%= f.contactNo %>"
+                              data-email="<%= f.email %>" data-joining="<%= f.joiningDate %>"
+                              data-role="<%= f.role %>"
+                              data-initials="<%= f.name.split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase() %>">View
+                              Details</button>
+                          </td>
+                        </tr>
+                        <% }) %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="tab-panel" id="panel-deactive-faculty">
+                <div class="card">
+                  <div class="card__head" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                      <div class="card__title" style="margin-bottom:0;">Deactive Faculty</div>
+                      <div class="card__desc">Historical catalog of deactivated faculty members</div>
+                    </div>
+                    <button class="btn btn-primary btn-sm" data-modal-open="addDeactiveFacultyModal">Add Deactive Record</button>
+                  </div>
+                  <div class="table-wrap">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>S.No</th>
+                          <th>Name</th>
+                          <th>Subject Taken</th>
+                          <th>Joining Date</th>
+                          <th>Resignation Date</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <% data.deactiveFaculty.forEach(function(f){ %>
+                          <tr>
+                            <td class="num">
+                              <%= f.sNo %>
+                            </td>
+                            <td>
+                              <%= f.name %>
+                            </td>
+                            <td>
+                              <%= f.subject %>
+                            </td>
+                            <td class="num">
+                              <%= f.joiningDate %>
+                            </td>
+                            <td class="num">
+                              <%= f.resignationDate %>
+                            </td>
+                            <td>
+                              <button class="btn btn-ghost btn-sm deactive-view-details-trigger" data-modal-open="deactiveFacultyDetailModal"
+                                data-name="<%= f.name %>"
+                                data-subject="<%= f.subject %>"
+                                data-contact="<%= f.contactNo %>"
+                                data-email="<%= f.email %>"
+                                data-joining="<%= f.joiningDate %>"
+                                data-resignation="<%= f.resignationDate %>"
+                                data-role="<%= f.role %>"
+                                data-initials="<%= f.name.split(' ').map(function(w){return w[0];}).join('').slice(0,2).toUpperCase() %>">View Details</button>
+                            </td>
+                          </tr>
+                          <% }) %>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+            </div>
+
+            <div class="tab-panel" id="panel-add-faculty">
+              <div class="card">
+                <div class="card__head">
+                  <div>
+                    <div class="card__title">Add New Faculty</div>
+                    <div class="card__desc">This is a static prototype form — fields are not submitted anywhere yet
+                    </div>
+                  </div>
+                  <a href="/principal/faculty-management/new" class="btn btn-ghost btn-sm">Open in New Page ↗</a>
+                </div>
+                <form class="form-grid" onsubmit="return false;">
+                  <div><label class="field-label">Name</label><input class="field-input w-full"
+                      placeholder="e.g. Nisha Rao"></div>
+                  <div><label class="field-label">Email</label><input class="field-input w-full"
+                      placeholder="name@example.in"></div>
+                  <div><label class="field-label">Contact No.</label><input class="field-input w-full"
+                      placeholder="+91"></div>
+                  <div><label class="field-label">Subject</label><input class="field-input w-full"
+                      placeholder="e.g. Chemistry"></div>
+                  <div><label class="field-label">Username</label><input class="field-input w-full"
+                      placeholder="Login username"></div>
+                  <div><label class="field-label">Password</label><input class="field-input w-full" type="password"
+                      placeholder="••••••••"></div>
+                  <div><label class="field-label">Joining Date</label><input class="field-input w-full"
+                      placeholder="DD-MM-YYYY"></div>
+                  <div><label class="field-label">Role</label>
+                    <select class="filter-select w-full">
+                      <option>Subject Faculty</option>
+                      <option>Assistant Faculty</option>
+                    </select>
+                  </div>
+                  <div class="span-2"><label class="field-label">Photo</label>
+                    <div class="upload-box">Click or drag a photo here</div>
+                  </div>
+                  <div class="span-2"><button class="btn btn-primary btn-block" type="submit">Create Faculty
+                      Account</button></div>
+                </form>
+              </div>
+            </div>
+
+  <!-- ACTIVE FACULTY DETAIL MODAL -->
+  <div class="modal-overlay" id="facultyDetailModal" data-modal style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; align-items: center; justify-content: center;">
+    <div class="modal-box" style="background: #fff; padding: 24px; border-radius: var(--radius-lg); max-width: 500px; width: 100%; position: relative;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div class="card__title" style="font-weight: 700; font-size: 16px; margin: 0;">Faculty Profile Detail</div>
+        <button class="modal-close" data-modal-close="facultyDetailModal" style="background: transparent; border: none; cursor: pointer; font-size: 24px; line-height: 1; color: var(--slate);">&times;</button>
+      </div>
+      <div class="detail-panel__filled" id="panelFilledState">
+        <div class="flex items-center gap-12" style="margin-bottom:20px;">
+          <div class="topbar__avatar dynamic-avatar" style="width:48px;height:48px;font-size:15px;" id="detInitials">—</div>
+          <div>
+            <div style="font-weight:700; font-size:15px; color: var(--ink);" id="detName">—</div>
+            <div class="text-slate" style="font-size:12px;" id="detBadge">—</div>
+          </div>
+        </div>
+        <div class="detail-panel__row"><span>Subject Taken</span><span id="detSubject">—</span></div>
+        <div class="detail-panel__row"><span>Contact No.</span><span id="detContact">—</span></div>
+        <div class="detail-panel__row"><span>Email</span><span id="detEmail">—</span></div>
+        <div class="detail-panel__row"><span>Joining Date</span><span id="detJoining">—</span></div>
+        <div class="detail-panel__actions" style="margin-top: 20px;">
+          <button class="btn btn-primary btn-sm flex-1" onclick="alert('Editing disabled in static prototype.')">Edit Details</button>
+          <button class="btn btn-danger-ghost btn-sm flex-1" onclick="alert('Faculty account deactivated.')">Deactivate Account</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEACTIVE FACULTY DETAIL MODAL -->
+  <div class="modal-overlay" id="deactiveFacultyDetailModal" data-modal style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; align-items: center; justify-content: center;">
+    <div class="modal-box" style="background: #fff; padding: 24px; border-radius: var(--radius-lg); max-width: 500px; width: 100%; position: relative;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div class="card__title" style="font-weight: 700; font-size: 16px; margin: 0;">Deactivated Faculty Detail</div>
+        <button class="modal-close" data-modal-close="deactiveFacultyDetailModal" style="background: transparent; border: none; cursor: pointer; font-size: 24px; line-height: 1; color: var(--slate);">&times;</button>
+      </div>
+      <div class="detail-panel__filled" id="deactivePanelFilledState">
+        <div class="flex items-center gap-12" style="margin-bottom:20px;">
+          <div class="topbar__avatar dynamic-avatar" style="width:48px;height:48px;font-size:15px;" id="deactiveDetInitials">—</div>
+          <div>
+            <div style="font-weight:700; font-size:15px; color: var(--ink);" id="deactiveDetName">—</div>
+            <div class="text-slate" style="font-size:12px;" id="deactiveDetBadge">—</div>
+          </div>
+        </div>
+        <div class="detail-panel__row"><span>Subject Taken</span><span id="deactiveDetSubject">—</span></div>
+        <div class="detail-panel__row"><span>Contact No.</span><span id="deactiveDetContact">—</span></div>
+        <div class="detail-panel__row"><span>Email</span><span id="deactiveDetEmail">—</span></div>
+        <div class="detail-panel__row"><span>Joining Date</span><span id="deactiveDetJoining">—</span></div>
+        <div class="detail-panel__row"><span>Resignation Date</span><span id="deactiveDetResignation">—</span></div>
+        <div class="detail-panel__actions" style="margin-top: 20px;">
+          <button class="btn btn-primary btn-sm flex-1" onclick="alert('Editing disabled in static prototype.')">Edit Details</button>
+          <button class="btn btn-success-ghost btn-sm flex-1" onclick="alert('Account Reactivated successfully.'); document.getElementById('deactiveFacultyDetailModal').style.display='none';">Reactivate Account</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ADD DEACTIVE RECORD MODAL -->
+  <div class="modal-overlay" id="addDeactiveFacultyModal" data-modal style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; align-items: center; justify-content: center;">
+    <div class="modal-box" style="background: #fff; padding: 24px; border-radius: var(--radius-lg); max-width: 550px; width: 100%; position: relative;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div class="card__title" style="font-weight: 700; font-size: 16px; margin: 0;">Add Deactivated Record</div>
+        <button class="modal-close" data-modal-close="addDeactiveFacultyModal" style="background: transparent; border: none; cursor: pointer; font-size: 24px; line-height: 1; color: var(--slate);">&times;</button>
+      </div>
+      <form class="form-grid" onsubmit="alert('Deactivated faculty record logged successfully!'); document.getElementById('addDeactiveFacultyModal').style.display='none'; return false;">
+        <div><label class="field-label">Name</label><input class="field-input w-full" placeholder="e.g. Nisha Rao" required></div>
+        <div><label class="field-label">Email</label><input class="field-input w-full" type="email" placeholder="name@example.in" required></div>
+        <div><label class="field-label">Contact No.</label><input class="field-input w-full" placeholder="+91 99000 88888" required></div>
+        <div><label class="field-label">Subject</label><input class="field-input w-full" placeholder="e.g. Chemistry" required></div>
+        <div><label class="field-label">Joining Date</label><input class="field-input w-full" placeholder="DD-MM-YYYY" required></div>
+        <div><label class="field-label">Resignation Date</label><input class="field-input w-full" placeholder="DD-MM-YYYY" required></div>
+        <div class="span-2"><label class="field-label">Role</label>
+          <select class="filter-select w-full" required>
+            <option>Subject Faculty</option>
+            <option>Assistant Faculty</option>
+          </select>
+        </div>
+        <div class="span-2"><button class="btn btn-primary btn-block" type="submit">Log Deactive Record</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="sheet-backdrop" id="drawerBackdrop"></div>
+
+  <%- include('../partials/scripts') %>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        // 1. NAVIGATION TABS CONTROLLER
+        const tabButtons = document.querySelectorAll('#facultyTabs .tab-btn');
+        const tabPanels = document.querySelectorAll('.tab-panel');
+
+        tabButtons.forEach(btn => {
+          btn.addEventListener('click', () => {
+            tabButtons.forEach(b => b.classList.remove('is-active'));
+            tabPanels.forEach(p => p.classList.remove('is-active'));
+
+            btn.classList.add('is-active');
+            const targetId = `panel-${btn.getAttribute('data-target')}`;
+            const currentPanel = document.getElementById(targetId);
+            if (currentPanel) currentPanel.classList.add('is-active');
+          });
+        });
+
+        // 2. LIVE SEARCH & FILTER ENGINE
+        const searchInput = document.getElementById('facultySearch');
+        const subjectSelect = document.getElementById('filterSubject');
+        const roleSelect = document.getElementById('filterRole');
+        const rows = document.querySelectorAll('.faculty-row');
+
+        function filterTable() {
+          const query = searchInput.value.toLowerCase().trim();
+          const selSub = subjectSelect.value;
+          const selRole = roleSelect.value;
+
+          rows.forEach(row => {
+            const name = row.getAttribute('data-name');
+            const email = row.getAttribute('data-email');
+            const sub = row.getAttribute('data-subject');
+            const role = row.getAttribute('data-role');
+
+            const matchesSearch = !query || name.includes(query) || email.includes(query);
+            const matchesSubject = !selSub || sub === selSub;
+            const matchesRole = !selRole || role === selRole;
+
+            if (matchesSearch && matchesSubject && matchesRole) {
+              row.style.display = '';
+            } else {
+              row.style.display = 'none';
+            }
+          });
+        }
+
+        if (searchInput) searchInput.addEventListener('input', filterTable);
+        if (subjectSelect) subjectSelect.addEventListener('change', filterTable);
+        if (roleSelect) roleSelect.addEventListener('change', filterTable);
+
+        // 3. PROFILE DETAILS DRAWER ENGINE (ACTIVE FACULTY)
+        const facultyModal = document.getElementById('facultyDetailModal');
+        if (facultyModal) {
+          const viewButtons = document.querySelectorAll('.view-details-trigger');
+          const detInitials = facultyModal.querySelector('#detInitials');
+          const detName = facultyModal.querySelector('#detName');
+          const detBadge = facultyModal.querySelector('#detBadge');
+          const detSubject = facultyModal.querySelector('#detSubject');
+          const detContact = facultyModal.querySelector('#detContact');
+          const detEmail = facultyModal.querySelector('#detEmail');
+          const detJoining = facultyModal.querySelector('#detJoining');
+
+          viewButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              e.preventDefault();
+
+              const name = btn.getAttribute('data-name');
+              const role = btn.getAttribute('data-role');
+              const subject = btn.getAttribute('data-subject');
+              const contact = btn.getAttribute('data-contact');
+              const email = btn.getAttribute('data-email');
+              const joining = btn.getAttribute('data-joining');
+              const initials = btn.getAttribute('data-initials');
+
+              if (detInitials) detInitials.textContent = initials || '—';
+              if (detName) detName.textContent = name || '—';
+              if (detSubject) detSubject.textContent = subject || '—';
+              if (detContact) detContact.textContent = contact || '—';
+              if (detEmail) detEmail.textContent = email || '—';
+              if (detJoining) detJoining.textContent = joining || '—';
+
+              if (detBadge) {
+                if (role === 'Subject Faculty') {
+                  detBadge.innerHTML = `<span class="chip chip-neutral">${role}</span>`;
+                } else {
+                  detBadge.innerHTML = `<span class="chip chip-success">${role}</span>`;
+                }
+              }
+            });
+          });
+        }
+
+        // 3b. PROFILE DETAILS DRAWER ENGINE (DEACTIVE FACULTY)
+        const deactiveFacultyModal = document.getElementById('deactiveFacultyDetailModal');
+        if (deactiveFacultyModal) {
+          const deactiveViewButtons = document.querySelectorAll('.deactive-view-details-trigger');
+          const deactiveDetInitials = deactiveFacultyModal.querySelector('#deactiveDetInitials');
+          const deactiveDetName = deactiveFacultyModal.querySelector('#deactiveDetName');
+          const deactiveDetBadge = deactiveFacultyModal.querySelector('#deactiveDetBadge');
+          const deactiveDetSubject = deactiveFacultyModal.querySelector('#deactiveDetSubject');
+          const deactiveDetContact = deactiveFacultyModal.querySelector('#deactiveDetContact');
+          const deactiveDetEmail = deactiveFacultyModal.querySelector('#deactiveDetEmail');
+          const deactiveDetJoining = deactiveFacultyModal.querySelector('#deactiveDetJoining');
+          const deactiveDetResignation = deactiveFacultyModal.querySelector('#deactiveDetResignation');
+
+          deactiveViewButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+              e.preventDefault();
+
+              const name = btn.getAttribute('data-name');
+              const role = btn.getAttribute('data-role');
+              const subject = btn.getAttribute('data-subject');
+              const contact = btn.getAttribute('data-contact');
+              const email = btn.getAttribute('data-email');
+              const joining = btn.getAttribute('data-joining');
+              const resignation = btn.getAttribute('data-resignation');
+              const initials = btn.getAttribute('data-initials');
+
+              if (deactiveDetInitials) deactiveDetInitials.textContent = initials || '—';
+              if (deactiveDetName) deactiveDetName.textContent = name || '—';
+              if (deactiveDetSubject) deactiveDetSubject.textContent = subject || '—';
+              if (deactiveDetContact) deactiveDetContact.textContent = contact || '—';
+              if (deactiveDetEmail) deactiveDetEmail.textContent = email || '—';
+              if (deactiveDetJoining) deactiveDetJoining.textContent = joining || '—';
+              if (deactiveDetResignation) deactiveDetResignation.textContent = resignation || '—';
+
+              if (deactiveDetBadge) {
+                if (role === 'Subject Faculty') {
+                  deactiveDetBadge.innerHTML = `<span class="chip chip-neutral">${role}</span>`;
+                } else {
+                  deactiveDetBadge.innerHTML = `<span class="chip chip-success">${role}</span>`;
+                }
+              }
+            });
+          });
+        }
+      });
+    </script>
+</body>
+
+</html>

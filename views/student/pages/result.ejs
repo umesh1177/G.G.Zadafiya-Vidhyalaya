@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head', { title: 'Result' }) %>
+</head>
+<body>
+  <div class="app">
+    <%- include('../partials/sidebar', { active: 'result', data: data }) %>
+
+    <div class="main">
+      <%- include('../partials/topbar', { title: 'Result', subtitle: 'Weekly, Monthly and Annual result sheets', data: data }) %>
+
+      <div class="content">
+
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="kpi-card__label">Total Result</div><div class="kpi-card__value num"><%= data.resultStats.total %></div></div>
+          <div class="kpi-card"><div class="kpi-card__label">Weekly</div><div class="kpi-card__value num"><%= data.resultStats.weekly %></div></div>
+          <div class="kpi-card"><div class="kpi-card__label">Monthly</div><div class="kpi-card__value num"><%= data.resultStats.monthly %></div></div>
+          <div class="kpi-card"><div class="kpi-card__label">Annual</div><div class="kpi-card__value num"><%= data.resultStats.annual %></div></div>
+        </div>
+
+        <div class="card">
+          <div class="card__head"><div class="card__title">Result Sheets</div></div>
+          <div class="filters">
+            <select class="filter-select"><option>Type</option><option>Weekly</option><option>Monthly</option><option>Annual</option></select>
+            <select class="filter-select"><option>Week</option></select>
+            <select class="filter-select"><option>Month</option></select>
+            <select class="filter-select"><option>Year</option></select>
+            <select class="filter-select"><option>Standard</option><option>11</option><option>12</option></select>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Sr No</th><th>Type</th><th>Standard</th><th>Date</th><th>Action</th></tr></thead>
+              <tbody>
+                <% data.resultHistory.forEach(function(r){ %>
+                  <tr>
+                    <td class="num"><%= r.srNo %></td><td><span class="chip chip-neutral"><%= r.type %></span></td>
+                    <td class="num"><%= r.standard %></td><td class="num"><%= r.date %></td>
+                    <td class="flex gap-8"><button class="btn btn-ghost btn-sm">View</button><button class="btn btn-ghost btn-sm">Download</button></td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <%- include('../partials/scripts') %>
+</body>
+</html>
+

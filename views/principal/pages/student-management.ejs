@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <%- include('../partials/head', { title: 'Student Management' }) %>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+  <div id="ejs-stats-bridge" data-group-a="<%= data && data.studentStats ? data.studentStats.groupA : 0 %>"
+    data-group-b="<%= data && data.studentStats ? data.studentStats.groupB : 0 %>"
+    data-group-ab="<%= data && data.studentStats ? data.studentStats.groupAB : 0 %>" style="display: none;"></div>
+
+  <div class="app">
+    <%- include('../partials/sidebar', { active: 'students' , data: data }) %>
+
+      <div class="main">
+        <%- include('../partials/topbar', { title: 'Student Management' , subtitle: 'Std 11–12 · Science Stream' , data:
+          data }) %>
+
+          <div class="content">
+
+            <div class="kpi-grid">
+              <div class="kpi-card">
+                <div class="kpi-card__label">Total Students</div>
+                <div class="kpi-card__value num">
+                  <%= data.studentStats.total %>
+                </div>
+              </div>
+              <div class="kpi-card is-success">
+                <div class="kpi-card__label">Group A (Maths)</div>
+                <div class="kpi-card__value num">
+                  <%= data.studentStats.groupA %>
+                </div>
+              </div>
+              <div class="kpi-card is-warning">
+                <div class="kpi-card__label">Group B (Biology)</div>
+                <div class="kpi-card__value num">
+                  <%= data.studentStats.groupB %>
+                </div>
+              </div>
+              <div class="kpi-card is-danger">
+                <div class="kpi-card__label">Group AB (Both)</div>
+                <div class="kpi-card__value num">
+                  <%= data.studentStats.groupAB %>
+                </div>
+              </div>
+            </div>
+
+            <div class="quick-actions-bar">
+              <button class="quick-btn" onclick="document.querySelector('[data-tab-target=\'add-student\']').click();">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span class="quick-btn__label">Add Student</span>
+              </button>
+
+              <button class="quick-btn" data-modal-open="attendanceModal">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                <span class="quick-btn__label">Mark Attendance</span>
+              </button>
+
+              <button class="quick-btn" data-modal-open="examMarksModal">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <line x1="18" y1="20" x2="18" y2="10"></line>
+                  <line x1="12" y1="20" x2="12" y2="4"></line>
+                  <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+                <span class="quick-btn__label">Exam Marks Entry</span>
+              </button>
+            </div>
+
+            <div class="card chart-card">
+              <div class="card__head">
+                <div>
+                  <div class="card__title">Stream Distribution &amp; Statistics</div>
+                  <div class="card__desc">Visual breakdown of active student allocations across Science streams</div>
+                </div>
+              </div>
+              <div class="chart-container">
+                <canvas id="streamAnalyticsChart"></canvas>
+              </div>
+            </div>
+
+            <div class="tabs" data-tab-group="studentTabs">
+              <button class="tab-btn is-active" data-tab-target="active-students">Active Students</button>
+              <button class="tab-btn" data-tab-target="alumni">Alumni Registry</button>
+              <button class="tab-btn" data-tab-target="add-student">+ Register New Student</button>
+            </div>
+
+            <div class="tab-panel is-active" data-tab-panel="active-students" data-tab-family="studentTabs">
+                <div class="card">
+                  <div class="card__head">
+                    <div class="card__title">Active Enrolled Roster</div>
+                  </div>
+
+                  <div class="filters-wrapper">
+                    <div class="search-bar-container">
+                      <input type="text" id="studentSearchInput" class="field-input"
+                        placeholder="Search name, roll, division...">
+                    </div>
+                    <div class="filters">
+                      <select class="filter-select" id="studentSortFilter">
+                        <option value="name">Sort By: Name</option>
+                        <option value="roll">Sort By: Roll No</option>
+                      </select>
+                      <select class="filter-select" id="studentGroupFilter">
+                        <option value="">All Groups</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="AB">AB</option>
+                      </select>
+                      <select class="filter-select" id="studentStandardFilter">
+                        <option value="">All Standards</option>
+                        <option value="11">11</option>
+                        <option value="12">12</option>
+                      </select>
+                      <select class="filter-select" id="studentDivisionFilter">
+                        <option value="">All Divisions</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="table-wrap">
+                    <table id="activeStudentsTable">
+                      <thead>
+                        <tr>
+                          <th>Roll No</th>
+                          <th>Name</th>
+                          <th>Group</th>
+                          <th>Standard</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <% data.students.forEach(function(s){ %>
+                          <% var initials="—" ; if (s.name) { var
+                            words=s.name.split(' '); var mapped=words.map(function(w) { return w ? w[0] : ''; }); initials=mapped.join('').slice(0, 2).toUpperCase(); } %>
+                            <tr class="student-row" data-name="<%= s.name.toLowerCase() %>" data-group="<%= s.group %>" data-standard="<%= s.standard %>" data-division="<%= s.division %>" data-roll="<%= s.rollNo %>">
+                              <td class="num">
+                                <%= s.rollNo %>
+                              </td>
+                              <td class="student-name-cell">
+                                <%= s.name %>
+                              </td>
+                              <td><span class="chip chip-neutral">Group <%= s.group %></span></td>
+                              <td class="num">
+                                <%= s.standard %>-<%= s.division %>
+                              </td>
+                              <td>
+                                <div style="display: flex; gap: 8px;">
+                                  <button class="btn btn-ghost btn-sm btn-view-profile" data-modal-open="studentDetailModal"
+                                    data-val-name="<%= s.name %>" data-val-roll="<%= s.rollNo %>"
+                                    data-val-group="Group <%= s.group %>"
+                                    data-val-standard="<%= s.standard %>-<%= s.division %>"
+                                    data-val-contact="<%= s.contactNo %>" data-val-email="<%= s.email %>"
+                                    data-val-joining="<%= s.joiningDate %>" data-val-initials="<%= initials %>"
+                                    data-val-dob="<%= s.dob %>" data-val-division="<%= s.division %>"
+                                    data-val-ending="<%= s.endingDate %>" data-val-photo="<%= s.photo %>">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                      fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                      stroke-linejoin="round" style="margin-right:4px;">
+                                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                      <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>View Profile
+                                  </button>
+                                  <button class="btn btn-danger-ghost btn-sm btn-delete-student" data-roll="<%= s.rollNo %>">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                      fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                      stroke-linejoin="round">
+                                      <polyline points="3 6 5 6 21 6"></polyline>
+                                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    </svg>Delete
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                            <% }) %>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+            </div>
+
+            <div class="tab-panel" data-tab-panel="alumni" data-tab-family="studentTabs">
+                <div class="card">
+                  <div class="card__head" style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                      <div class="card__title">Alumni Records &amp; Archives</div>
+                      <div class="card__desc">Historical lookup tools for graduated stream pipelines</div>
+                    </div>
+                    <button class="btn btn-primary btn-sm" data-modal-open="addAlumniModal">Add Alumni</button>
+                  </div>
+
+                  <div class="filters" style="margin-bottom: 20px;">
+                    <select class="filter-select" id="alumniBatchFilter">
+                      <option value="">Filter By Year (All)</option>
+                      <option value="2025">Graduated 2025</option>
+                      <option value="2024">Graduated 2024</option>
+                      <option value="2023">Graduated 2023</option>
+                    </select>
+                    <select class="filter-select" id="alumniGroupFilter">
+                      <option value="">Filter By Group (All)</option>
+                      <option value="A">A</option>
+                      <option value="B">B</option>
+                      <option value="AB">AB</option>
+                    </select>
+                    <select class="filter-select" id="alumniStdFilter">
+                      <option value="">Filter By Past Class</option>
+                      <option value="12-A">12-A</option>
+                      <option value="12-B">12-B</option>
+                    </select>
+                  </div>
+
+                  <div class="table-wrap">
+                    <table id="alumniTable">
+                      <thead>
+                        <tr>
+                          <th>Roll No</th>
+                          <th>Name</th>
+                          <th>Group</th>
+                          <th>Standard</th>
+                          <th>Current Pursuit</th>
+                          <th>Ending Date</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <% data.alumni.forEach(function(a){ %>
+                          <% var initials="—" ; if (a.name) { var
+                            words=a.name.split(' '); var mapped=words.map(function(w) { return w ? w[0] : ''; }); initials=mapped.join('').slice(0, 2).toUpperCase(); } %>
+                          <tr class="alumni-row" data-group="<%= a.group %>" data-std="<%= a.standard %>-<%= a.division %>"
+                            data-year="<%= a.endingDate ? a.endingDate.split(' ').pop() : '' %>">
+                              <td class="num">
+                                <%= a.rollNo %>
+                              </td>
+                              <td class="student-name-cell">
+                                <%= a.name %>
+                              </td>
+                              <td><span class="chip chip-neutral">Group <%= a.group %></span></td>
+                              <td class="num">
+                                <%= a.standard %>-<%= a.division %>
+                              </td>
+                              <td>
+                                <%= a.job %>
+                              </td>
+                              <td class="num">
+                                <%= a.endingDate %>
+                              </td>
+                              <td>
+                                <button class="btn btn-ghost btn-sm btn-view-alumni-profile" data-modal-open="alumniDetailModal"
+                                  data-val-name="<%= a.name %>" data-val-roll="<%= a.rollNo %>"
+                                  data-val-group="Group <%= a.group %>"
+                                  data-val-standard="<%= a.standard %>-<%= a.division %>"
+                                  data-val-contact="<%= a.contactNo %>" data-val-email="<%= a.email %>"
+                                  data-val-joining="—" data-val-initials="<%= initials %>"
+                                  data-val-dob="<%= a.dob %>" data-val-division="<%= a.division %>"
+                                  data-val-ending="<%= a.endingDate %>" data-val-job="<%= a.job %>" data-val-photo="<%= a.photo %>">
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    <polyline points="10 9 9 9 8 9"></polyline>
+                                  </svg>View History
+                                </button>
+                              </td>
+                            </tr>
+                            <% }) %>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+            </div>
+
+              <div class="tab-panel" data-tab-panel="add-student" data-tab-family="studentTabs">
+                <div class="card">
+                  <div class="card__head">
+                    <div>
+                      <div class="card__title">Add New Student Registration</div>
+                      <div class="card__desc">Provision standard student profile configuration records</div>
+                    </div>
+                  </div>
+                  <form class="form-grid" onsubmit="return false;">
+                    <div><label class="field-label">First Name</label><input class="field-input w-full"
+                        placeholder="e.g. Umesh"></div>
+                    <div><label class="field-label">Middle Name</label><input class="field-input w-full"
+                        placeholder="e.g. R."></div>
+                    <div><label class="field-label">Last Name</label><input class="field-input w-full"
+                        placeholder="e.g. Pal"></div>
+                    <div><label class="field-label">Roll No</label><input class="field-input w-full"
+                        placeholder="e.g. 9"></div>
+                    <div>
+                      <label class="field-label">Academic Stream Group</label>
+                      <select class="filter-select w-full">
+                        <option>A</option>
+                        <option>B</option>
+                        <option>AB</option>
+                      </select>
+                    </div>
+                    <div><label class="field-label">Standard &amp; Division Allocation</label><input
+                        class="field-input w-full" placeholder="e.g. 11-A"></div>
+                    <div><label class="field-label">Primary Contact No.</label><input class="field-input w-full"
+                        placeholder="+91 XXXXX XXXXX"></div>
+                    <div><label class="field-label">Official Email Address</label><input class="field-input w-full"
+                        type="email" placeholder="student@vatsalya.edu.in"></div>
+                    <div><label class="field-label">Admission/Joining Date</label><input class="field-input w-full"
+                        type="date"></div>
+                    <div class="span-2" style="margin-top:6px;">
+                      <label class="field-label">Student Avatar Photograph</label>
+                      <div class="avatar-uploader" id="avatarUploadBox"
+                        style="border: 2px dashed #cbd5e1; padding: 24px; text-align: center; border-radius: 6px; cursor: pointer; background: #f8fafc; font-size: 13px; color: #64748b;">
+                        <div>Click here or drop your file to mount attachment payload configurations</div>
+                        <input type="file" id="hiddenAvatarInput" accept="image/*" style="display: none;">
+                      </div>
+                    </div>
+                    <div class="span-2" style="margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line);">
+                      <button class="btn btn-primary" type="submit">Complete Registration</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+            </div>
+          </div>
+      </div>
+
+      <!-- STUDENT DETAIL MODAL -->
+      <div class="modal-overlay" id="studentDetailModal" data-modal style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; align-items: center; justify-content: center;">
+        <div class="modal-box" style="background: #fff; padding: 24px; border-radius: var(--radius-lg); max-width: 550px; width: 100%; position: relative;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div class="card__title" style="font-weight: 700; font-size: 16px; margin: 0;">Student Profile Detail</div>
+            <button class="modal-close" data-modal-close="studentDetailModal" style="background: transparent; border: none; cursor: pointer; font-size: 24px; line-height: 1; color: var(--slate);">&times;</button>
+          </div>
+          <div class="detail-panel__filled" id="studentModalFilledState">
+            <div style="display: grid; grid-template-columns: 1fr 100px; gap: 16px; align-items: start;">
+              <div>
+                <div class="flex items-center gap-12" style="margin-bottom:20px;">
+                  <div class="topbar__avatar dynamic-avatar" data-field="initials" id="studentModInitials">—</div>
+                  <div>
+                    <div style="font-weight:700; font-size:15.5px; color: var(--ink);" data-field="name" id="studentModName">—</div>
+                    <div class="text-slate" style="font-size:12.5px; margin-top: 2px;">Roll No <span
+                        data-field="roll" class="num" id="studentModRoll">—</span> · <span data-field="standard" id="studentModStandard">—</span></div>
+                  </div>
+                </div>
+                <div class="detail-panel__row"><span>Academic Group</span><span data-field="group" id="studentModGroup">—</span></div>
+                <div class="detail-panel__row"><span>Date of Birth</span><span data-field="dob" id="studentModDob">—</span></div>
+                <div class="detail-panel__row"><span>Contact Number</span><span data-field="contact"
+                    class="num" id="studentModContact">—</span></div>
+                <div class="detail-panel__row"><span>Email Address</span><span data-field="email" id="studentModEmail"
+                    style="word-break: break-all;">—</span></div>
+                <div class="detail-panel__row"><span>Division</span><span data-field="division" id="studentModDivision">—</span></div>
+                <div class="detail-panel__row"><span>Admission Date</span><span data-field="joining"
+                    class="num" id="studentModJoining">—</span></div>
+                <div class="detail-panel__row"><span>Ending Date</span><span data-field="endingDate"
+                    class="num" id="studentModEnding">—</span></div>
+              </div>
+              <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100px; height: 100px; border: 2px dashed var(--line); border-radius: var(--radius-sm); overflow: hidden; background: var(--surface-muted); color: var(--slate); font-size: 11px; font-weight: 700; text-align: center; margin-top: 10px;">
+                <img data-field="photo" id="studentModPhoto" src="" alt="Photo" style="display: none; width: 100%; height: 100%; object-fit: cover;">
+                <span data-field="photo-placeholder" id="studentModPhotoPlaceholder">Photo</span>
+              </div>
+            </div>
+            <div class="detail-panel__actions" style="margin-top: 20px;">
+              <button class="btn btn-primary btn-sm flex-1" onclick="alert('Editing disabled in static prototype.')">Edit Details</button>
+              <button class="btn btn-danger-ghost btn-sm flex-1" onclick="alert('Student Deactivated.')">Deactivate Account</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ALUMNI DETAIL MODAL -->
+      <div class="modal-overlay" id="alumniDetailModal" data-modal style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; align-items: center; justify-content: center;">
+        <div class="modal-box" style="background: #fff; padding: 24px; border-radius: var(--radius-lg); max-width: 550px; width: 100%; position: relative;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div class="card__title" style="font-weight: 700; font-size: 16px; margin: 0;">Alumni Profile Detail</div>
+            <button class="modal-close" data-modal-close="alumniDetailModal" style="background: transparent; border: none; cursor: pointer; font-size: 24px; line-height: 1; color: var(--slate);">&times;</button>
+          </div>
+          <div class="detail-panel__filled" id="alumniModalFilledState">
+            <div style="display: grid; grid-template-columns: 1fr 100px; gap: 16px; align-items: start;">
+              <div>
+                <div class="flex items-center gap-12" style="margin-bottom:20px;">
+                  <div class="topbar__avatar dynamic-avatar" data-field="initials" id="alumniModInitials">—</div>
+                  <div>
+                    <div style="font-weight:700; font-size:15.5px; color: var(--ink);" data-field="name" id="alumniModName">—</div>
+                    <div class="text-slate" style="font-size:12.5px; margin-top: 2px;">Roll No <span
+                        data-field="roll" class="num" id="alumniModRoll">—</span> · <span data-field="standard" id="alumniModStandard">—</span></div>
+                  </div>
+                </div>
+                <div class="detail-panel__row"><span>Academic Group</span><span data-field="group" id="alumniModGroup">—</span></div>
+                <div class="detail-panel__row"><span>Date of Birth</span><span data-field="dob" id="alumniModDob">—</span></div>
+                <div class="detail-panel__row"><span>Contact Number</span><span data-field="contact"
+                    class="num" id="alumniModContact">—</span></div>
+                <div class="detail-panel__row"><span>Email Address</span><span data-field="email" id="alumniModEmail"
+                    style="word-break: break-all;">—</span></div>
+                <div class="detail-panel__row"><span>Division</span><span data-field="division" id="alumniModDivision">—</span></div>
+                <div class="detail-panel__row"><span>Current Pursuit</span><span data-field="job" id="alumniModJob">—</span></div>
+                <div class="detail-panel__row"><span>Ending Date</span><span data-field="endingDate"
+                    class="num" id="alumniModEnding">—</span></div>
+              </div>
+              <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100px; height: 100px; border: 2px dashed var(--line); border-radius: var(--radius-sm); overflow: hidden; background: var(--surface-muted); color: var(--slate); font-size: 11px; font-weight: 700; text-align: center; margin-top: 10px;">
+                <img data-field="photo" id="alumniModPhoto" src="" alt="Photo" style="display: none; width: 100%; height: 100%; object-fit: cover;">
+                <span data-field="photo-placeholder" id="alumniModPhotoPlaceholder">Photo</span>
+              </div>
+            </div>
+            <div class="detail-panel__actions" style="margin-top: 20px;">
+              <button class="btn btn-primary btn-sm flex-1" onclick="alert('Editing disabled in static prototype.')">Edit Details</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADD ALUMNI MODAL -->
+      <div class="modal-overlay" id="addAlumniModal" data-modal style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; align-items: center; justify-content: center;">
+        <div class="modal-box" style="background: #fff; padding: 24px; border-radius: var(--radius-lg); max-width: 550px; width: 100%; position: relative;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div class="card__title" style="font-weight: 700; font-size: 16px; margin: 0;">Add Alumni Record</div>
+            <button class="modal-close" data-modal-close="addAlumniModal" style="background: transparent; border: none; cursor: pointer; font-size: 24px; line-height: 1; color: var(--slate);">&times;</button>
+          </div>
+          <form class="form-grid" onsubmit="alert('Alumni record added successfully!'); document.getElementById('addAlumniModal').style.display='none'; return false;">
+            <div><label class="field-label">Name</label><input class="field-input w-full" placeholder="e.g. Ramesh Patel" required></div>
+            <div><label class="field-label">Roll No</label><input class="field-input w-full" placeholder="e.g. 1201" required></div>
+            <div><label class="field-label">Group</label>
+              <select class="filter-select w-full" required>
+                <option value="A">A</option>
+                <option value="B">B</option>
+                <option value="AB">AB</option>
+              </select>
+            </div>
+            <div><label class="field-label">Standard</label><input class="field-input w-full" placeholder="e.g. 12" required></div>
+            <div><label class="field-label">Division</label><input class="field-input w-full" placeholder="e.g. A" required></div>
+            <div><label class="field-label">Current Pursuit</label><input class="field-input w-full" placeholder="e.g. B.Tech Engineering" required></div>
+            <div class="span-2"><label class="field-label">Ending Date (Graduation)</label><input class="field-input w-full" placeholder="e.g. May 2025" required></div>
+            <div class="span-2"><button class="btn btn-primary btn-block" type="submit">Save Alumni Record</button></div>
+          </form>
+        </div>
+      </div>
+
+      <div class="modal-overlay" id="attendanceModal" data-modal
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; align-items: center; justify-content: center;">
+        <div class="modal-box"
+          style="background: #fff; padding: 20px; border-radius: 8px; max-width: 650px; width: 100%; margin: auto; max-height: 85vh; overflow-y: auto;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div>
+              <div class="card__title" style="font-weight: 700; font-size: 16px;">Daily Attendance Registry</div>
+              <div class="card__desc" style="font-size: 12px; color: #64748b;">Mark present status for current science
+                sections</div>
+            </div>
+            <button class="modal-close" data-modal-close="attendanceModal"
+              style="background: transparent; border: none; cursor: pointer; font-size: 20px;">&times;</button>
+          </div>
+          <form id="attendanceSubmissionForm" onsubmit="return false;">
+            <div class="filters" style="margin-bottom: 14px; display: flex; gap: 10px;">
+              <input type="date" class="filter-select" value="2026-06-25" style="padding: 4px 8px;">
+              <select class="filter-select">
+                <option>Morning Session</option>
+                <option>Afternoon Session</option>
+              </select>
+            </div>
+            <div class="table-wrap"
+              style="max-height: 280px; overflow-y: auto; margin-bottom: 16px; border: 1px solid #e2e8f0;">
+              <table style="width: 100%;">
+                <thead style="position: sticky; top: 0; background: #f8fafc; z-index: 10;">
+                  <tr>
+                    <th>Roll</th>
+                    <th>Name</th>
+                    <th>Class</th>
+                    <th style="text-align: center;">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% data.students.forEach(function(s){ %>
+                    <tr>
+                      <td class="num">
+                        <%= s.rollNo %>
+                      </td>
+                      <td>
+                        <%= s.name %>
+                      </td>
+                      <td class="num">
+                        <%= s.standard %>-<%= s.division %>
+                      </td>
+                      <td style="text-align: center;">
+                        <div style="display: flex; gap: 12px; justify-content: center;">
+                          <label style="cursor: pointer; font-size: 12px;"><input type="radio"
+                              name="att_<%= s.rollNo %>" value="present" checked> P</label>
+                          <label style="cursor: pointer; font-size: 12px; color: #ef4444;"><input type="radio"
+                              name="att_<%= s.rollNo %>" value="absent"> A</label>
+                        </div>
+                      </td>
+                    </tr>
+                    <% }) %>
+                </tbody>
+              </table>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 8px;">
+              <button type="button" class="btn btn-ghost btn-sm" data-modal-close="attendanceModal">Cancel</button>
+              <button type="submit" class="btn btn-primary btn-sm">Save Attendance Roll</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <div class="modal-overlay" id="examMarksModal" data-modal
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; align-items: center; justify-content: center;">
+        <div class="modal-box"
+          style="background: #fff; padding: 20px; border-radius: 8px; max-width: 650px; width: 100%; margin: auto; max-height: 85vh; overflow-y: auto;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div>
+              <div class="card__title" style="font-weight: 700; font-size: 16px;">Exam Marks Ledger Intake</div>
+              <div class="card__desc" style="font-size: 12px; color: #64748b;">Record score marks parameters into system
+                records</div>
+            </div>
+            <button class="modal-close" data-modal-close="examMarksModal"
+              style="background: transparent; border: none; cursor: pointer; font-size: 20px;">&times;</button>
+          </div>
+          <form id="examMarksSubmissionForm" onsubmit="return false;">
+            <div class="form-grid"
+              style="margin-bottom: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div>
+                <label class="field-label">Subject Assessment</label>
+                <select class="filter-select w-full">
+                  <option>Physics</option>
+                  <option>Chemistry</option>
+                  <option>Mathematics</option>
+                  <option>Biology</option>
+                </select>
+              </div>
+              <div>
+                <label class="field-label">Exam Evaluation Component</label>
+                <select class="filter-select w-full">
+                  <option>Weekly Test 3</option>
+                  <option>Mid-Term Exam</option>
+                </select>
+              </div>
+            </div>
+            <div class="table-wrap"
+              style="max-height: 280px; overflow-y: auto; margin-bottom: 16px; border: 1px solid #e2e8f0;">
+              <table style="width: 100%;">
+                <thead style="position: sticky; top: 0; background: #f8fafc; z-index: 10;">
+                  <tr>
+                    <th>Roll</th>
+                    <th>Name</th>
+                    <th>Group</th>
+                    <th style="width: 120px;">Score (Max 100)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% data.students.forEach(function(s){ %>
+                    <tr>
+                      <td class="num">
+                        <%= s.rollNo %>
+                      </td>
+                      <td>
+                        <%= s.name %>
+                      </td>
+                      <td><span class="chip chip-neutral">Group <%= s.group %></span></td>
+                      <td><input type="number" class="field-input w-full num" min="0" max="100" placeholder="Marks"
+                          style="padding: 4px 8px;"></td>
+                    </tr>
+                    <% }) %>
+                </tbody>
+              </table>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 8px;">
+              <button type="button" class="btn btn-ghost btn-sm" data-modal-close="examMarksModal">Cancel</button>
+              <button type="submit" class="btn btn-primary btn-sm">Submit Score Ledger</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <%- include('../partials/scripts') %>
+
+        <script>
+          document.addEventListener('DOMContentLoaded', () => {
+            // === 1. TAB SWAPPING LAYOUT CONTROL ===
+            const tabs = document.querySelectorAll('[data-tab-target]');
+            const panels = document.querySelectorAll('[data-tab-panel]');
+            tabs.forEach(tab => {
+              tab.addEventListener('click', () => {
+                const target = tab.getAttribute('data-tab-target');
+                tabs.forEach(t => t.classList.remove('is-active'));
+                panels.forEach(p => p.style.display = 'none');
+                tab.classList.add('is-active');
+                const activePanel = document.querySelector(`[data-tab-panel="${target}"]`);
+                if (activePanel) {
+                  activePanel.style.display = activePanel.classList.contains('responsive-split-grid') ? 'grid' : 'block';
+                }
+              });
+            });
+
+            // === 2. MODAL TOGGLING ENGINE INTERRUPTS ===
+            const openTriggers = document.querySelectorAll('[data-modal-open]');
+            openTriggers.forEach(trigger => {
+              trigger.addEventListener('click', () => {
+                const targetId = trigger.getAttribute('data-modal-open');
+                const targetModal = document.getElementById(targetId);
+                if (targetModal) targetModal.style.display = 'flex';
+              });
+            });
+
+            const closeTriggers = document.querySelectorAll('[data-modal-close], .modal-overlay');
+            closeTriggers.forEach(closer => {
+              closer.addEventListener('click', (e) => {
+                if (closer.hasAttribute('data-modal-close') || e.target === closer) {
+                  const targetModal = closer.closest('[data-modal]');
+                  if (targetModal) targetModal.style.display = 'none';
+                }
+              });
+            });
+
+            // Form Completion Event Handlers
+            document.getElementById('attendanceSubmissionForm').addEventListener('submit', () => {
+              alert('Daily class tracking matrix registers saved successfully!');
+              document.getElementById('attendanceModal').style.display = 'none';
+            });
+
+            document.getElementById('examMarksSubmissionForm').addEventListener('submit', () => {
+              alert('Examination score logs captured into production analysis stream ledger!');
+              document.getElementById('examMarksModal').style.display = 'none';
+            });
+
+            // === 3. STREAM ANALYTICS CHART INTERFACE RENDERING ===
+            const bridge = document.getElementById('ejs-stats-bridge');
+            const canvasEl = document.getElementById('streamAnalyticsChart');
+            if (bridge && canvasEl) {
+              new Chart(canvasEl, {
+                type: 'doughnut',
+                data: {
+                  labels: ['Group A (Maths)', 'Group B (Biology)', 'Group AB (Both)'],
+                  datasets: [{
+                    data: [
+                      parseInt(bridge.getAttribute('data-group-a') || 0),
+                      parseInt(bridge.getAttribute('data-group-b') || 0),
+                      parseInt(bridge.getAttribute('data-group-ab') || 0)
+                    ],
+                    backgroundColor: ['#3B4FE0', '#F59E0B', '#EF4444'],
+                    borderWidth: 0
+                  }]
+                },
+                options: {
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: { legend: { position: 'right', labels: { font: { family: 'Manrope', weight: 600 } } } }
+                }
+              });
+            }
+
+            // === 4. ACTIVE STUDENTS FILTER & SORT ENGINE ===
+            const searchInput = document.getElementById('studentSearchInput');
+            const groupFilter = document.getElementById('studentGroupFilter');
+            const standardFilter = document.getElementById('studentStandardFilter');
+            const divisionFilter = document.getElementById('studentDivisionFilter');
+            const sortFilter = document.getElementById('studentSortFilter');
+
+            function filterActiveStudents() {
+              const text = searchInput.value.toLowerCase();
+              const group = groupFilter.value;
+              const standard = standardFilter.value;
+              const division = divisionFilter.value;
+
+              const rows = Array.from(document.querySelectorAll('#activeStudentsTable tbody tr.student-row'));
+              rows.forEach(row => {
+                const rName = row.getAttribute('data-name');
+                const rGroup = row.getAttribute('data-group');
+                const rStandard = row.getAttribute('data-standard');
+                const rDivision = row.getAttribute('data-division');
+                const rRoll = row.getAttribute('data-roll');
+                
+                const matchesSearch = !text || rName.includes(text) || rRoll.includes(text) || rDivision.toLowerCase().includes(text);
+                const matchesGroup = !group || rGroup === group;
+                const matchesStandard = !standard || rStandard === standard;
+                const matchesDivision = !division || rDivision === division;
+
+                if (matchesSearch && matchesGroup && matchesStandard && matchesDivision) {
+                  row.style.display = '';
+                } else {
+                  row.style.display = 'none';
+                }
+              });
+
+              // Apply Sorting
+              const sortBy = sortFilter.value;
+              const tbody = document.querySelector('#activeStudentsTable tbody');
+              const sortedRows = rows.sort((a, b) => {
+                if (sortBy === 'name') {
+                  return a.getAttribute('data-name').localeCompare(b.getAttribute('data-name'));
+                } else if (sortBy === 'roll') {
+                  return parseInt(a.getAttribute('data-roll')) - parseInt(b.getAttribute('data-roll'));
+                }
+                return 0;
+              });
+              sortedRows.forEach(row => tbody.appendChild(row));
+            }
+
+            if (searchInput) searchInput.addEventListener('input', filterActiveStudents);
+            if (groupFilter) groupFilter.addEventListener('change', filterActiveStudents);
+            if (standardFilter) standardFilter.addEventListener('change', filterActiveStudents);
+            if (divisionFilter) divisionFilter.addEventListener('change', filterActiveStudents);
+            if (sortFilter) sortFilter.addEventListener('change', filterActiveStudents);
+
+            // === 4b. ALUMNI FILTER ENGINE ===
+            const alumniBatchFilter = document.getElementById('alumniBatchFilter');
+            const alumniGroupFilter = document.getElementById('alumniGroupFilter');
+            const alumniStdFilter = document.getElementById('alumniStdFilter');
+
+            function filterAlumni() {
+              const batch = alumniBatchFilter.value;
+              const group = alumniGroupFilter.value;
+              const std = alumniStdFilter.value;
+
+              document.querySelectorAll('#alumniTable tbody tr.alumni-row').forEach(row => {
+                const rGroup = row.getAttribute('data-group');
+                const rStd = row.getAttribute('data-std');
+                const rYear = row.getAttribute('data-year');
+
+                const matchesBatch = !batch || rYear.includes(batch);
+                const matchesGroup = !group || rGroup === group;
+                const matchesStd = !std || rStd === std;
+
+                if (matchesBatch && matchesGroup && matchesStd) {
+                  row.style.display = '';
+                } else {
+                  row.style.display = 'none';
+                }
+              });
+            }
+
+            if (alumniBatchFilter) alumniBatchFilter.addEventListener('change', filterAlumni);
+            if (alumniGroupFilter) alumniGroupFilter.addEventListener('change', filterAlumni);
+            if (alumniStdFilter) alumniStdFilter.addEventListener('change', filterAlumni);
+
+            // === 4c. DELETE STUDENT ACTION ===
+            document.querySelectorAll('.btn-delete-student').forEach(btn => {
+              btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const roll = btn.getAttribute('data-roll');
+                if (confirm(`Are you sure you want to delete student Roll No. ${roll}?`)) {
+                  const row = btn.closest('tr');
+                  if (row) row.remove();
+                  alert(`Student Roll No. ${roll} deleted successfully.`);
+                }
+              });
+            });
+
+            // === 5. STUDENT ROSTER MODAL POPULATOR ===
+            const studentModal = document.getElementById('studentDetailModal');
+            if (studentModal) {
+              const detailTriggers = document.querySelectorAll('.btn-view-profile');
+              detailTriggers.forEach(trigger => {
+                trigger.addEventListener('click', () => {
+                  ['name', 'roll', 'group', 'standard', 'contact', 'email', 'joining', 'initials', 'dob', 'division', 'endingDate'].forEach(f => {
+                    const domEl = studentModal.querySelector(`#studentMod${f.charAt(0).toUpperCase() + f.slice(1)}`);
+                    if (domEl) domEl.textContent = trigger.getAttribute(`data-val-${f}`) || '—';
+                  });
+
+                  const photoEl = studentModal.querySelector('#studentModPhoto');
+                  const placeholderEl = studentModal.querySelector('#studentModPhotoPlaceholder');
+                  const photoUrl = trigger.getAttribute('data-val-photo');
+                  if (photoUrl) {
+                    photoEl.src = photoUrl;
+                    photoEl.style.display = 'block';
+                    if (placeholderEl) placeholderEl.style.display = 'none';
+                  } else {
+                    photoEl.style.display = 'none';
+                    if (placeholderEl) placeholderEl.style.display = 'block';
+                  }
+                });
+              });
+            }
+
+            // === 5b. ALUMNI ROSTER MODAL POPULATOR ===
+            const alumniModal = document.getElementById('alumniDetailModal');
+            if (alumniModal) {
+              const detailTriggers = document.querySelectorAll('.btn-view-alumni-profile');
+              detailTriggers.forEach(trigger => {
+                trigger.addEventListener('click', () => {
+                  ['name', 'roll', 'group', 'standard', 'contact', 'email', 'joining', 'initials', 'dob', 'division', 'endingDate', 'job'].forEach(f => {
+                    const domEl = alumniModal.querySelector(`#alumniMod${f.charAt(0).toUpperCase() + f.slice(1)}`);
+                    if (domEl) domEl.textContent = trigger.getAttribute(`data-val-${f}`) || '—';
+                  });
+
+                  const photoEl = alumniModal.querySelector('#alumniModPhoto');
+                  const placeholderEl = alumniModal.querySelector('#alumniModPhotoPlaceholder');
+                  const photoUrl = trigger.getAttribute('data-val-photo');
+                  if (photoUrl) {
+                    photoEl.src = photoUrl;
+                    photoEl.style.display = 'block';
+                    if (placeholderEl) placeholderEl.style.display = 'none';
+                  } else {
+                    photoEl.style.display = 'none';
+                    if (placeholderEl) placeholderEl.style.display = 'block';
+                  }
+                });
+              });
+            }
+
+            // === 6. AVATAR UPLOADER PAYLOAD FILE PROXY ===
+            const uploadBox = document.getElementById('avatarUploadBox');
+            const hiddenInput = document.getElementById('hiddenAvatarInput');
+            if (uploadBox && hiddenInput) {
+              uploadBox.addEventListener('click', () => hiddenInput.click());
+              hiddenInput.addEventListener('change', () => {
+                if (hiddenInput.files.length) {
+                  uploadBox.querySelector('div').textContent = `Selected: ${hiddenInput.files[0].name}`;
+                }
+              });
+            }
+          });
+        </script>
+</body>
+
+</html>

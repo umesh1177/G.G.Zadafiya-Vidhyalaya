@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head', { title: 'Progress Report' }) %>
+</head>
+<body>
+  <div class="app">
+    <%- include('../partials/sidebar', { active: 'progressReport', data: data }) %>
+
+    <div class="main">
+      <%- include('../partials/topbar', { title: 'Progress Report', subtitle: 'Your personal trend, weekly and monthly', data: data }) %>
+
+      <div class="content">
+
+        <div class="tabs" data-tab-group="progressTabs">
+          <button class="tab-btn" data-tab-target="weekly-report">Weekly</button>
+          <button class="tab-btn is-active" data-tab-target="monthly-report">Monthly (Student/Parent)</button>
+          <button class="tab-btn" data-tab-target="principal-report">Principal View</button>
+        </div>
+
+        <!-- WEEKLY -->
+        <div class="tab-panel" data-tab-panel="weekly-report" data-tab-family="progressTabs">
+          <div class="banner banner-success">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.2 4.2L19 6.8"/></svg>
+            <span><%= data.progressReport.weekly.message %></span>
+          </div>
+
+          <div class="kpi-grid">
+            <div class="kpi-card"><div class="kpi-card__label">My Average (This Week)</div><div class="kpi-card__value num"><%= data.progressReport.weekly.average %>%</div></div>
+            <div class="kpi-card is-success"><div class="kpi-card__label">Growth vs Last Week</div><div class="kpi-card__value num text-success">+<%= data.progressReport.weekly.growthVsLastWeek %>%</div></div>
+            <div class="kpi-card"><div class="kpi-card__label">Rank</div><div class="kpi-card__value num">#<%= data.progressReport.weekly.rank %></div><div class="kpi-card__hint text-success num"><%= data.progressReport.weekly.rankChange %> positions</div></div>
+            <div class="kpi-card is-success"><div class="kpi-card__label">Percentile</div><div class="kpi-card__value num"><%= data.progressReport.weekly.percentile %></div></div>
+          </div>
+
+          <div class="card chart-card">
+            <div class="card__title" style="margin-bottom:14px;">Subject-wise Average</div>
+            <canvas id="weeklySubjectChart" height="180"></canvas>
+          </div>
+        </div>
+
+        <!-- MONTHLY (Student/Parent View) -->
+        <div class="tab-panel is-active" data-tab-panel="monthly-report" data-tab-family="progressTabs">
+          <div class="kpi-grid">
+            <div class="kpi-card"><div class="kpi-card__label">Month Average</div><div class="kpi-card__value num"><%= data.progressReport.monthly.average %>%</div><div class="kpi-card__hint">Class avg: <%= data.progressReport.monthly.classAverage %>%</div></div>
+            <div class="kpi-card"><div class="kpi-card__label">Exam Average (This Month)</div><div class="kpi-card__value num"><%= data.progressReport.monthly.examAverage %>%</div></div>
+            <div class="kpi-card is-success"><div class="kpi-card__label">Growth vs Last Month</div><div class="kpi-card__value num text-success">+<%= data.progressReport.monthly.momGrowth %>%</div></div>
+            <div class="kpi-card"><div class="kpi-card__label">Rank</div><div class="kpi-card__value num">#<%= data.progressReport.monthly.rank %></div><div class="kpi-card__hint text-success num"><%= data.progressReport.monthly.rankChange %> positions</div></div>
+            <div class="kpi-card"><div class="kpi-card__label">Peer Benchmark</div><div class="kpi-card__value num"><%= data.progressReport.monthly.peerBenchmark %></div></div>
+          </div>
+
+          <div class="grid-2">
+            <div class="card chart-card">
+              <div class="card__title" style="margin-bottom:14px;">4-Week Trend</div>
+              <canvas id="monthlyTrendChart" height="170"></canvas>
+            </div>
+            
+            <div class="card chart-card">
+              <div class="card__title" style="margin-bottom:14px;">Month Comparison</div>
+              <canvas id="monthComparisonChart" height="170"></canvas>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="card">
+              <div class="card__title" style="margin-bottom:14px;">Performance Summary</div>
+              <p style="font-size:13.4px; color:var(--ink-soft); margin-bottom:14px;">
+                <%= data.progressReport.monthly.overallPerformance %>
+              </p>
+              
+              <div class="detail-panel">
+                <div class="detail-panel__row"><span>Top in Subjects:</span><span><%= data.progressReport.monthly.topInSubjects.join(', ') || 'N/A' %></span></div>
+                <div class="detail-panel__row"><span>Consistency Score:</span><span><%= data.progressReport.monthly.consistencyScore %></span></div>
+                <div class="detail-panel__row"><span>LT Average:</span><span><%= data.progressReport.monthly.ltAverage %>%</span></div>
+                <div class="detail-panel__row"><span>Discipline:</span><span><%= data.progressReport.monthly.disciplineRemarks %></span></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card__title" style="margin-bottom:14px;">Weekly Breakdown & Insights</div>
+              <table style="margin-top:10px; margin-bottom: 16px;">
+                <tbody>
+                  <tr>
+                    <td class="text-slate">Best Week</td>
+                    <td class="num text-success" style="text-align:right;"><%= data.progressReport.monthly.bestWeek %></td>
+                  </tr>
+                  <tr>
+                    <td class="text-slate">Worst Week</td>
+                    <td class="num text-danger" style="text-align:right;"><%= data.progressReport.monthly.worstWeek %></td>
+                  </tr>
+                  <tr>
+                    <td class="text-slate">Weeks Improved vs Declined</td>
+                    <td class="num" style="text-align:right;"><%= data.progressReport.monthly.weeksImproved %> vs <%= data.progressReport.monthly.weeksDeclined %></td>
+                  </tr>
+                  <tr>
+                    <td class="text-slate">Net Growth (First vs Last)</td>
+                    <td class="num" style="text-align:right; font-weight:700;"><%= data.progressReport.monthly.netGrowth %></td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="card__title" style="margin-bottom:8px; font-size:14px;">Recurring Weak Topics</div>
+              <ul>
+                <% data.progressReport.monthly.recurringWeakTopics.forEach(function(t){ %>
+                  <li class="flex items-center gap-8" style="padding:6px 0; border-bottom:1px solid var(--line-soft); font-size:13px;">
+                    <span class="chip chip-warning">!</span><%= t %>
+                  </li>
+                <% }) %>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- PRINCIPAL VIEW -->
+        <div class="tab-panel" data-tab-panel="principal-report" data-tab-family="progressTabs">
+          <div class="grid-2">
+            <div class="card chart-card">
+              <div class="card__title" style="margin-bottom:6px;">Subject-wise Poor Student Distribution</div>
+              <div class="card__desc" style="margin-bottom:14px;">Percentage of weak students per subject</div>
+              <canvas id="principalPoorChart" height="200"></canvas>
+            </div>
+            
+            <div class="card">
+              <div class="card__title" style="margin-bottom:14px;">Student Percentile Leaderboard</div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Rank</th>
+                      <th>Student Name</th>
+                      <th>Percentile</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% data.progressReport.principal.studentPercentiles.forEach(function(s) { %>
+                      <tr>
+                        <td class="num">#<%= s.rank %></td>
+                        <td><%= s.name %></td>
+                        <td class="num"><%= s.percentile %></td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <%- include('../partials/scripts') %>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Small delay to allow the layout to settle, especially for tabs
+      setTimeout(function() {
+        try {
+          new Chart(document.getElementById('weeklySubjectChart'), {
+            type: 'bar',
+            data: {
+              labels: <%- JSON.stringify(data.progressReport.weekly.subjectAverages.map(s=>s.subject)) %>,
+              datasets: [{ data: <%- JSON.stringify(data.progressReport.weekly.subjectAverages.map(s=>s.avg)) %>,
+                backgroundColor: '#3B4FE0', borderRadius:6, maxBarThickness:42 }]
+            },
+            options: { plugins:{legend:{display:false}}, scales:{ y:{beginAtZero:true, max:100, grid:{color:'#EEF0F8'}, ticks:{font:{family:'IBM Plex Mono'}}}, x:{grid:{display:false}, ticks:{font:{family:'Manrope', weight:600}}} } }
+          });
+        } catch(e) { console.error(e); }
+
+        try {
+          new Chart(document.getElementById('monthlyTrendChart'), {
+            type: 'line',
+            data: {
+              labels: <%- JSON.stringify(data.progressReport.monthly.trend.map(t=>t.week)) %>,
+              datasets: [{ data: <%- JSON.stringify(data.progressReport.monthly.trend.map(t=>t.avg)) %>,
+                borderColor: '#3B4FE0', backgroundColor: 'rgba(59,79,224,0.08)', fill:true, tension:.35, pointRadius:4, pointBackgroundColor:'#3B4FE0' }]
+            },
+            options: { plugins:{legend:{display:false}}, scales:{ y:{beginAtZero:false, grid:{color:'#EEF0F8'}, ticks:{font:{family:'IBM Plex Mono'}}}, x:{grid:{display:false}, ticks:{font:{family:'Manrope', weight:600}}} } }
+          });
+        } catch(e) { console.error(e); }
+
+        try {
+          new Chart(document.getElementById('monthComparisonChart'), {
+            type: 'bar',
+            data: {
+              labels: ['Last Month', 'This Month'],
+              datasets: [{ 
+                data: [<%= data.progressReport.monthly.monthComparison.lastMonth %>, <%= data.progressReport.monthly.monthComparison.thisMonth %>],
+                backgroundColor: ['#98A0BC', '#3B4FE0'], borderRadius:6, maxBarThickness:50 
+              }]
+            },
+            options: { plugins:{legend:{display:false}}, scales:{ y:{beginAtZero:true, max:100, grid:{color:'#EEF0F8'}, ticks:{font:{family:'IBM Plex Mono'}}}, x:{grid:{display:false}, ticks:{font:{family:'Manrope', weight:600}}} } }
+          });
+        } catch(e) { console.error(e); }
+
+        try {
+          new Chart(document.getElementById('principalPoorChart'), {
+            type: 'bar',
+            data: {
+              labels: <%- JSON.stringify(data.progressReport.principal.poorStudentGraph.map(s=>s.subject)) %>,
+              datasets: [{ data: <%- JSON.stringify(data.progressReport.principal.poorStudentGraph.map(s=>s.percentWeak)) %>,
+                backgroundColor: '#E0473D', borderRadius:6, maxBarThickness:42 }]
+            },
+            options: { plugins:{legend:{display:false}}, scales:{ y:{beginAtZero:true, max:100, grid:{color:'#EEF0F8'}, ticks:{font:{family:'IBM Plex Mono'}}}, x:{grid:{display:false}, ticks:{font:{family:'Manrope', weight:600}}} } }
+          });
+        } catch(e) { console.error(e); }
+        
+      }, 100);
+      
+      // Force resize on tab clicks so charts in hidden tabs redraw properly
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          setTimeout(() => window.dispatchEvent(new Event('resize')), 50);
+        });
+      });
+    });
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head', { title: 'Set LT' }) %>
+</head>
+<body>
+  <div class="app">
+    <%- include('../partials/sidebar', { active: 'setLt', data: data }) %>
+
+    <div class="main">
+      <%- include('../partials/topbar', { title: 'Set LT', subtitle: 'Pick a topic finished today and set tomorrow\'s Lecture Test', data: data }) %>
+
+      <div class="content">
+
+        <div class="tabs" data-tab-group="setLtTabs">
+          <button class="tab-btn is-active" data-tab-target="set-lt-panel">Set LT</button>
+          <button class="tab-btn" data-tab-target="lt-history-panel">LT History</button>
+        </div>
+
+        <!-- SET LT PANEL -->
+        <div class="tab-panel is-active" data-tab-panel="set-lt-panel" data-tab-family="setLtTabs">
+          <div class="grid-2">
+            <div class="card">
+              <div class="card__title" style="margin-bottom:14px;">Today's Finished Topic List</div>
+              <div class="table-wrap is-fluid">
+                <table>
+                  <thead><tr><th>Sr No</th><th>Topic Name</th><th>Action</th></tr></thead>
+                  <tbody>
+                    <% data.todayFinishTopics.forEach(function(t){ %>
+                      <tr data-row-topic="<%= t.topicName %>">
+                        <td class="num"><%= t.srNo %></td><td><%= t.topicName %></td>
+                        <td><button type="button" class="btn btn-primary btn-sm btn-add-lt" data-topic="<%= t.topicName %>">Add for LT</button></td>
+                      </tr>
+                    <% }) %>
+                    <% if (data.todayFinishTopics.length === 0) { %>
+                      <tr><td colspan="3" style="text-align:center; color:var(--slate); padding:18px;">Mark a topic "Finish" in Syllabus first — it'll show up here.</td></tr>
+                    <% } %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card__title" style="margin-bottom:14px;">LT Box</div>
+              <div class="detail-panel" style="margin-bottom:16px;">
+                <div class="detail-panel__row" style="flex-direction: column; align-items: stretch; border-bottom: none;">
+                  <span style="margin-bottom: 8px;">Selected Topics</span>
+                  <div id="selectedLtTopicsList" class="added-list" style="margin: 0;"></div>
+                  <div id="selectedLtTopicsEmpty" class="detail-panel__empty" style="padding: 10px 0; text-align: left;">None selected yet</div>
+                </div>
+              </div>
+
+              <form onsubmit="return false;">
+                <div class="form-grid" style="margin-bottom:16px;">
+                  <div><label class="field-label">Date</label><input type="date" class="field-input w-full"></div>
+                  <div>
+                    <label class="field-label">Subject</label>
+                    <select class="filter-select w-full">
+                      <option <%= data.faculty.subject === 'Physics' ? 'selected' : '' %>>Physics</option>
+                      <option <%= data.faculty.subject === 'Chemistry' ? 'selected' : '' %>>Chemistry</option>
+                      <option <%= data.faculty.subject === 'Mathematics' ? 'selected' : '' %>>Mathematics</option>
+                      <option <%= data.faculty.subject === 'Biology' ? 'selected' : '' %>>Biology</option>
+                    </select>
+                  </div>
+                </div>
+                <button class="btn btn-primary btn-block" type="submit">Submit LT</button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        <!-- LT HISTORY PANEL -->
+        <div class="tab-panel" data-tab-panel="lt-history-panel" data-tab-family="setLtTabs">
+          <div class="card">
+            <div class="card__title" style="margin-bottom:14px;">LT History</div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Sr No</th>
+                    <th>Date</th>
+                    <th>Subject</th>
+                    <th>Topics</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% data.ltHistory.forEach(function(e){ %>
+                    <tr>
+                      <td class="num"><%= e.srNo %></td>
+                      <td class="num"><%= e.date %></td>
+                      <td><%= e.subject %></td>
+                      <td><%= e.topics %></td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <%- include('../partials/scripts') %>
+</body>
+</html>
+

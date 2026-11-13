@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <%- include('../partials/head', { title: 'LT Analysis' }) %>
+</head>
+
+<body>
+  <div class="app">
+    <%- include('../partials/sidebar', { active: 'ltAnalysis' , data: data }) %>
+
+      <div class="main">
+        <%- include('../partials/topbar', { title: 'LT Analysis' ,
+          subtitle: 'Daily Lecture Test tracking across all subjects' , data: data }) %>
+
+          <div class="content">
+
+            <div class="kpi-grid">
+              <div class="kpi-card">
+                <div class="kpi-card__label">Total LT Conducted</div>
+                <div class="kpi-card__value num">
+                  <%= data.ltStats.totalLT %>
+                </div>
+              </div>
+              <div class="kpi-card is-success">
+                <div class="kpi-card__label">Total Topics Covered</div>
+                <div class="kpi-card__value num">
+                  <%= data.ltStats.totalTopicCovered %>
+                </div>
+              </div>
+              <div class="kpi-card is-warning">
+                <div class="kpi-card__label">Total LT Pending</div>
+                <div class="kpi-card__value num">
+                  <%= data.ltStats.totalLTPending %>
+                </div>
+              </div>
+            </div>
+
+            <div class="tabs" id="ltAnalysisTabs">
+              <button class="tab-btn is-active" data-target="completed-lt">Evaluated Diagnostics</button>
+              <button class="tab-btn" data-target="pending-lt">Pending Evaluation (<%= data.ltStats.totalLTPending %>
+                  )</button>
+            </div>
+
+            <div class="card" style="padding: 14px 20px; margin-bottom: 16px;">
+              <div class="filters-wrapper">
+                <div class="search-bar-container" style="flex: 1; min-width: 240px;">
+                  <input type="text" id="ltSearchInput" class="field-input w-full"
+                    placeholder="🔍 Search lecture tests by topic, concept, or LT number...">
+                </div>
+                <div class="filters" style="margin-bottom: 0; gap: 12px;">
+                  <select id="filterLtSubject" class="filter-select">
+                    <option value="">All Subjects</option>
+                    <option value="Physics">Physics</option>
+                    <option value="Chemistry">Chemistry</option>
+                    <option value="Mathematics">Mathematics</option>
+                    <option value="Biology">Biology</option>
+                  </select>
+                  <select id="filterLtPerformance" class="filter-select">
+                    <option value="">All Outcomes</option>
+                    <option value="Excellent">Excellent</option>
+                    <option value="Better">Better</option>
+                    <option value="Good">Good</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div class="tab-panel is-active" id="panel-completed-lt">
+              <div class="card">
+                <div class="card__head">
+                  <div>
+                    <div class="card__title">Completed Diagnostics Ledger</div>
+                    <div class="card__desc">Daily tracking matrices for evaluated conceptual checks</div>
+                  </div>
+                </div>
+                <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>LT No</th>
+                        <th>Subject</th>
+                        <th>Assessment Date</th>
+                        <th>Overall Average</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody id="completedLtBody">
+                      <% var completedLTs=data.ltList.filter(lt=> lt.status === 'completed'); %>
+                        <% if (completedLTs.length===0) { %>
+                          <tr>
+                            <td colspan="5" class="text-slate" style="text-align: center; padding: 24px;">No evaluated
+                              lecture tests found.</td>
+                          </tr>
+                          <% } else { %>
+                            <% completedLTs.forEach(function(lt){ %>
+                              <tr class="lt-row" data-subject="<%= lt.subject %>"
+                                data-performance="<%= lt.overallAverage %>">
+                                <td class="num">#<%= lt.ltNo %>
+                                </td>
+                                <td style="font-weight: 600; color: var(--ink);">
+                                  <%= lt.subject %>
+                                </td>
+                                <td class="num">
+                                  <%= lt.date %>
+                                </td>
+                                <td>
+                                  <span
+                                    class="chip <%= lt.overallAverage === 'Excellent' ? 'chip-success' : lt.overallAverage === 'Better' ? 'chip-neutral' : 'chip-warning' %>">
+                                    <%= lt.overallAverage %>
+                                  </span>
+                                </td>
+                                <td>
+                                  <% if (data.ltAnalysisDetail[lt.ltNo]) { %>
+                                    <a href="/principal/lt-analysis/<%= lt.ltNo %>" class="btn btn-primary btn-sm">View
+                                      Analysis</a>
+                                    <% } else { %>
+                                      <a href="/principal/lt-analysis/1" class="btn btn-ghost btn-sm">View Analysis</a>
+                                      <% } %>
+                                </td>
+                              </tr>
+                              <% }) %>
+                                <% } %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <div class="tab-panel" id="panel-pending-lt">
+              <div class="card">
+                <div class="card__head">
+                  <div>
+                    <div class="card__title">Awaiting Diagnostic Metrics</div>
+                    <div class="card__desc">Lecture tests conducted that are awaiting performance profile submission
+                      sheets</div>
+                  </div>
+                </div>
+                <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>LT No</th>
+                        <th>Subject</th>
+                        <th>Conducted Date</th>
+                        <th>Status</th>
+                        <th>Action Link</th>
+                      </tr>
+                    </thead>
+                    <tbody id="pendingLtBody">
+                      <% var pendingLTs=data.ltList.filter(lt=> lt.status !== 'completed'); %>
+                        <% if (pendingLTs.length===0) { %>
+                          <tr>
+                            <td colspan="5" class="text-slate" style="text-align: center; padding: 24px;">All metrics
+                              are up to date! No pending tracks.</td>
+                          </tr>
+                          <% } else { %>
+                            <% pendingLTs.forEach(function(lt){ %>
+                              <tr class="lt-row" data-subject="<%= lt.subject %>" data-performance="Pending">
+                                <td class="num">#<%= lt.ltNo %>
+                                </td>
+                                <td style="font-weight: 600;">
+                                  <%= lt.subject %>
+                                </td>
+                                <td class="num">
+                                  <%= lt.date %>
+                                </td>
+                                <td><span class="chip chip-warning">Awaiting Marks</span></td>
+                                <td><span class="text-slate" style="font-size:12.5px;">Faculty processing</span></td>
+                              </tr>
+                              <% }) %>
+                                <% } %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+          </div>
+      </div>
+  </div>
+
+  <%- include('../partials/scripts') %>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        // 1. OPERATION TAB NAVIGATION CONTROLLER
+        const tabButtons = document.querySelectorAll('#ltAnalysisTabs .tab-btn');
+        const tabPanels = document.querySelectorAll('.tab-panel');
+
+        tabButtons.forEach(btn => {
+          btn.addEventListener('click', () => {
+            tabButtons.forEach(b => b.classList.remove('is-active'));
+            tabPanels.forEach(p => p.classList.remove('is-active'));
+
+            btn.classList.add('is-active');
+            const currentPanel = document.getElementById(`panel-${btn.getAttribute('data-target')}`);
+            if (currentPanel) currentPanel.classList.add('is-active');
+          });
+        });
+
+        // 2. RUNTIME CONDITIONAL QUERY FILTER
+        const searchInput = document.getElementById('ltSearchInput');
+        const subjectSelect = document.getElementById('filterLtSubject');
+        const performanceSelect = document.getElementById('filterLtPerformance');
+
+        function runLtFilteringEngine() {
+          const query = searchInput.value.toLowerCase().trim();
+          const selectedSubject = subjectSelect.value;
+          const selectedPerformance = performanceSelect.value;
+          const targetRows = document.querySelectorAll('.lt-row');
+
+          targetRows.forEach(row => {
+            const rowSubject = row.getAttribute('data-subject');
+            const rowPerformance = row.getAttribute('data-performance');
+            const baselineText = row.innerText.toLowerCase();
+
+            const matchesSearch = !query || baselineText.includes(query);
+            const matchesSubject = !selectedSubject || rowSubject === selectedSubject;
+            const matchesPerformance = !selectedPerformance || rowPerformance === selectedPerformance;
+
+            if (matchesSearch && matchesSubject && matchesPerformance) {
+              row.style.display = '';
+            } else {
+              row.style.display = 'none';
+            }
+          });
+        }
+
+        if (searchInput) searchInput.addEventListener('input', runLtFilteringEngine);
+        if (subjectSelect) subjectSelect.addEventListener('change', runLtFilteringEngine);
+        if (performanceSelect) performanceSelect.addEventListener('change', runLtFilteringEngine);
+      });
+    </script>
+</body>
+
+</html>

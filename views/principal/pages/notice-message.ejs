@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <%- include('../partials/head', { title: 'Notice Message' }) %>
+</head>
+
+<body>
+  <div class="app">
+    <%- include('../partials/sidebar', { active: 'notice' , data: data }) %>
+
+      <div class="main">
+        <%- include('../partials/topbar', { title: 'Notice Message' ,
+          subtitle: 'Send and track notices to students, faculty and parents' , data: data }) %>
+
+          <div class="content">
+
+            <div class="tabs" data-tab-group="noticeTabs">
+              <button class="tab-btn is-active" data-tab-target="send-notice">Send New Notice</button>
+              <button class="tab-btn" data-tab-target="notice-history">Notice History</button>
+            </div>
+
+            <div class="tab-panel is-active" data-tab-panel="send-notice" data-tab-family="noticeTabs">
+              <div class="card" style="max-width:600px;">
+                <div class="card__head">
+                  <div>
+                    <div class="card__title">Compose Notice</div>
+                    <div class="card__desc">Fill details below to construct system announcements</div>
+                  </div>
+                </div>
+                <form id="composeNoticeForm" onsubmit="return false;">
+                  <div style="margin-bottom:14px;">
+                    <label class="field-label">Type</label>
+                    <div class="flex gap-12" style="margin-top:6px;">
+                      <label class="flex items-center gap-8" style="font-size:13px; font-weight:600; cursor: pointer;">
+                        <input type="radio" name="noticeType" value="general" checked> General
+                      </label>
+                      <label class="flex items-center gap-8" style="font-size:13px; font-weight:600; cursor: pointer;">
+                        <input type="radio" name="noticeType" value="specific"> Specific
+                      </label>
+                    </div>
+                  </div>
+
+                  <div class="form-grid" style="margin-bottom:14px;">
+                    <div>
+                      <label class="field-label">Audience</label>
+                      <select class="filter-select w-full" id="noticeAudience">
+                        <option value="all">All Students &amp; Faculty</option>
+                        <option value="student">Student (by Roll No)</option>
+                        <option value="faculty">Faculty</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label class="field-label">Roll No / Faculty (if Specific)</label>
+                      <input class="field-input w-full" id="specificTargetInput" placeholder="e.g. 3 or Faculty name"
+                        disabled style="background-color: #f1f5f9; cursor: not-allowed;">
+                    </div>
+                  </div>
+
+                  <div style="margin-bottom:16px;">
+                    <label class="field-label">Message Description</label>
+                    <textarea class="field-input w-full" rows="4" placeholder="Type the notice message here…"
+                      required></textarea>
+                  </div>
+
+                  <button class="btn btn-primary" type="submit">Send Notice</button>
+                </form>
+              </div>
+            </div>
+
+            <div class="tab-panel" data-tab-panel="notice-history" data-tab-family="noticeTabs" style="display: none;">
+              <div class="card">
+                <div class="card__head">
+                  <div>
+                    <div class="card__title">Notice History</div>
+                    <div class="card__desc">All notices sent so far</div>
+                  </div>
+                </div>
+                <div class="filters">
+                  <select class="filter-select">
+                    <option>Date</option>
+                  </select>
+                  <select class="filter-select">
+                    <option>Type</option>
+                    <option>General</option>
+                    <option>Specific — Student</option>
+                    <option>Specific — Faculty</option>
+                  </select>
+                </div>
+                <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Sr No</th>
+                        <th>Type</th>
+                        <th>Date</th>
+                        <th>Audience</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% if (data && data.notices) { %>
+                        <% data.notices.forEach(function(n){ %>
+                          <tr>
+                            <td class="num">
+                              <%= n.srNo %>
+                            </td>
+                            <td><span class="chip chip-neutral">
+                                <%= n.type %>
+                              </span></td>
+                            <td class="num">
+                              <%= n.date %>
+                            </td>
+                            <td>
+                              <%= n.audience %>
+                            </td>
+                            <td class="flex gap-8">
+                              <button class="btn btn-ghost btn-sm" data-modal-open="noticeModal<%= n.srNo %>">View
+                                Details</button>
+                              <button class="btn btn-danger-ghost btn-sm"
+                                onclick="confirm('Are you sure you want to permanently withdraw notice #<%= n.srNo %>?')">Delete</button>
+                            </td>
+                          </tr>
+                          <% }) %>
+                            <% } %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+          </div>
+      </div>
+  </div>
+
+  <% if (data && data.notices) { %>
+    <% data.notices.forEach(function(n){ %>
+      <div class="modal-overlay" id="noticeModal<%= n.srNo %>" data-modal
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; align-items: center; justify-content: center;">
+        <div class="modal-box"
+          style="background: #fff; padding: 22px; border-radius: 8px; max-width: 550px; width: 100%; margin: auto;">
+          <div class="modal-box__head"
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <div>
+              <div class="card__title" style="font-weight: 700; font-size: 16px;">Notice #<%= n.srNo %>
+              </div>
+              <div class="card__desc" style="font-size: 12px; color: #64748b;">
+                <%= n.type %> · <%= n.date %> · <%= n.audience %>
+              </div>
+            </div>
+            <button class="modal-close" data-modal-close
+              style="background: transparent; border: none; cursor: pointer;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" style="width: 20px; height: 20px;">
+                <path d="M6 6l12 12M18 6 6 18" />
+              </svg>
+            </button>
+          </div>
+          <div class="text-slate" style="font-size:11.5px; font-weight:700; margin-bottom:6px; color: #64748b;">MESSAGE
+            DESCRIPTION</div>
+          <p style="font-size:13.6px; line-height:1.6; color: #1e293b; margin: 0;">
+            <%= n.message %>
+          </p>
+        </div>
+      </div>
+      <% }) %>
+        <% } %>
+
+          <%- include('../partials/scripts') %>
+
+            <script>
+              document.addEventListener('DOMContentLoaded', () => {
+
+                // 1. Tab Swapper Engine
+                const tabButtons = document.querySelectorAll('[data-tab-target]');
+                const tabPanels = document.querySelectorAll('[data-tab-panel]');
+
+                tabButtons.forEach(btn => {
+                  btn.addEventListener('click', () => {
+                    const target = btn.getAttribute('data-tab-target');
+
+                    tabButtons.forEach(b => b.classList.remove('is-active'));
+                    tabPanels.forEach(p => p.style.display = 'none');
+
+                    btn.classList.add('is-active');
+                    const activePanel = document.querySelector(`[data-tab-panel="${target}"]`);
+                    if (activePanel) {
+                      activePanel.style.display = activePanel.classList.contains('grid-2') ? 'grid' : 'block';
+                    }
+                  });
+                });
+
+                // 2. Radio Button Conditional Fields Controller
+                const specificRadioInputs = document.querySelectorAll('input[name="noticeType"]');
+                const targetInput = document.getElementById('specificTargetInput');
+                const audienceSelect = document.getElementById('noticeAudience');
+
+                function toggleTargetField() {
+                  const selectedValue = document.querySelector('input[name="noticeType"]:checked').value;
+                  if (selectedValue === 'specific') {
+                    targetInput.disabled = false;
+                    targetInput.style.backgroundColor = '#fff';
+                    targetInput.style.cursor = 'text';
+                    if (audienceSelect.value === 'all') {
+                      audienceSelect.value = 'student';
+                    }
+                  } else {
+                    targetInput.disabled = true;
+                    targetInput.style.backgroundColor = '#f1f5f9';
+                    targetInput.style.cursor = 'not-allowed';
+                    targetInput.value = '';
+                    audienceSelect.value = 'all';
+                  }
+                }
+
+                specificRadioInputs.forEach(radio => radio.addEventListener('change', toggleTargetField));
+
+                audienceSelect.addEventListener('change', () => {
+                  if (audienceSelect.value !== 'all') {
+                    document.querySelector('input[name="noticeType"][value="specific"]').checked = true;
+                  } else {
+                    document.querySelector('input[name="noticeType"][value="general"]').checked = true;
+                  }
+                  toggleTargetField();
+                });
+
+                // 3. Notice Composition Submission Handler
+                const composeForm = document.getElementById('composeNoticeForm');
+                if (composeForm) {
+                  composeForm.addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    alert('Notice announcement successfully logged and staged for generation dispatch routing!');
+                    composeForm.reset();
+                    toggleTargetField();
+                  });
+                }
+
+                // 4. Modal Open/Close Controls Engine
+                const openTriggers = document.querySelectorAll('[data-modal-open]');
+                openTriggers.forEach(trigger => {
+                  trigger.addEventListener('click', () => {
+                    const targetId = trigger.getAttribute('data-modal-open');
+                    const targetModal = document.getElementById(targetId);
+                    if (targetModal) {
+                      targetModal.style.display = 'flex';
+                    }
+                  });
+                });
+
+                const closeTriggers = document.querySelectorAll('[data-modal-close], .modal-overlay');
+                closeTriggers.forEach(closer => {
+                  closer.addEventListener('click', (e) => {
+                    if (closer.hasAttribute('data-modal-close') || e.target === closer) {
+                      const targetModal = closer.closest('[data-modal]');
+                      if (targetModal) {
+                        targetModal.style.display = 'none';
+                      }
+                    }
+                  });
+                });
+              });
+            </script>
+</body>
+
+</html>

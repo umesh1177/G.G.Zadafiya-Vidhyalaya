@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head', { title: 'Home' }) %>
+</head>
+<body>
+  <div class="app">
+    <%- include('../partials/sidebar', { active: 'home', data: data }) %>
+
+    <div class="main">
+      <%- include('../partials/topbar', { title: 'Good morning, ' + data.faculty.name, subtitle: data.faculty.subject + ' · Std 11–12 Science', data: data }) %>
+
+      <div class="content">
+
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="kpi-card__label">Total Chapters</div><div class="kpi-card__value num"><%= data.syllabusStats.totalChapters %></div></div>
+          <div class="kpi-card is-success"><div class="kpi-card__label">Completed</div><div class="kpi-card__value num"><%= data.syllabusStats.completed %></div></div>
+          <div class="kpi-card is-warning"><div class="kpi-card__label">Pending</div><div class="kpi-card__value num"><%= data.syllabusStats.pending %></div></div>
+          <div class="kpi-card"><div class="kpi-card__label">Syllabus Complete</div><div class="kpi-card__value num"><%= data.completionPercent %>%</div></div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card__head">
+              <div>
+                <div class="card__title">Today's Finished Topics</div>
+                <div class="card__desc">Marked complete today — ready to add for tomorrow's LT</div>
+              </div>
+              <a href="/faculty/set-lt" class="btn btn-ghost btn-sm">Open Set LT</a>
+            </div>
+            <div class="table-wrap is-fluid">
+              <table>
+                <thead><tr><th>Sr No</th><th>Topic Name</th><th>Chapter</th></tr></thead>
+                <tbody>
+                  <% data.todayFinishTopics.forEach(function(t){ %>
+                    <tr><td class="num"><%= t.srNo %></td><td><%= t.topicName %></td><td class="text-slate"><%= t.chapter %></td></tr>
+                  <% }) %>
+                  <% if (data.todayFinishTopics.length === 0) { %>
+                    <tr><td colspan="3" style="text-align:center; color:var(--slate); padding:18px;">No topics marked finished today yet.</td></tr>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card__head">
+              <div>
+                <div class="card__title">Syllabus Completion</div>
+                <div class="card__desc"><%= data.faculty.subject %> — overall progress</div>
+              </div>
+              <a href="/faculty/syllabus" class="btn btn-ghost btn-sm">Open Syllabus</a>
+            </div>
+            <div class="progress-row">
+              <div class="progress-row__label"><%= data.faculty.subject %></div>
+              <div class="progress-track"><div class="progress-fill" style="width:<%= data.completionPercent %>%; background: <%= data.completionPercent >= 80 ? 'var(--success)' : data.completionPercent >= 50 ? 'var(--indigo)' : 'var(--warning)' %>;"></div></div>
+              <div class="progress-row__value num"><%= data.completionPercent %>%</div>
+            </div>
+            <div class="banner banner-success" style="margin-top:14px; margin-bottom:0;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.2 4.2L19 6.8"/></svg>
+              <span><%= data.syllabusStats.completed %> of <%= data.syllabusStats.totalChapters %> chapters fully complete — on track for board exam coverage.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__head">
+            <div>
+              <div class="card__title">Recent Notices</div>
+              <div class="card__desc">From the Principal</div>
+            </div>
+            <a href="/faculty/notice" class="btn btn-ghost btn-sm">View all</a>
+          </div>
+          <ul>
+            <% data.notices.slice(0,2).forEach(function(n){ %>
+              <li style="padding:10px 0; border-bottom:1px solid var(--line-soft);">
+                <div class="text-slate num" style="font-size:11.5px; margin-bottom:4px;"><%= n.date %></div>
+                <div style="font-size:13px; color:var(--ink-soft);"><%= n.message %></div>
+              </li>
+            <% }) %>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <%- include('../partials/scripts') %>
+</body>
+</html>
+

@@ -1,0 +1,596 @@
+[
+  {
+    "tableIndex": 1,
+    "rowIndex": 2,
+    "chapterText": "અધ્યાય 2",
+    "itemText": "ઉદાહરણ 2.3 (આકૃતિ 2.6)",
+    "imageTarget": "media/image1.png",
+    "cleanFileName": "ch2_ex2_3.png",
+    "relativeUrl": "/syllabus/physics/ch2_ex2_3.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 3,
+    "chapterText": "અધ્યાય 2",
+    "itemText": "ઉદાહરણ 2.4 (આકૃતિ 2.7 (a),(b),(c))",
+    "imageTarget": "media/image2.png",
+    "cleanFileName": "ch2_ex2_4.png",
+    "relativeUrl": "/syllabus/physics/ch2_ex2_4.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 4,
+    "chapterText": "અધ્યાય 2",
+    "itemText": "ઉદાહરણ 2.7 (આકૃતિ 2.8)",
+    "imageTarget": "media/image3.png",
+    "cleanFileName": "ch2_ex2_7.png",
+    "relativeUrl": "/syllabus/physics/ch2_ex2_7.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 5,
+    "chapterText": "અધ્યાય 2",
+    "itemText": "સ્વાધ્યાય 2.2 (આકૃતિ 2.9)",
+    "imageTarget": "media/image4.png",
+    "cleanFileName": "ch2_sw2_2.png",
+    "relativeUrl": "/syllabus/physics/ch2_sw2_2.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 6,
+    "chapterText": "અધ્યાય 2",
+    "itemText": "સ્વાધ્યાય 2.12 (આકૃતિ 2.10)",
+    "imageTarget": "media/image5.png",
+    "cleanFileName": "ch2_sw2_12.png",
+    "relativeUrl": "/syllabus/physics/ch2_sw2_12.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 7,
+    "chapterText": "અધ્યાય 2",
+    "itemText": "સ્વાધ્યાય 2.13 (આકૃતિ 2.11)",
+    "imageTarget": "media/image6.png",
+    "cleanFileName": "ch2_sw2_13.png",
+    "relativeUrl": "/syllabus/physics/ch2_sw2_13.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 8,
+    "chapterText": "અધ્યાય 2",
+    "itemText": "સ્વાધ્યાય 2.15 (આકૃતિ 2.12)",
+    "imageTarget": "media/image7.png",
+    "cleanFileName": "ch2_sw2_15.png",
+    "relativeUrl": "/syllabus/physics/ch2_sw2_15.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 9,
+    "chapterText": "અધ્યાય 2",
+    "itemText": "સ્વાધ્યાય 2.16 (આકૃતિ 2.13)",
+    "imageTarget": "media/image8.png",
+    "cleanFileName": "ch2_sw2_16.png",
+    "relativeUrl": "/syllabus/physics/ch2_sw2_16.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 10,
+    "chapterText": "અધ્યાય 2",
+    "itemText": "સ્વાધ્યાય 2.17 (આકૃતિ 2.14)",
+    "imageTarget": "media/image9.png",
+    "cleanFileName": "ch2_sw2_17.png",
+    "relativeUrl": "/syllabus/physics/ch2_sw2_17.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 11,
+    "chapterText": "અધ્યાય 2",
+    "itemText": "સ્વાધ્યાય 2.18 (આકૃતિ 2.15)",
+    "imageTarget": "media/image10.png",
+    "cleanFileName": "ch2_sw2_18.png",
+    "relativeUrl": "/syllabus/physics/ch2_sw2_18.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 12,
+    "chapterText": "અધ્યાય 3",
+    "itemText": "ઉદાહરણ 3.1 (આકૃતિ 3.7)",
+    "imageTarget": "media/image11.png",
+    "cleanFileName": "ch3_ex3_1.png",
+    "relativeUrl": "/syllabus/physics/ch3_ex3_1.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 13,
+    "chapterText": "અધ્યાય 3",
+    "itemText": "ઉદાહરણ 3.2 (આકૃતિ 3.10)",
+    "imageTarget": "media/image12.png",
+    "cleanFileName": "ch3_ex3_2.png",
+    "relativeUrl": "/syllabus/physics/ch3_ex3_2.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 14,
+    "chapterText": "અધ્યાય 3",
+    "itemText": "ઉદાહરણ 3.3 (આકૃતિ 3.11)",
+    "imageTarget": "media/image13.png",
+    "cleanFileName": "ch3_ex3_3.png",
+    "relativeUrl": "/syllabus/physics/ch3_ex3_3.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 15,
+    "chapterText": "અધ્યાય 3",
+    "itemText": "સ્વાધ્યાય 3.8 (આકૃતિ 3.19)",
+    "imageTarget": "media/image14.png",
+    "cleanFileName": "ch3_sw3_8.png",
+    "relativeUrl": "/syllabus/physics/ch3_sw3_8.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 16,
+    "chapterText": "અધ્યાય 3",
+    "itemText": "સ્વાધ્યાય 3.9 (આકૃતિ 3.20)",
+    "imageTarget": "media/image15.png",
+    "cleanFileName": "ch3_sw3_9.png",
+    "relativeUrl": "/syllabus/physics/ch3_sw3_9.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 17,
+    "chapterText": "અધ્યાય 4",
+    "itemText": "ઉદાહરણ 4.5 (આકૃતિ 4.6 (a),(b))",
+    "imageTarget": "media/image16.png",
+    "cleanFileName": "ch4_ex4_5.png",
+    "relativeUrl": "/syllabus/physics/ch4_ex4_5.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 18,
+    "chapterText": "અધ્યાય 4",
+    "itemText": "ઉદાહરણ 4.6 (આકૃતિ 4.8 (a),(b),(c))",
+    "imageTarget": "media/image17.png",
+    "cleanFileName": "ch4_ex4_6.png",
+    "relativeUrl": "/syllabus/physics/ch4_ex4_6.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 19,
+    "chapterText": "અધ્યાય 4",
+    "itemText": "ઉદાહરણ 4.8 (આકૃતિ 4.11)",
+    "imageTarget": "media/image18.png",
+    "cleanFileName": "ch4_ex4_8.png",
+    "relativeUrl": "/syllabus/physics/ch4_ex4_8.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 20,
+    "chapterText": "અધ્યાય 4",
+    "itemText": "ઉદાહરણ 4.9 (આકૃતિ 4.12 (a),(b),(c))",
+    "imageTarget": "media/image19.png",
+    "cleanFileName": "ch4_ex4_9.png",
+    "relativeUrl": "/syllabus/physics/ch4_ex4_9.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 21,
+    "chapterText": "અધ્યાય 4",
+    "itemText": "ઉદાહરણ 4.12 (આકૃતિ 4.15 (a),(b))",
+    "imageTarget": "media/image20.png",
+    "cleanFileName": "ch4_ex4_12.png",
+    "relativeUrl": "/syllabus/physics/ch4_ex4_12.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 22,
+    "chapterText": "અધ્યાય 4",
+    "itemText": "સ્વાધ્યાય 4.14 (આકૃતિ 4.16)",
+    "imageTarget": "media/image21.png",
+    "cleanFileName": "ch4_sw4_14.png",
+    "relativeUrl": "/syllabus/physics/ch4_sw4_14.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 23,
+    "chapterText": "અધ્યાય 5",
+    "itemText": "ઉદાહરણ 5.5 (આકૃતિ 5.4)",
+    "imageTarget": "media/image22.png",
+    "cleanFileName": "ch5_ex5_5.png",
+    "relativeUrl": "/syllabus/physics/ch5_ex5_5.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 24,
+    "chapterText": "અધ્યાય 5",
+    "itemText": "ઉદાહરણ 5.7 (આકૃતિ 5.6)",
+    "imageTarget": "media/image23.png",
+    "cleanFileName": "ch5_ex5_7.png",
+    "relativeUrl": "/syllabus/physics/ch5_ex5_7.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 25,
+    "chapterText": "અધ્યાય 5",
+    "itemText": "ઉદાહરણ 5.9 (આકૃતિ 5.9)",
+    "imageTarget": "media/image24.png",
+    "cleanFileName": "ch5_ex5_9.png",
+    "relativeUrl": "/syllabus/physics/ch5_ex5_9.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 26,
+    "chapterText": "અધ્યાય 5",
+    "itemText": "ઉદાહરણ 5.12 (આકૃતિ 5.10)",
+    "imageTarget": "media/image25.png",
+    "cleanFileName": "ch5_ex5_12.png",
+    "relativeUrl": "/syllabus/physics/ch5_ex5_12.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 27,
+    "chapterText": "અધ્યાય 5",
+    "itemText": "સ્વાધ્યાય 5.3 (આકૃતિ 5.11)",
+    "imageTarget": "media/image26.png",
+    "cleanFileName": "ch5_sw5_3.png",
+    "relativeUrl": "/syllabus/physics/ch5_sw5_3.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 28,
+    "chapterText": "અધ્યાય 5",
+    "itemText": "સ્વાધ્યાય 5.4 (આકૃતિ 5.12)",
+    "imageTarget": "media/image27.png",
+    "cleanFileName": "ch5_sw5_4.png",
+    "relativeUrl": "/syllabus/physics/ch5_sw5_4.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 29,
+    "chapterText": "અધ્યાય 5",
+    "itemText": "સ્વાધ્યાય 5.5 (આકૃતિ 5.13)",
+    "imageTarget": "media/image28.png",
+    "cleanFileName": "ch5_sw5_5.png",
+    "relativeUrl": "/syllabus/physics/ch5_sw5_5.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 30,
+    "chapterText": "અધ્યાય 5",
+    "itemText": "સ્વાધ્યાય 5.16 (આકૃતિ 5.14)",
+    "imageTarget": "media/image29.png",
+    "cleanFileName": "ch5_sw5_16.png",
+    "relativeUrl": "/syllabus/physics/ch5_sw5_16.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 31,
+    "chapterText": "અધ્યાય 5",
+    "itemText": "સ્વાધ્યાય 5.17 (આકૃતિ 5.15)",
+    "imageTarget": "media/image30.png",
+    "cleanFileName": "ch5_sw5_17.png",
+    "relativeUrl": "/syllabus/physics/ch5_sw5_17.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 32,
+    "chapterText": "અધ્યાય 6",
+    "itemText": "ઉદાહરણ 6.1 (આકૃતિ 6.9)",
+    "imageTarget": "media/image31.png",
+    "cleanFileName": "ch6_ex6_1.png",
+    "relativeUrl": "/syllabus/physics/ch6_ex6_1.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 33,
+    "chapterText": "અધ્યાય 6",
+    "itemText": "ઉદાહરણ 6.2 (આકૃતિ 6.10)",
+    "imageTarget": "media/image32.png",
+    "cleanFileName": "ch6_ex6_2.png",
+    "relativeUrl": "/syllabus/physics/ch6_ex6_2.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 34,
+    "chapterText": "અધ્યાય 6",
+    "itemText": "ઉદાહરણ 6.3 (આકૃતિ 6.11)",
+    "imageTarget": "media/image33.png",
+    "cleanFileName": "ch6_ex6_3.png",
+    "relativeUrl": "/syllabus/physics/ch6_ex6_3.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 35,
+    "chapterText": "અધ્યાય 6",
+    "itemText": "ઉદાહરણ 6.6 (આકૃતિ 6.19)",
+    "imageTarget": "media/image34.png",
+    "cleanFileName": "ch6_ex6_6.png",
+    "relativeUrl": "/syllabus/physics/ch6_ex6_6.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 36,
+    "chapterText": "અધ્યાય 6",
+    "itemText": "ઉદાહરણ 6.7 (આકૃતિ 6.22)",
+    "imageTarget": "media/image35.png",
+    "cleanFileName": "ch6_ex6_7.png",
+    "relativeUrl": "/syllabus/physics/ch6_ex6_7.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 37,
+    "chapterText": "અધ્યાય 6",
+    "itemText": "ઉદાહરણ 6.8 (આકૃતિ 6.26)",
+    "imageTarget": "media/image36.png",
+    "cleanFileName": "ch6_ex6_8.png",
+    "relativeUrl": "/syllabus/physics/ch6_ex6_8.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 38,
+    "chapterText": "અધ્યાય 6",
+    "itemText": "ઉદાહરણ 6.9 (આકૃતિ 6.27)",
+    "imageTarget": "media/image37.png",
+    "cleanFileName": "ch6_ex6_9.png",
+    "relativeUrl": "/syllabus/physics/ch6_ex6_9.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 39,
+    "chapterText": "અધ્યાય 6",
+    "itemText": "ઉદાહરણ 6.12 (આકૃતિ 6.31)",
+    "imageTarget": "media/image38.png",
+    "cleanFileName": "ch6_ex6_12.png",
+    "relativeUrl": "/syllabus/physics/ch6_ex6_12.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 40,
+    "chapterText": "અધ્યાય 6",
+    "itemText": "સ્વાધ્યાય 6.8 (આકૃતિ 6.33)",
+    "imageTarget": "media/image39.png",
+    "cleanFileName": "ch6_sw6_8.png",
+    "relativeUrl": "/syllabus/physics/ch6_sw6_8.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 41,
+    "chapterText": "અધ્યાય 7",
+    "itemText": "ઉદાહરણ 7.1 (આકૃતિ 7.1(a), 7.2)",
+    "imageTarget": "media/image40.png",
+    "cleanFileName": "ch7_ex7_1.png",
+    "relativeUrl": "/syllabus/physics/ch7_ex7_1.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 42,
+    "chapterText": "અધ્યાય 7",
+    "itemText": "ઉદાહરણ 7.2 (આકૃતિ 7.5)",
+    "imageTarget": "media/image41.png",
+    "cleanFileName": "ch7_ex7_2.png",
+    "relativeUrl": "/syllabus/physics/ch7_ex7_2.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 43,
+    "chapterText": "અધ્યાય 7",
+    "itemText": "ઉદાહરણ 7.3 (આકૃતિ 7.9)",
+    "imageTarget": "media/image42.png",
+    "cleanFileName": "ch7_ex7_3.png",
+    "relativeUrl": "/syllabus/physics/ch7_ex7_3.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 44,
+    "chapterText": "અધ્યાય 7",
+    "itemText": "ઉદાહરણ 7.4 (આકૃતિ 7.10)",
+    "imageTarget": "media/image43.png",
+    "cleanFileName": "ch7_ex7_4.png",
+    "relativeUrl": "/syllabus/physics/ch7_ex7_4.png"
+  },
+  {
+    "tableIndex": 1,
+    "rowIndex": 45,
+    "chapterText": "અધ્યાય 7",
+    "itemText": "સ્વાધ્યાય 7.10 અને 7.11 (આકૃતિ 7.12)",
+    "imageTarget": "media/image44.png",
+    "cleanFileName": "ch7_sw7_10_11.png",
+    "relativeUrl": "/syllabus/physics/ch7_sw7_10_11.png"
+  },
+  {
+    "tableIndex": 2,
+    "rowIndex": 2,
+    "chapterText": "અધ્યાય 8",
+    "itemText": "ઉદાહરણ 8.3 (આકૃતિ 8.4)",
+    "imageTarget": "media/image45.png",
+    "cleanFileName": "ch8_ex8_3.png",
+    "relativeUrl": "/syllabus/physics/ch8_ex8_3.png"
+  },
+  {
+    "tableIndex": 2,
+    "rowIndex": 3,
+    "chapterText": "અધ્યાય 8",
+    "itemText": "ઉદાહરણ 8.4 (આકૃતિ 8.5)",
+    "imageTarget": "media/image46.png",
+    "cleanFileName": "ch8_ex8_4.png",
+    "relativeUrl": "/syllabus/physics/ch8_ex8_4.png"
+  },
+  {
+    "tableIndex": 2,
+    "rowIndex": 4,
+    "chapterText": "અધ્યાય 8",
+    "itemText": "સ્વાધ્યાય 8.2 (આકૃતિ 8.9)",
+    "imageTarget": "media/image47.png",
+    "cleanFileName": "ch8_sw8_2.png",
+    "relativeUrl": "/syllabus/physics/ch8_sw8_2.png"
+  },
+  {
+    "tableIndex": 2,
+    "rowIndex": 5,
+    "chapterText": "અધ્યાય 8",
+    "itemText": "સ્વાધ્યાય 8.3 (આકૃતિ 8.10)",
+    "imageTarget": "media/image48.png",
+    "cleanFileName": "ch8_sw8_3.png",
+    "relativeUrl": "/syllabus/physics/ch8_sw8_3.png"
+  },
+  {
+    "tableIndex": 2,
+    "rowIndex": 6,
+    "chapterText": "અધ્યાય 8",
+    "itemText": "સ્વાધ્યાય 8.5 (આકૃતિ 8.11)",
+    "imageTarget": "media/image49.png",
+    "cleanFileName": "ch8_sw8_5.png",
+    "relativeUrl": "/syllabus/physics/ch8_sw8_5.png"
+  },
+  {
+    "tableIndex": 2,
+    "rowIndex": 7,
+    "chapterText": "અધ્યાય 9",
+    "itemText": "ઉદાહરણ 9.6 (આકૃતિ 9.6(b))",
+    "imageTarget": "media/image50.png",
+    "cleanFileName": "ch9_ex9_6.png",
+    "relativeUrl": "/syllabus/physics/ch9_ex9_6.png"
+  },
+  {
+    "tableIndex": 2,
+    "rowIndex": 8,
+    "chapterText": "અધ્યાય 9",
+    "itemText": "ઉદાહરણ 9.8 (આકૃતિ 9.13)",
+    "imageTarget": "media/image51.png",
+    "cleanFileName": "ch9_ex9_8.png",
+    "relativeUrl": "/syllabus/physics/ch9_ex9_8.png"
+  },
+  {
+    "tableIndex": 2,
+    "rowIndex": 9,
+    "chapterText": "અધ્યાય 9",
+    "itemText": "સ્વાધ્યાય 9.15 (આકૃતિ 9.20)",
+    "imageTarget": "media/image52.png",
+    "cleanFileName": "ch9_sw9_15.png",
+    "relativeUrl": "/syllabus/physics/ch9_sw9_15.png"
+  },
+  {
+    "tableIndex": 2,
+    "rowIndex": 10,
+    "chapterText": "અધ્યાય 9",
+    "itemText": "સ્વાધ્યાય 9.18 (આકૃતિ 9.21)",
+    "imageTarget": "media/image53.png",
+    "cleanFileName": "ch9_sw9_18.png",
+    "relativeUrl": "/syllabus/physics/ch9_sw9_18.png"
+  },
+  {
+    "tableIndex": 2,
+    "rowIndex": 11,
+    "chapterText": "અધ્યાય 10",
+    "itemText": "ઉદાહરણ 10.1 (આકૃતિ 10.8)",
+    "imageTarget": "media/image54.png",
+    "cleanFileName": "ch10_ex10_1.png",
+    "relativeUrl": "/syllabus/physics/ch10_ex10_1.png"
+  },
+  {
+    "tableIndex": 2,
+    "rowIndex": 12,
+    "chapterText": "અધ્યાય 10",
+    "itemText": "ઉદાહરણ 10.6 (આકૃતિ 10.15)",
+    "imageTarget": "media/image55.png",
+    "cleanFileName": "ch10_ex10_6.png",
+    "relativeUrl": "/syllabus/physics/ch10_ex10_6.png"
+  },
+  {
+    "tableIndex": 2,
+    "rowIndex": 13,
+    "chapterText": "અધ્યાય 10",
+    "itemText": "ઉદાહરણ 10.7 (આકૃતિ 10.16)",
+    "imageTarget": "media/image56.png",
+    "cleanFileName": "ch10_ex10_7.png",
+    "relativeUrl": "/syllabus/physics/ch10_ex10_7.png"
+  },
+  {
+    "tableIndex": 2,
+    "rowIndex": 14,
+    "chapterText": "અધ્યાય 11",
+    "itemText": "સ્વાધ્યાય 11.8 (આકૃતિ 11.11)",
+    "imageTarget": "media/image57.png",
+    "cleanFileName": "ch11_sw11_8.png",
+    "relativeUrl": "/syllabus/physics/ch11_sw11_8.png"
+  },
+  {
+    "tableIndex": 2,
+    "rowIndex": 15,
+    "chapterText": "અધ્યાય 12",
+    "itemText": "ઉદાહરણ 12.6 (આકૃતિ 12.5)",
+    "imageTarget": "media/image58.png",
+    "cleanFileName": "ch12_ex12_6.png",
+    "relativeUrl": "/syllabus/physics/ch12_ex12_6.png"
+  },
+  {
+    "tableIndex": 2,
+    "rowIndex": 16,
+    "chapterText": "અધ્યાય 12",
+    "itemText": "સ્વાધ્યાય 12.3 (આકૃતિ 12.8)",
+    "imageTarget": "media/image59.png",
+    "cleanFileName": "ch12_sw12_3.png",
+    "relativeUrl": "/syllabus/physics/ch12_sw12_3.png"
+  },
+  {
+    "tableIndex": 2,
+    "rowIndex": 17,
+    "chapterText": "અધ્યાય 13",
+    "itemText": "ઉદાહરણ 13.4 (આકૃતિ 13.10)",
+    "imageTarget": "media/image60.png",
+    "cleanFileName": "ch13_ex13_4.png",
+    "relativeUrl": "/syllabus/physics/ch13_ex13_4.png"
+  },
+  {
+    "tableIndex": 2,
+    "rowIndex": 18,
+    "chapterText": "અધ્યાય 13",
+    "itemText": "ઉદાહરણ 13.6 (આકૃતિ 13.14, 13.15)",
+    "imageTarget": "media/image61.png",
+    "cleanFileName": "ch13_ex13_6.png",
+    "relativeUrl": "/syllabus/physics/ch13_ex13_6.png"
+  },
+  {
+    "tableIndex": 2,
+    "rowIndex": 19,
+    "chapterText": "અધ્યાય 13",
+    "itemText": "સ્વાધ્યાય 13.3 (આકૃતિ 13.18)",
+    "imageTarget": "media/image62.png",
+    "cleanFileName": "ch13_sw13_3.png",
+    "relativeUrl": "/syllabus/physics/ch13_sw13_3.png"
+  },
+  {
+    "tableIndex": 2,
+    "rowIndex": 20,
+    "chapterText": "અધ્યાય 13",
+    "itemText": "સ્વાધ્યાય 13.9 (આકૃતિ 13.19)",
+    "imageTarget": "media/image63.png",
+    "cleanFileName": "ch13_sw13_9.png",
+    "relativeUrl": "/syllabus/physics/ch13_sw13_9.png"
+  },
+  {
+    "tableIndex": 2,
+    "rowIndex": 21,
+    "chapterText": "અધ્યાય 13",
+    "itemText": "સ્વાધ્યાય 13.11 (આકૃતિ 13.20)",
+    "imageTarget": "media/image64.png",
+    "cleanFileName": "ch13_sw13_11.png",
+    "relativeUrl": "/syllabus/physics/ch13_sw13_11.png"
+  },
+  {
+    "tableIndex": 2,
+    "rowIndex": 22,
+    "chapterText": "અધ્યાય 13",
+    "itemText": "સ્વાધ્યાય 13.13 (આકૃતિ 13.21)",
+    "imageTarget": "media/image65.png",
+    "cleanFileName": "ch13_sw13_13.png",
+    "relativeUrl": "/syllabus/physics/ch13_sw13_13.png"
+  },
+  {
+    "tableIndex": 2,
+    "rowIndex": 23,
+    "chapterText": "અધ્યાય 14",
+    "itemText": "ઉદાહરણ 14.5 (આકૃતિ 14.15)",
+    "imageTarget": "media/image66.png",
+    "cleanFileName": "ch14_ex14_5.png",
+    "relativeUrl": "/syllabus/physics/ch14_ex14_5.png"
+  }
+]

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <%- include('../partials/head', { title: 'Syllabus Tracking' }) %>
+</head>
+
+<body>
+  <div class="app">
+    <%- include('../partials/sidebar', { active: 'syllabus' , data: data }) %>
+
+      <div class="main">
+        <%- include('../partials/topbar', { title: 'Syllabus Tracking' ,
+          subtitle: 'Live completion status — no need to ask faculty directly' , data: data }) %>
+
+          <div class="content">
+
+            <div class="filters">
+              <select class="filter-select">
+                <option>Class</option>
+                <option>Std 11</option>
+                <option>Std 12</option>
+              </select>
+              <select class="filter-select">
+                <option>Subject</option>
+                <option>Physics</option>
+                <option>Chemistry</option>
+                <option>Maths</option>
+                <option>Biology</option>
+              </select>
+            </div>
+
+            <div class="kpi-grid">
+              <div class="kpi-card">
+                <div class="kpi-card__label">Overall Completion</div>
+                <div class="kpi-card__value num">
+                  <%= Math.round(data.syllabus.subjects.reduce((a,s)=>a+s.completion,0)/data.syllabus.subjects.length)
+                    %>%
+                </div>
+              </div>
+              <div class="kpi-card is-success">
+                <div class="kpi-card__label">Completed Topics</div>
+                <div class="kpi-card__value num">
+                  <%= data.syllabus.completedTopics %>
+                </div>
+              </div>
+              <div class="kpi-card is-warning">
+                <div class="kpi-card__label">Pending Topics</div>
+                <div class="kpi-card__value num">
+                  <%= data.syllabus.pendingTopics %>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div class="card">
+                <div class="card__title" style="margin-bottom:16px;">% Syllabus Completion by Subject</div>
+                <% data.syllabus.subjects.forEach(function(s){ %>
+                  <div class="progress-row">
+                    <div class="progress-row__label">
+                      <%= s.name %>
+                    </div>
+                    <div class="progress-track">
+                      <div class="progress-fill"
+                        style="width:<%= s.completion %>%; background: <%= s.completion >= 80 ? 'var(--success)' : s.completion >= 60 ? 'var(--indigo)' : 'var(--warning)' %>;">
+                      </div>
+                    </div>
+                    <div class="progress-row__value num">
+                      <%= s.completion %>%
+                    </div>
+                  </div>
+                  <% }) %>
+              </div>
+
+              <div class="card">
+                <div class="card__head">
+                  <div>
+                    <div class="card__title">Today's Finished Topics</div>
+                    <div class="card__desc">Marked complete by subject faculty today</div>
+                  </div>
+                </div>
+                <div class="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Sr No</th>
+                        <th>Subject</th>
+                        <th>Topics Finished</th>
+                        <th>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% data.syllabus.todayFinishTopics.forEach(function(t){ %>
+                        <tr>
+                          <td class="num">
+                            <%= t.srNo %>
+                          </td>
+                          <td>
+                            <%= t.subject %>
+                          </td>
+                          <td><span class="chip chip-success num">
+                              <%= t.topicsFinished %>
+                            </span></td>
+                          <td><button class="btn btn-ghost btn-sm" data-modal-open="todayTopicsModal">View All</button>
+                          </td>
+                        </tr>
+                        <% }) %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+          </div>
+      </div>
+  </div>
+
+  <div class="modal-overlay" id="todayTopicsModal" data-modal>
+    <div class="modal-box">
+      <div class="modal-box__head">
+        <div>
+          <div class="card__title">Today's Finished Topics — Full List</div>
+          <div class="card__desc">All topics marked complete across subjects today</div>
+        </div>
+        <button class="modal-close" data-modal-close>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M6 6l12 12M18 6 6 18" />
+          </svg>
+        </button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Sr No</th>
+              <th>Topic Name</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% data.syllabus.todayTopicDetail.forEach(function(t){ %>
+              <tr>
+                <td class="num">
+                  <%= t.srNo %>
+                </td>
+                <td>
+                  <%= t.topicName %>
+                </td>
+              </tr>
+              <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <%- include('../partials/scripts') %>
+</body>
+
+</html>

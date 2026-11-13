@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head', { title: 'Notice' }) %>
+</head>
+<body>
+  <div class="app">
+    <%- include('../partials/sidebar', { active: 'notice', data: data }) %>
+
+    <div class="main">
+      <%- include('../partials/topbar', { title: 'Notice Message', subtitle: 'Messages from the Principal', data: data }) %>
+
+      <div class="content">
+
+        <div class="card">
+          <div class="card__head"><div class="card__title">Notice Inbox</div></div>
+          <div class="filters">
+            <select class="filter-select"><option>Date</option></select>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Sr No</th><th>Date</th><th>Message</th><th>Action</th></tr></thead>
+              <tbody>
+                <% data.notices.forEach(function(n){ %>
+                  <tr>
+                    <td class="num"><%= n.srNo %></td><td class="num"><%= n.date %></td>
+                    <td><%= n.message.length > 60 ? n.message.slice(0,60)+'…' : n.message %></td>
+                    <td><button class="btn btn-ghost btn-sm" data-modal-open="noticeModal<%= n.srNo %>">View Full Message</button></td>
+                  </tr>
+                <% }) %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <% data.notices.forEach(function(n){ %>
+    <div class="modal-overlay" id="noticeModal<%= n.srNo %>" data-modal>
+      <div class="modal-box">
+        <div class="modal-box__head">
+          <div><div class="card__title">Notice #<%= n.srNo %></div><div class="card__desc num"><%= n.date %></div></div>
+          <button class="modal-close" data-modal-close>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+          </button>
+        </div>
+        <p style="font-size:13.6px; line-height:1.6;"><%= n.message %></p>
+      </div>
+    </div>
+  <% }) %>
+
+  <%- include('../partials/scripts') %>
+</body>
+</html>
+

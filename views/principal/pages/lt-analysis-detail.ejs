@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head', { title: 'LT Analysis' }) %>
+</head>
+<body>
+  <div class="app">
+    <%- include('../partials/sidebar', { active: 'ltAnalysis', data: data }) %>
+
+    <div class="main">
+      <%- include('../partials/topbar', { title: lt.subject + ' — LT #' + lt.ltNo, subtitle: 'Topic: ' + lt.ltTopic + ' · Assessed ' + lt.dateOfAssessment, data: data }) %>
+
+      <div class="content">
+        <a href="/principal/lt-analysis" class="btn btn-ghost btn-sm" style="margin-bottom:18px;">&larr; Back to LT Analysis</a>
+
+        <div class="kpi-grid">
+          <div class="kpi-card"><div class="kpi-card__label">Token Date</div><div class="kpi-card__value" style="font-size:18px;"><%= lt.tokenDate %></div></div>
+          <div class="kpi-card"><div class="kpi-card__label">Date of Assessment</div><div class="kpi-card__value" style="font-size:18px;"><%= lt.dateOfAssessment %></div></div>
+          <div class="kpi-card is-success"><div class="kpi-card__label">Overall Average</div><div class="kpi-card__value" style="font-size:18px;"><%= lt.overallAverage %></div></div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card chart-card">
+            <div class="card__title" style="margin-bottom:14px;">Score Distribution</div>
+            <div class="chart-row">
+              <div class="chart-box" style="max-width:320px; height:220px;">
+                <div id="ltDistChart" style="height:100%; width:100%;"></div>
+              </div>
+              <div class="legend-list">
+                <div class="legend-item"><span class="legend-dot" style="background:#2F8F5B"></span>Excellent — <%= lt.distribution.excellent %> students</div>
+                <div class="legend-item"><span class="legend-dot" style="background:#3D6FE0"></span>Better — <%= lt.distribution.better %> students</div>
+                <div class="legend-item"><span class="legend-dot" style="background:#D99A2B"></span>Good — <%= lt.distribution.good %> students</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card__title" style="margin-bottom:14px;">Weak Topic List (class average score band)</div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Sr No</th><th>Topic</th><th>Class Average</th></tr></thead>
+                <tbody>
+                  <% lt.weakTopicList.forEach(function(w){ %>
+                    <tr><td class="num"><%= w.srNo %></td><td><%= w.topicName %></td><td><span class="chip chip-warning"><%= w.classAverage %></span></td></tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="tabs" data-tab-group="ltScoreTabs">
+          <button class="tab-btn is-active" data-tab-target="excellent-list">Excellent (<%= lt.excellentList.length %>)</button>
+          <button class="tab-btn" data-tab-target="better-list">Better (<%= lt.betterList.length %>)</button>
+          <button class="tab-btn" data-tab-target="good-list">Good (<%= lt.goodList.length %>)</button>
+        </div>
+        <% [['excellent-list', lt.excellentList], ['better-list', lt.betterList], ['good-list', lt.goodList]].forEach(function(pair, idx){ %>
+          <div class="tab-panel <%= idx===0?'is-active':'' %>" data-tab-panel="<%= pair[0] %>" data-tab-family="ltScoreTabs">
+            <div class="card">
+              <div class="table-wrap">
+                <table><thead><tr><th>Roll No</th><th>Name</th></tr></thead>
+                  <tbody>
+                    <% pair[1].forEach(function(s){ %>
+                      <tr><td class="num"><%= s.rollNo %></td><td><%= s.name %></td></tr>
+                    <% }) %>
+                    <% if (pair[1].length===0) { %><tr><td colspan="2" style="text-align:center; color:var(--slate); padding:18px;">No students in this band.</td></tr><% } %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+
+        <div class="grid-list-2">
+          <div class="card">
+            <div class="card__title" style="margin-bottom:14px;">List of Students Whose Score Increased</div>
+            <ul>
+              <% lt.scoreIncreaseList.forEach(function(s){ %>
+                <li class="flex items-center gap-8" style="padding:8px 0; border-bottom:1px solid var(--line-soft); font-size:13.4px;">
+                  <span class="chip chip-success num"><%= s.rollNo %></span><%= s.name %>
+                </li>
+              <% }) %>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="card__title" style="margin-bottom:14px;">List of Students Whose Score Decreased</div>
+            <ul>
+              <% lt.scoreDecreaseList.forEach(function(s){ %>
+                <li class="flex items-center gap-8" style="padding:8px 0; border-bottom:1px solid var(--line-soft); font-size:13.4px;">
+                  <span class="chip chip-danger num"><%= s.rollNo %></span><%= s.name %>
+                </li>
+              <% }) %>
+            </ul>
+          </div>
+        </div>
+
+        <div class="grid-list-2">
+          <!-- Consistent Good Performer -->
+          <div class="card">
+            <div class="card__title" style="margin-bottom:14px;">Consistent Good Performer List</div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Roll No</th>
+                    <th>Name</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% lt.consistentGoodList.forEach(function(s){ %>
+                    <tr>
+                      <td class="num"><%= s.rollNo %></td>
+                      <td style="font-weight: 600;"><%= s.name %></td>
+                      <td>
+                        <button class="btn btn-ghost btn-sm btn-view-score" 
+                          data-name="<%= s.name %>"
+                          data-excellent="<%= s.excellentCount %>" 
+                          data-better="<%= s.betterCount %>" 
+                          data-good="<%= s.goodCount %>">
+                          View Score
+                        </button>
+                      </td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Consistent Poor Performer -->
+          <div class="card">
+            <div class="card__title" style="margin-bottom:14px;">Consistent Poor Performer List</div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Roll No</th>
+                    <th>Name</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% lt.consistentPoorList.forEach(function(s){ %>
+                    <tr>
+                      <td class="num"><%= s.rollNo %></td>
+                      <td style="font-weight: 600;"><%= s.name %></td>
+                      <td>
+                        <button class="btn btn-ghost btn-sm btn-view-score" 
+                          data-name="<%= s.name %>"
+                          data-excellent="<%= s.excellentCount %>" 
+                          data-better="<%= s.betterCount %>" 
+                          data-good="<%= s.goodCount %>">
+                          View Score
+                        </button>
+                      </td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Inline View Score Display Block (toggled dynamically by JS) -->
+        <div id="viewScoreDisplayBlock" class="card" style="display: none; margin-top: 18px; background: var(--indigo-softer); border-color: var(--indigo-soft);">
+          <div class="card__head" style="margin-bottom: 8px;">
+            <div class="card__title" id="scoreDisplayName">Student Performance Summary</div>
+          </div>
+          <div class="grid-3" style="margin-top: 10px;">
+            <div style="background: #fff; padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--line); text-align: center;">
+              <div class="text-slate" style="font-size: 11.5px; font-weight: 700;">No of Excellent</div>
+              <div class="num text-success" id="scoreDisplayExcellent" style="font-size: 24px; font-weight: 700; margin-top: 4px;">0</div>
+            </div>
+            <div style="background: #fff; padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--line); text-align: center;">
+              <div class="text-slate" style="font-size: 11.5px; font-weight: 700;">No of Better</div>
+              <div class="num text-success" id="scoreDisplayBetter" style="font-size: 24px; font-weight: 700; margin-top: 4px;">0</div>
+            </div>
+            <div style="background: #fff; padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--line); text-align: center;">
+              <div class="text-slate" style="font-size: 11.5px; font-weight: 700;">No of Good</div>
+              <div class="num text-warning" id="scoreDisplayGood" style="font-size: 24px; font-weight: 700; margin-top: 4px;">0</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <%- include('../partials/scripts') %>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      const chartContainer = document.getElementById('ltDistChart');
+      if (!chartContainer) return;
+
+      const scoreData = <%- JSON.stringify([lt.distribution.excellent, lt.distribution.better, lt.distribution.good]) %>;
+      const colors = ['#2F8F5B', '#3D6FE0', '#D99A2B'];
+      
+      const numericData = scoreData.map(function(v) { return Number(v) || 0; });
+      const total = numericData.reduce(function (sum, val) { return sum + val; }, 0);
+
+      if (total === 0) {
+        chartContainer.innerHTML = '<div class="empty-state">No score distribution data available.</div>';
+        return;
+      }
+
+      const size = 200;
+      const center = size / 2;
+      const radius = 80;
+      const strokeWidth = 24; // Width of the doughnut ring
+
+      const chart = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      chart.setAttribute('viewBox', '0 0 ' + size + ' ' + size);
+      chart.setAttribute('width', '100%');
+      chart.setAttribute('height', '100%');
+      chart.setAttribute('role', 'img');
+      chart.setAttribute('aria-label', 'Score distribution doughnut chart');
+
+      // Helper function to turn polar coordinates into Cartesian coordinates
+      function polarToCartesian(centerX, centerY, radius, angleInDegrees) {
+        const angleInRadians = (angleInDegrees - 90) * Math.PI / 180.0;
+        return {
+          x: centerX + (radius * Math.cos(angleInRadians)),
+          y: centerY + (radius * Math.sin(angleInRadians))
+        };
+      }
+
+      // Helper function to build the SVG arc path description
+      function describeArc(x, y, radius, startAngle, endAngle) {
+        const start = polarToCartesian(x, y, radius, endAngle);
+        const end = polarToCartesian(x, y, radius, startAngle);
+        const largeArcFlag = endAngle - startAngle <= 180 ? '0' : '1';
+        return [
+          'M', start.x, start.y, 
+          'A', radius, radius, 0, largeArcFlag, 0, end.x, end.y
+        ].join(' ');
+      }
+
+      let currentAngle = 0;
+
+      numericData.forEach(function (value, index) {
+        if (value === 0) return;
+
+        const angleDelta = (value / total) * 360;
+        const startAngle = currentAngle;
+        const endAngle = currentAngle + angleDelta;
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        
+        // Handle special full 360 circle scenario to avoid layout breaks
+        if (angleDelta === 360) {
+          const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          circle.setAttribute('cx', center);
+          circle.setAttribute('cy', center);
+          circle.setAttribute('r', radius);
+          circle.setAttribute('fill', 'none');
+          circle.setAttribute('stroke', colors[index]);
+          circle.setAttribute('stroke-width', strokeWidth);
+          chart.appendChild(circle);
+          return;
+        }
+
+        path.setAttribute('d', describeArc(center, center, radius, startAngle, endAngle));
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', colors[index]);
+        path.setAttribute('stroke-width', strokeWidth);
+        chart.appendChild(path);
+
+        currentAngle = endAngle;
+      });
+
+      // Central Total text
+      const totalText = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      totalText.setAttribute('x', center);
+      totalText.setAttribute('y', center - 2);
+      totalText.setAttribute('text-anchor', 'middle');
+      totalText.setAttribute('font-size', '22');
+      totalText.setAttribute('font-weight', '700');
+      totalText.setAttribute('font-family', 'IBM Plex Mono, monospace');
+      totalText.setAttribute('fill', '#0F172A');
+      totalText.textContent = total;
+      chart.appendChild(totalText);
+
+      const totalLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      totalLabel.setAttribute('x', center);
+      totalLabel.setAttribute('y', center + 14);
+      totalLabel.setAttribute('text-anchor', 'middle');
+      totalLabel.setAttribute('font-size', '10');
+      totalLabel.setAttribute('font-family', 'Manrope, Arial, sans-serif');
+      totalLabel.setAttribute('fill', '#64748B');
+      totalLabel.textContent = 'TOTAL';
+      chart.appendChild(totalLabel);
+
+      chartContainer.innerHTML = '';
+      chartContainer.appendChild(chart);
+
+      // === 3. VIEW SCORE INLINE CARD POPULATOR & TOGGLER ===
+      const viewScoreButtons = document.querySelectorAll('.btn-view-score');
+      const scoreDisplayBlock = document.getElementById('viewScoreDisplayBlock');
+      const scoreDisplayName = document.getElementById('scoreDisplayName');
+      const scoreDisplayExcellent = document.getElementById('scoreDisplayExcellent');
+      const scoreDisplayBetter = document.getElementById('scoreDisplayBetter');
+      const scoreDisplayGood = document.getElementById('scoreDisplayGood');
+
+      viewScoreButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const name = btn.getAttribute('data-name');
+          const excellent = btn.getAttribute('data-excellent') || '0';
+          const better = btn.getAttribute('data-better') || '0';
+          const good = btn.getAttribute('data-good') || '0';
+
+          if (scoreDisplayBlock) {
+            scoreDisplayBlock.style.display = 'block';
+            scoreDisplayName.textContent = `Performance Summary of ${name}`;
+            scoreDisplayExcellent.textContent = excellent;
+            scoreDisplayBetter.textContent = better;
+            scoreDisplayGood.textContent = good;
+            scoreDisplayBlock.scrollIntoView({ behavior: 'smooth' });
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>

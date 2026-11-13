@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#123B5D" />
+    <title>Offline — G.G. Zadafiya Vidhyalaya Portal</title>
+    <style>
+      :root {
+        --navy: #123B5D;
+        --navy-dark: #0B253B;
+        --bg: #F6F7FB;
+        --card: #FFFFFF;
+        --ink: #0F172A;
+        --slate: #475569;
+        --border: #E2E8F0;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      }
+      .offline-card {
+        width: 100%;
+        max-width: 440px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-top: 4px solid var(--navy);
+        border-radius: 16px;
+        padding: 28px 24px;
+        box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+        text-align: center;
+      }
+      .offline-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 12px;
+        border-radius: 999px;
+        background: #FBF2E1;
+        border: 1px solid #F3D9A4;
+        color: #9A6700;
+        font-size: 12px;
+        font-weight: 700;
+        margin-bottom: 16px;
+      }
+      .offline-logo {
+        width: 56px;
+        height: 56px;
+        margin: 0 auto 14px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, var(--navy), var(--navy-dark));
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 18px;
+        letter-spacing: 0.5px;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 20px;
+        color: var(--ink);
+      }
+      p {
+        margin: 0 0 22px;
+        font-size: 14px;
+        line-height: 1.55;
+        color: var(--slate);
+      }
+      .btn-retry {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        width: 100%;
+        padding: 11px 18px;
+        border: none;
+        border-radius: 10px;
+        background: var(--navy);
+        color: #fff;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .btn-retry:hover {
+        background: var(--navy-dark);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="offline-card">
+      <div class="offline-logo">GGZ</div>
+      <div class="offline-badge">No Internet Connection</div>
+      <h1>You are currently offline</h1>
+      <p>
+        G.G. Zadafiya Vidhyalaya Academic Portal requires a connection to sync live school data.
+        Please check your Wi-Fi or mobile data and try again.
+      </p>
+      <button class="btn-retry" type="button" onclick="window.location.reload()">
+        Retry Connection
+      </button>
+    </div>
+  </body>
+</html>
+

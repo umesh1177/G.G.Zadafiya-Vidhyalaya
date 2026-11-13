@@ -1,0 +1,84 @@
+{
+  "id": "/",
+  "name": "G.G. Zadafiya Vidhyalaya — Academic Portal",
+  "short_name": "GGZV Portal",
+  "description": "G.G. Zadafiya Vidhyalaya Science Stream Combined Academic, Syllabus, Exam & Lecture Test Dashboard",
+  "lang": "en",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#F6F7FB",
+  "theme_color": "#123B5D",
+  "prefer_related_applications": false,
+  "categories": ["education", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Portal Login",
+      "short_name": "Login",
+      "description": "Sign in to Principal, Faculty, Assistant, or Student portal",
+      "url": "/login",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Principal Dashboard",
+      "short_name": "Principal",
+      "description": "Open Principal LT, Exam, and Syllabus Analytics",
+      "url": "/principal",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Faculty Dashboard",
+      "short_name": "Faculty",
+      "description": "Open Subject Faculty LT, Exam Unit, and Syllabus",
+      "url": "/faculty",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}

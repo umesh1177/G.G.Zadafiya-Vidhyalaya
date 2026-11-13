@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head', { title: 'LT' }) %>
+</head>
+<body>
+  <div class="app">
+    <%- include('../partials/sidebar', { active: 'lt', data: data }) %>
+
+    <div class="main">
+      <%- include('../partials/topbar', {
+        title: 'LT',
+        subtitle: 'Daily Lecture Test — set timer, view today\'s LTs, review history, enter pending marks',
+        data: data
+      }) %>
+
+      <div class="content">
+
+        <div class="tabs" data-tab-group="ltTabs">
+          <button class="tab-btn is-active" data-tab-target="today">Today</button>
+          <button class="tab-btn" data-tab-target="lt-history">LT History</button>
+          <button class="tab-btn" data-tab-target="pending-lt">Pending LT (<%= data.lt.pending.length %>)</button>
+        </div>
+
+        <!-- ============================================================ TODAY TAB -->
+        <div class="tab-panel is-active" data-tab-panel="today" data-tab-family="ltTabs">
+
+          <!-- Top bar: date info + Set LT Timer button -->
+          <div class="lt-today-bar">
+            <div>
+              <div class="card__title" style="margin-bottom:2px;">Today's Lecture Tests</div>
+              <div class="card__desc">
+                <span class="num"><%= data.lt.todayLTs[0].date %></span>
+                &nbsp;·&nbsp; <%= data.lt.todayLTs.length %> subjects
+              </div>
+            </div>
+            <button class="btn btn-primary" id="openTimerBtn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round"
+                style="width:15px;height:15px;vertical-align:-2px;margin-right:6px;">
+                <circle cx="12" cy="12" r="10"/>
+                <polyline points="12 6 12 12 16 14"/>
+              </svg>
+              Set LT Timer
+            </button>
+          </div>
+
+          <!-- Today's LT table -->
+          <div class="card">
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Subject</th>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Topic</th>
+                    <th>Duration</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% data.lt.todayLTs.forEach(function(lt){ %>
+                    <tr>
+                      <td class="num"><%= lt.id %></td>
+                      <td><strong><%= lt.subject %></strong></td>
+                      <td class="num"><%= lt.date %></td>
+                      <td><span class="chip chip-neutral"><%= lt.type %></span></td>
+                      <td><%= lt.topic %></td>
+                      <td class="num"><%= lt.defaultMinutes %> min</td>
+                      <td>
+                        <button class="btn btn-ghost btn-sm"
+                          data-modal-open="ltDetailModal-<%= lt.id %>">
+                          View Full LT
+                        </button>
+                      </td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div><!-- /today tab -->
+
+        <!-- ============================================================ LT HISTORY TAB -->
+        <div class="tab-panel" data-tab-panel="lt-history" data-tab-family="ltTabs">
+          <div class="card">
+            <div class="card__title" style="margin-bottom:14px;">LT History</div>
+            <div class="filters">
+              <select class="filter-select"><option>Date</option></select>
+              <select class="filter-select">
+                <option>Subject</option>
+                <option>Physics</option><option>Chemistry</option>
+                <option>Maths</option><option>Biology</option>
+              </select>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>LT No</th><th>Subject</th><th>Date</th><th>Action</th></tr></thead>
+                <tbody>
+                  <% data.lt.history.forEach(function(h){ %>
+                    <tr>
+                      <td class="num"><%= h.ltNo %></td>
+                      <td><%= h.subject %></td>
+                      <td class="num"><%= h.date %></td>
+                      <td>
+                        <a href="/assistant/lt/history/<%= h.ltNo %>" class="btn btn-ghost btn-sm">View Details</a>
+                      </td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ============================================================ PENDING LT TAB -->
+        <div class="tab-panel" data-tab-panel="pending-lt" data-tab-family="ltTabs">
+          <div class="card">
+            <div class="card__title" style="margin-bottom:14px;">Pending LT</div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>LT No</th><th>Date</th><th>Standard</th><th>Action</th></tr></thead>
+                <tbody>
+                  <% data.lt.pending.forEach(function(p){ %>
+                    <tr>
+                      <td class="num"><%= p.ltNo %></td>
+                      <td class="num"><%= p.date %></td>
+                      <td class="num"><%= p.standard %></td>
+                      <td>
+                        <a href="/assistant/lt/enter-marks/<%= p.ltNo %>" target="_blank" class="btn btn-primary btn-sm">
+                          Enter Marks
+                        </a>
+                      </td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /content -->
+    </div><!-- /main -->
+  </div><!-- /app -->
+
+  <!-- ============================================================ View Full LT modals (detail only, no timer) -->
+  <% data.lt.todayLTs.forEach(function(lt){ %>
+    <div class="modal-overlay" id="ltDetailModal-<%= lt.id %>" data-modal>
+      <div class="modal-box">
+        <div class="modal-box__head">
+          <div>
+            <div class="card__title">LT — <%= lt.subject %></div>
+            <div class="card__desc"><%= lt.type %> &nbsp;·&nbsp; <span class="num"><%= lt.date %></span></div>
+          </div>
+          <button class="modal-close" data-modal-close>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 6l12 12M18 6 6 18"/>
+            </svg>
+          </button>
+        </div>
+        <div class="detail-panel">
+          <div class="detail-panel__row"><span>Subject</span><strong><%= lt.subject %></strong></div>
+          <div class="detail-panel__row"><span>Date</span><span class="num"><%= lt.date %></span></div>
+          <div class="detail-panel__row"><span>Type</span><span><%= lt.type %></span></div>
+          <div class="detail-panel__row"><span>Topic</span><span><%= lt.topic %></span></div>
+          <div class="detail-panel__row"><span>Duration</span><span class="num"><%= lt.defaultMinutes %> min</span></div>
+        </div>
+      </div>
+    </div>
+  <% }) %>
+
+  <!-- ============================================================ TIMER-ONLY FULLSCREEN -->
+  <div class="lt-fullscreen-overlay" id="ltFullscreen">
+
+    <button class="lt-fullscreen-close" id="closeFullscreenBtn" aria-label="Close">✕</button>
+
+    <div class="lt-fullscreen-content">
+
+      <div class="lt-fullscreen-topic" style="font-size:22px; color:rgba(255,255,255,0.45); font-weight:600; margin-bottom:28px;">
+        LT Timer
+      </div>
+
+      <!-- Giant timer -->
+      <div class="lt-fullscreen-timer" id="fsTimerDisplay">15:00</div>
+
+      <!-- State label -->
+      <div class="lt-fullscreen-state" id="fsTimerState">Not started</div>
+
+      <!-- Min / Sec adjustment row (hidden while running) -->
+      <div class="fs-adj-row" id="fsTimeAdjRow">
+        <div class="fs-adj-group">
+          <button class="fs-adj-btn" id="fsMinMinus">−</button>
+          <div class="fs-adj-value-wrap">
+            <span class="fs-adj-value" id="fsMinLabel">15</span>
+            <span class="fs-adj-unit">MIN</span>
+          </div>
+          <button class="fs-adj-btn" id="fsMinPlus">+</button>
+        </div>
+        <div class="fs-adj-sep">:</div>
+        <div class="fs-adj-group">
+          <button class="fs-adj-btn" id="fsSecMinus">−</button>
+          <div class="fs-adj-value-wrap">
+            <span class="fs-adj-value" id="fsSecLabel">00</span>
+            <span class="fs-adj-unit">SEC</span>
+          </div>
+          <button class="fs-adj-btn" id="fsSecPlus">+</button>
+        </div>
+      </div>
+
+      <!-- Start / Pause button -->
+      <div class="lt-fullscreen-actions">
+        <button class="lt-fullscreen-btn" id="fsStartTimerBtn">Start LT Timer</button>
+      </div>
+
+    </div>
+  </div><!-- /fullscreen -->
+
+  <%- include('../partials/scripts') %>
+  <script>
+  (function () {
+
+    /* ===== Single shared timer state ===== */
+    var minutes    = 15;
+    var seconds    = 0;
+    var running    = false;
+    var intervalId = null;
+
+    /* ===== Element refs ===== */
+    var fsOverlay      = document.getElementById('ltFullscreen');
+    var fsTimerDisplay = document.getElementById('fsTimerDisplay');
+    var fsTimerState   = document.getElementById('fsTimerState');
+    var fsStartBtn     = document.getElementById('fsStartTimerBtn');
+    var fsTimeAdjRow   = document.getElementById('fsTimeAdjRow');
+    var fsMinLabel     = document.getElementById('fsMinLabel');
+    var fsSecLabel     = document.getElementById('fsSecLabel');
+    var openTimerBtn   = document.getElementById('openTimerBtn');
+    var closeBtn       = document.getElementById('closeFullscreenBtn');
+
+    /* ===== Render timer display ===== */
+    function render() {
+      var m  = String(minutes).padStart(2, '0');
+      var s  = String(seconds).padStart(2, '0');
+      var ts = m + ':' + s;
+      fsTimerDisplay.textContent = ts;
+      if (fsMinLabel) fsMinLabel.textContent = m;
+      if (fsSecLabel) fsSecLabel.textContent = s;
+      /* Colour: yellow when ≤ 30 s, red when done */
+      var low = minutes === 0 && seconds <= 30;
+      fsTimerDisplay.className = 'lt-fullscreen-timer' + (low && running ? ' is-warning' : '');
+    }
+
+    function setState(text, cls) {
+      fsTimerState.textContent = text;
+      fsTimerState.className   = 'lt-fullscreen-state' + (cls ? ' ' + cls : '');
+    }
+
+    /* ===== Timer tick ===== */
+    function tick() {
+      if (seconds === 0) {
+        if (minutes === 0) { finish(); return; }
+        minutes--; seconds = 59;
+      } else {
+        seconds--;
+      }
+      render();
+    }
+
+    /* ===== Time's up ===== */
+    function finish() {
+      clearInterval(intervalId);
+      intervalId = null;
+      running    = false;
+      fsTimerDisplay.className   = 'lt-fullscreen-timer is-done';
+      setState("Time's up!", 'is-done');
+      fsStartBtn.textContent     = 'Start LT Timer';
+      fsTimeAdjRow.style.display = 'flex';
+    }
+
+    /* ===== Open timer fullscreen ===== */
+    openTimerBtn.addEventListener('click', function () {
+      fsOverlay.classList.add('is-open');
+    });
+
+    /* ===== Close — does NOT stop timer ===== */
+    closeBtn.addEventListener('click', function () {
+      fsOverlay.classList.remove('is-open');
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') fsOverlay.classList.remove('is-open');
+    });
+
+    /* ===== Start / Pause toggle ===== */
+    fsStartBtn.addEventListener('click', function () {
+      if (running) {
+        /* PAUSE */
+        clearInterval(intervalId);
+        intervalId = null;
+        running    = false;
+        setState('Paused', '');
+        fsStartBtn.textContent     = 'Resume LT Timer';
+        fsTimeAdjRow.style.display = 'flex';
+      } else {
+        /* START / RESUME */
+        running    = true;
+        intervalId = setInterval(tick, 1000);
+        setState('Running…', 'is-running');
+        fsStartBtn.textContent     = 'Pause LT Timer';
+        fsTimeAdjRow.style.display = 'none';
+      }
+    });
+
+    /* ===== Minutes adjustment ===== */
+    document.getElementById('fsMinPlus').addEventListener('click', function () {
+      if (running) return;
+      minutes = Math.min(59, minutes + 1);
+      render();
+    });
+    document.getElementById('fsMinMinus').addEventListener('click', function () {
+      if (running) return;
+      minutes = Math.max(0, minutes - 1);
+      render();
+    });
+
+    /* ===== Seconds adjustment (+5 / −5 steps) ===== */
+    document.getElementById('fsSecPlus').addEventListener('click', function () {
+      if (running) return;
+      seconds = (seconds + 5 >= 60) ? 55 : seconds + 5;
+      render();
+    });
+    document.getElementById('fsSecMinus').addEventListener('click', function () {
+      if (running) return;
+      seconds = Math.max(0, seconds - 5);
+      render();
+    });
+
+    /* ===== Initial render ===== */
+    render();
+
+  })();
+  </script>
+</body>
+</html>
+

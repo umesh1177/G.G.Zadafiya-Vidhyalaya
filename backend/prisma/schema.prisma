@@ -1,0 +1,672 @@
+// =========================================================================
+// PRISMA SCHEMA FOR 11-12TH SCIENCE STREAM SCHOOL MANAGEMENT SYSTEM (SMS)
+// Database: PostgreSQL
+// Roles: Student, Assistant Faculty, Subject Faculty, Principal
+// Streams: Group A (PCM - Physics, Chemistry, Maths), Group B (PCB - Physics, Chemistry, Biology)
+// Exams: Board, JEE, NEET, GUJCET, Weekly, Monthly, Annual
+// =========================================================================
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// =========================================================================
+// ENUMS
+// =========================================================================
+
+enum Role {
+  STUDENT
+  ASSISTANT_FACULTY
+  SUBJECT_FACULTY
+  PRINCIPAL
+}
+
+enum Standard {
+  STD_11
+  STD_12
+}
+
+enum Division {
+  A
+  B
+}
+
+enum StreamGroup {
+  GROUP_A   // PCM: Physics, Chemistry, Maths
+  GROUP_B   // PCB: Physics, Chemistry, Biology
+  GROUP_AB  // PCMB: Physics, Chemistry, Maths, Biology
+}
+
+enum SubjectCode {
+  PHYSICS
+  CHEMISTRY
+  MATHEMATICS
+  BIOLOGY
+  ENGLISH
+  COMPUTER
+}
+
+enum ExamType {
+  BOARD
+  JEE
+  NEET
+  GUJCET
+  WEEKLY
+  MONTHLY
+  ANNUAL
+  UNIT
+}
+
+enum ExamStatus {
+  UPCOMING
+  AWAITING_MARKS
+  EVALUATED
+  PUBLISHED
+  CANCELLED
+}
+
+enum LtGrade {
+  EXCELLENT
+  BETTER
+  GOOD
+  AB
+}
+
+enum LtStatus {
+  PENDING_EVALUATION
+  EVALUATED
+  CANCELLED
+}
+
+enum StudentStatus {
+  ACTIVE
+  ALUMNI
+  INACTIVE
+}
+
+enum DisciplineType {
+  COME_LATE
+  LONG_HAIR
+  LONG_NAIL
+  UNIFORM_ISSUE
+  OTHER
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+enum AttendanceSession {
+  MORNING
+  AFTERNOON
+}
+
+enum PublishStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ReportPeriodType {
+  WEEKLY
+  MONTHLY
+  ANNUAL
+}
+
+// =========================================================================
+// 1. AUTHENTICATION & CORE USERS
+// =========================================================================
+
+model User {
+  id            String    @id @default(cuid())
+  username      String    @unique
+  passwordHash  String
+  email         String    @unique
+  contactNo     String?
+  role          Role
+  isActive      Boolean   @default(true)
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  studentProfile   Student?
+  facultyProfile   Faculty?
+  principalProfile Principal?
+
+  @@index([role, isActive])
+  @@map("users")
+}
+
+// =========================================================================
+// 2. PRINCIPAL PROFILE
+// =========================================================================
+
+model Principal {
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name           String
+  email          String    @unique
+  contactNo      String?
+  schoolName     String    @default("Shree Vidya Vihar Science School")
+  qualification  String?
+  joiningDate    DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  createdNotices Notice[]
+
+  @@map("principals")
+}
+
+// =========================================================================
+// 3. FACULTY PROFILE (Subject Faculty & Assistant Faculty)
+// =========================================================================
+
+model Faculty {
+  id               String       @id @default(cuid())
+  userId           String       @unique
+  user             User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name             String
+  email            String       @unique
+  contactNo        String
+  role             Role
+  primarySubject   SubjectCode?
+  joiningDate      DateTime     @default(now())
+  resignationDate  DateTime?
+  isActive         Boolean      @default(true)
+  photoUrl         String?
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  allocations             FacultySubjectAllocation[]
+  syllabusCompletions     SyllabusCompletion[]
+  createdLTs              LectureTest[]        @relation("LtCreator")
+  assignedAssistantLTs    LectureTest[]        @relation("LtAssistant")
+  evaluatedLtMarks        LtMarkEntry[]        @relation("LtEvaluator")
+  createdExams            Exam[]               @relation("ExamCreator")
+  conductedExams          Exam[]               @relation("ExamConductor")
+  enteredExamMarks        ExamMarkEntry[]      @relation("ExamMarkRecorder")
+  generatedResultBatches  ResultBatch[]        @relation("ResultGenerator")
+  generatedHallTicketBatches HallTicketBatch[] @relation("HallTicketGenerator")
+  notedDisciplineRemarks  DisciplineRemark[]   @relation("DisciplineNoter")
+
+  @@index([role, isActive])
+  @@map("faculties")
+}
+
+// =========================================================================
+// 4. STUDENT PROFILE (Active Students & Alumni)
+// =========================================================================
+
+model Student {
+  id              String         @id @default(cuid())
+  userId          String         @unique
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rollNo          Int
+  firstName       String
+  middleName      String?
+  lastName        String
+  fullName        String
+  standard        Standard       // STD_11 or STD_12
+  division        Division       // A or B
+  streamGroup     StreamGroup    // GROUP_A (PCM), GROUP_B (PCB), GROUP_AB (PCMB)
+  admissionDate   DateTime       @default(now())
+  contactNo       String
+  email           String?
+  avatarUrl       String?
+  schoolName      String         @default("Shree Vidya Vihar Science School")
+  status          StudentStatus  @default(ACTIVE)
+
+  // Alumni Specific Fields (from EJS Alumni form)
+  graduationYear  Int?
+  currentPursuit  String?        // e.g. "B.Tech Engineering", "MBBS", "Pharmacy"
+  endingDate      DateTime?
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  ltMarks         LtMarkEntry[]
+  examMarks       ExamMarkEntry[]
+  attendances     StudentAttendance[]
+  disciplineNotes DisciplineRemark[]
+  resultItems     ResultItem[]
+  hallTickets     HallTicket[]
+  progressReports ProgressReport[]
+
+  @@unique([standard, division, rollNo])
+  @@index([standard, division, streamGroup, status])
+  @@map("students")
+}
+
+// =========================================================================
+// 5. SUBJECTS, CHAPTERS, TOPICS & SYLLABUS
+// =========================================================================
+
+model Subject {
+  id              String                     @id @default(cuid())
+  code            SubjectCode                @unique
+  name            String
+  isCoreScience   Boolean                    @default(true)
+  applicableGroup StreamGroup?
+
+  chapters        Chapter[]
+  allocations     FacultySubjectAllocation[]
+  lectureTests    LectureTest[]
+
+  @@map("subjects")
+}
+
+model Chapter {
+  id          String              @id @default(cuid())
+  subjectId   String
+  subject     Subject             @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  standard    Standard
+  chapterNo   Int
+  chapterName String
+  description String?
+
+  topics      Topic[]
+  examUnits   ExamUnitCoverage[]
+
+  @@unique([subjectId, standard, chapterNo])
+  @@index([standard, subjectId])
+  @@map("chapters")
+}
+
+model Topic {
+  id             String               @id @default(cuid())
+  chapterId      String
+  chapter        Chapter              @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  topicNo        String
+  name           String
+  estimatedHours Float?
+
+  subtopics      Subtopic[]
+  completions    SyllabusCompletion[]
+  ltCoverages    LtTopicCoverage[]
+
+  @@unique([chapterId, topicNo])
+  @@map("topics")
+}
+
+model Subtopic {
+  id             String    @id @default(cuid())
+  topicId        String
+  topic          Topic     @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  name           String
+  sampleQuestion String?
+  marks          Float?
+
+  @@map("subtopics")
+}
+
+model SyllabusCompletion {
+  id            String    @id @default(cuid())
+  topicId       String
+  topic         Topic     @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  facultyId     String
+  faculty       Faculty   @relation(fields: [facultyId], references: [id])
+  standard      Standard
+  division      Division
+  completedDate DateTime  @default(now())
+  isFinished    Boolean   @default(true)
+  notes         String?
+  createdAt     DateTime  @default(now())
+
+  @@unique([topicId, standard, division])
+  @@index([standard, division, completedDate])
+  @@map("syllabus_completions")
+}
+
+model FacultySubjectAllocation {
+  id           String      @id @default(cuid())
+  facultyId    String
+  faculty      Faculty     @relation(fields: [facultyId], references: [id], onDelete: Cascade)
+  subjectId    String
+  subject      Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  standard     Standard
+  division     Division
+  academicYear String
+
+  @@unique([facultyId, subjectId, standard, division, academicYear])
+  @@map("faculty_subject_allocations")
+}
+
+// =========================================================================
+// 6. LT (LECTURE TEST) MODULE
+// =========================================================================
+
+model LectureTest {
+  id                  String             @id @default(cuid())
+  ltNo                Int
+  date                DateTime
+  standard            Standard
+  division            Division?
+  streamGroup         StreamGroup?
+  subjectId           String
+  subject             Subject            @relation(fields: [subjectId], references: [id])
+  timeMinutes         Int                @default(15)
+  totalMarks          Float              @default(20)
+  status              LtStatus           @default(PENDING_EVALUATION)
+  
+  createdById         String
+  createdBy           Faculty            @relation("LtCreator", fields: [createdById], references: [id])
+  assignedAssistantId String?
+  assignedAssistant   Faculty?           @relation("LtAssistant", fields: [assignedAssistantId], references: [id])
+  
+  questionDetails     String?
+  solutionFileUrl     String?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  topicsCovered       LtTopicCoverage[]
+  studentMarks        LtMarkEntry[]
+
+  @@index([standard, date, subjectId, status])
+  @@map("lecture_tests")
+}
+
+model LtTopicCoverage {
+  id      String      @id @default(cuid())
+  ltId    String
+  lt      LectureTest @relation(fields: [ltId], references: [id], onDelete: Cascade)
+  topicId String
+  topic   Topic       @relation(fields: [topicId], references: [id], onDelete: Cascade)
+
+  @@unique([ltId, topicId])
+  @@map("lt_topic_coverages")
+}
+
+model LtMarkEntry {
+  id             String       @id @default(cuid())
+  ltId           String
+  lt             LectureTest  @relation(fields: [ltId], references: [id], onDelete: Cascade)
+  studentId      String
+  student        Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  
+  scoreGrade     LtGrade      @default(GOOD)
+  numericScore   Float?
+  isAbsent       Boolean      @default(false)
+  
+  evaluatedById  String
+  evaluatedBy    Faculty      @relation("LtEvaluator", fields: [evaluatedById], references: [id])
+  evaluatedAt    DateTime     @default(now())
+  remarks        String?
+  isWeakTopic    Boolean      @default(false)
+
+  @@unique([ltId, studentId])
+  @@index([studentId, isWeakTopic])
+  @@index([evaluatedById, evaluatedAt])
+  @@map("lt_mark_entries")
+}
+
+// =========================================================================
+// 7. EXAM MODULE
+// =========================================================================
+
+model Exam {
+  id                  String             @id @default(cuid())
+  examNo              Int                @unique
+  title               String
+  examType            ExamType
+  standard            Standard
+  division            Division?
+  applicableGroup     StreamGroup?
+  subject             String
+  date                DateTime
+  startTime           DateTime?
+  endTime             DateTime?
+  totalMarks          Float
+  passingMarks        Float?
+  unitCoverageSummary String
+  questionPaperUrl    String?
+  status              ExamStatus         @default(UPCOMING)
+
+  createdById         String
+  createdBy           Faculty            @relation("ExamCreator", fields: [createdById], references: [id])
+  conductedById       String?
+  conductedBy         Faculty?           @relation("ExamConductor", fields: [conductedById], references: [id])
+
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  coveredUnits        ExamUnitCoverage[]
+  studentMarks        ExamMarkEntry[]
+
+  @@index([standard, date, examType, status])
+  @@map("exams")
+}
+
+model ExamUnitCoverage {
+  id             String    @id @default(cuid())
+  examId         String
+  exam           Exam      @relation(fields: [examId], references: [id], onDelete: Cascade)
+  chapterId      String
+  chapter        Chapter   @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  tillTopicId    String?
+  isFullChapter  Boolean   @default(false)
+  unitLabel      String
+
+  @@map("exam_unit_coverages")
+}
+
+model ExamMarkEntry {
+  id                 String       @id @default(cuid())
+  examId             String
+  exam               Exam         @relation(fields: [examId], references: [id], onDelete: Cascade)
+  studentId          String
+  student            Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  singleSubjectScore Float?
+  physicsScore       Float?
+  chemistryScore     Float?
+  mathsScore         Float?
+  biologyScore       Float?
+
+  totalScore         Float        @default(0)
+  percentage         Float?
+  rank               Int?
+  percentile         Float?
+  isAbsent           Boolean      @default(false)
+
+  enteredById        String
+  enteredBy          Faculty      @relation("ExamMarkRecorder", fields: [enteredById], references: [id])
+  enteredAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  @@unique([examId, studentId])
+  @@index([examId, totalScore])
+  @@index([studentId, examId])
+  @@map("exam_mark_entries")
+}
+
+// =========================================================================
+// 8. RESULT GENERATION MODULE
+// =========================================================================
+
+model ResultBatch {
+  id               String           @id @default(cuid())
+  batchNo          Int              @default(autoincrement())
+  standard         Standard
+  division         Division?
+  streamGroup      StreamGroup?
+  resultType       ReportPeriodType
+  date             DateTime
+  academicPeriod   String
+  status           PublishStatus    @default(DRAFT)
+  publishedAt      DateTime?
+  
+  generatedById    String
+  generatedBy      Faculty          @relation("ResultGenerator", fields: [generatedById], references: [id])
+  includedSubjects Json
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  studentResults   ResultItem[]
+
+  @@index([standard, resultType, date])
+  @@map("result_batches")
+}
+
+model ResultItem {
+  id                 String        @id @default(cuid())
+  resultBatchId      String
+  resultBatch        ResultBatch   @relation(fields: [resultBatchId], references: [id], onDelete: Cascade)
+  studentId          String
+  student            Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  totalMarksObtained Float
+  maxMarks           Float
+  percentage         Float
+  classRank          Int
+  overallPercentile  Float
+  subjectBreakdown   Json
+  status             PublishStatus @default(DRAFT)
+  createdAt          DateTime      @default(now())
+
+  @@unique([resultBatchId, studentId])
+  @@index([studentId, resultBatchId])
+  @@map("result_items")
+}
+
+// =========================================================================
+// 9. HALL TICKET GENERATION MODULE
+// =========================================================================
+
+model HallTicketBatch {
+  id             String        @id @default(cuid())
+  batchNo        Int           @default(autoincrement())
+  standard       Standard
+  examType       ExamType
+  examDate       DateTime
+  status         PublishStatus @default(DRAFT)
+  
+  generatedById  String
+  generatedBy    Faculty       @relation("HallTicketGenerator", fields: [generatedById], references: [id])
+  scheduleDetails Json
+  formatTemplate String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  tickets        HallTicket[]
+
+  @@index([standard, examType, examDate])
+  @@map("hall_ticket_batches")
+}
+
+model HallTicket {
+  id           String          @id @default(cuid())
+  batchId      String
+  batch        HallTicketBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      Student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  seatNumber   String
+  centerName   String          @default("Shree Vidya Vihar Science School Campus")
+  issuedDate   DateTime        @default(now())
+  status       PublishStatus   @default(DRAFT)
+
+  @@unique([batchId, studentId])
+  @@index([studentId, batchId])
+  @@map("hall_tickets")
+}
+
+// =========================================================================
+// 10. STUDENT PROGRESS REPORTS & ANALYTICS
+// =========================================================================
+
+model ProgressReport {
+  id                 String           @id @default(cuid())
+  studentId          String
+  student            Student          @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  reportType         ReportPeriodType
+  academicPeriod     String
+  
+  averageScore       Float
+  classAverage       Float?
+  examAverage        Float?
+  ltAverage          Float?
+  growthVsLastPeriod Float            @default(0)
+  rank               Int
+  rankChange         String?
+  percentile         Float
+  peerBenchmark      String?
+  consistencyScore   Float?
+  topInSubjects      Json?
+  weakAreas          Json?
+  subjectAverages    Json?
+  trendData          Json?
+  summaryMessage     String
+  
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  @@unique([studentId, reportType, academicPeriod])
+  @@index([studentId, reportType])
+  @@map("progress_reports")
+}
+
+// =========================================================================
+// 11. ATTENDANCE, DISCIPLINE REMARKS & NOTICES
+// =========================================================================
+
+model StudentAttendance {
+  id         String            @id @default(cuid())
+  studentId  String
+  student    Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  date       DateTime
+  session    AttendanceSession @default(MORNING)
+  status     AttendanceStatus  @default(PRESENT)
+  markedById String?
+  createdAt  DateTime          @default(now())
+
+  @@unique([studentId, date, session])
+  @@index([date, status])
+  @@map("student_attendances")
+}
+
+model DisciplineRemark {
+  id           String         @id @default(cuid())
+  studentId    String
+  student      Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  incidentType DisciplineType
+  date         DateTime       @default(now())
+  message      String
+  
+  notedById    String
+  notedBy      Faculty        @relation("DisciplineNoter", fields: [notedById], references: [id])
+  notedByName  String
+  standard     Standard
+  division     Division
+  createdAt    DateTime       @default(now())
+
+  @@index([studentId, date])
+  @@map("discipline_remarks")
+}
+
+model Notice {
+  id             String    @id @default(cuid())
+  srNo           Int       @default(autoincrement())
+  title          String
+  message        String
+  targetRole     Role?
+  targetStandard Standard?
+  date           DateTime  @default(now())
+  
+  createdById    String?
+  createdBy      Principal? @relation(fields: [createdById], references: [id])
+  createdAt      DateTime  @default(now())
+
+  @@index([date, targetRole])
+  @@map("notices")
+}
+

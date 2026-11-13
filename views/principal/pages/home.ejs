@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head', { title: 'Home' }) %>
+</head>
+<body>
+  <div class="app">
+    <%- include('../partials/sidebar', { active: 'home', data: data }) %>
+
+    <div class="main">
+      <%- include('../partials/topbar', { title: 'Good morning, ' + (data && data.principal ? data.principal.name : 'Principal'), subtitle: 'Here\'s how the school is tracking today', data: data }) %>
+
+      <div class="content">
+
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-card__label">Total Students</div>
+            <div class="kpi-card__value num"><%= (data && data.studentStats) ? data.studentStats.total : 0 %></div>
+            <div class="kpi-card__hint">Group A <%= (data && data.studentStats) ? data.studentStats.groupA : 0 %> · B <%= (data && data.studentStats) ? data.studentStats.groupB : 0 %> · AB <%= (data && data.studentStats) ? data.studentStats.groupAB : 0 %></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-card__label">Total Faculty</div>
+            <div class="kpi-card__value num"><%= (data && data.facultyStats) ? data.facultyStats.total : 0 %></div>
+            <div class="kpi-card__hint"><%= (data && data.facultyStats) ? data.facultyStats.subjectFaculty : 0 %> Subject · <%= (data && data.facultyStats) ? data.facultyStats.assistantFaculty : 0 %> Assistant</div>
+          </div>
+          <div class="kpi-card is-warning">
+            <div class="kpi-card__label">Pending Mark Entry</div>
+            <div class="kpi-card__value num"><%= (data && data.examStats) ? data.examStats.pending : 0 %></div>
+            <div class="kpi-card__hint">Exams completed, marks not yet entered</div>
+          </div>
+          <div class="kpi-card is-success">
+            <div class="kpi-card__label">Avg. Syllabus Completion</div>
+            <div class="kpi-card__value num">
+              <%= (data && data.syllabus && data.syllabus.subjects && data.syllabus.subjects.length > 0) ? Math.round(data.syllabus.subjects.reduce((a,s)=>a+s.completion,0)/data.syllabus.subjects.length) : 0 %>%
+            </div>
+            <div class="kpi-card__hint">Across Physics, Chemistry, Maths, Biology</div>
+          </div>
+        </div>
+
+        <% if (data && data.examStats && data.examStats.pending > 0) { %>
+        <div class="banner banner-warning">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px; height:20px;"><path d="M12 9v4M12 16.5h.01"/><path d="M10.3 3.9l-8 13.5A1.6 1.6 0 0 0 3.7 20h16.6a1.6 1.6 0 0 0 1.4-2.4l-8-13.5a1.6 1.6 0 0 0-2.8 0Z"/></svg>
+          <span><%= data.examStats.pending %> exam(s) are marked complete but marks haven't been entered yet by faculty/assistant — review in Exam Analysis.</span>
+        </div>
+        <% } %>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card__head">
+              <div>
+                <div class="card__title">This Week's Exam Performance</div>
+                <div class="card__desc">Class average across all subjects tested this week</div>
+              </div>
+              <a href="/principal/exam-analysis" class="btn btn-ghost btn-sm">View full analysis</a>
+            </div>
+            <div class="chart-row">
+              <div class="chart-box"><canvas id="homeExamChart" height="170"></canvas></div>
+              <div class="legend-list" style="margin-top: 10px;">
+                <% if (data && data.exams) { %>
+                  <% data.exams.filter(e=>e.status==='completed').slice(0,5).forEach(function(e){ %>
+                    <div class="legend-item" style="display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 4px;">
+                      <span class="legend-dot" style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#3B4FE0;"></span>
+                      <%= e.subject %> — <strong class="num"><%= e.classAverage %>%</strong>
+                    </div>
+                  <% }) %>
+                <% } %>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card__head">
+              <div>
+                <div class="card__title">Syllabus Progress</div>
+                <div class="card__desc">% completed by subject</div>
+              </div>
+              <a href="/principal/syllabus-tracking" class="btn btn-ghost btn-sm">Open</a>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 8px;">
+              <% if (data && data.syllabus && data.syllabus.subjects) { %>
+                <% data.syllabus.subjects.forEach(function(s){ %>
+                  <div class="progress-row">
+                    <div class="progress-row__label" style="font-size: 13.4px; font-weight: 600; margin-bottom: 2px;"><%= s.name %></div>
+                    <div class="progress-track" style="background: #eef0f8; border-radius: 4px; height: 8px; width: 100%; overflow: hidden; margin-bottom: 4px;">
+                      <div class="progress-fill" style="width:<%= s.completion %>%; background: #3B4FE0; height: 100%; border-radius: 4px;"></div>
+                    </div>
+                    <div class="progress-row__value num" style="font-size: 12px; text-align: right; color: #64748b;"><%= s.completion %>%</div>
+                  </div>
+                <% }) %>
+              <% } %>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card__head">
+              <div>
+                <div class="card__title">Recent Discipline Flags</div>
+                <div class="card__desc">Latest noted incidents across all standards</div>
+              </div>
+              <a href="/principal/discipline-remark" class="btn btn-ghost btn-sm">View all</a>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Roll No</th><th>Name</th><th>Type</th><th>Date</th></tr></thead>
+                <tbody>
+                  <% if (data && data.discipline && data.discipline.undisciplined && data.discipline.undisciplined.length > 0) { %>
+                    <% data.discipline.undisciplined.forEach(function(d){ %>
+                      <tr>
+                        <td class="num"><%= d.rollNo %></td>
+                        <td><%= d.name %></td>
+                        <td><span class="chip chip-warning"><%= d.type %></span></td>
+                        <td class="num"><%= d.date %></td>
+                      </tr>
+                    <% }) %>
+                  <% } else { %>
+                    <tr><td colspan="4" style="text-align: center; color: #64748b; padding: 14px 0;">No recent disciplinary incidents recorded.</td></tr>
+                  <% } %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card__head">
+              <div>
+                <div class="card__title">Recent Notices</div>
+                <div class="card__desc">Latest sent to students, faculty or parents</div>
+              </div>
+              <a href="/principal/notice-message" class="btn btn-ghost btn-sm">View all</a>
+            </div>
+            <ul style="list-style: none; padding: 0; margin: 0;">
+              <% if (data && data.notices && data.notices.length > 0) { %>
+                <% data.notices.slice(0,3).forEach(function(n){ %>
+                  <li style="padding:10px 0; border-bottom:1px solid var(--line-soft);">
+                    <div class="flex items-center gap-8" style="margin-bottom:4px;">
+                      <span class="chip chip-neutral"><%= n.type %></span>
+                      <span class="text-slate num" style="font-size:11.5px;"><%= n.date %></span>
+                    </div>
+                    <div style="font-size:13px; color:var(--ink-soft);"><%= n.message.length > 90 ? n.message.slice(0,90)+'…' : n.message %></div>
+                  </li>
+                <% }) %>
+              <% } else { %>
+                <li style="padding: 14px 0; text-align: center; color: #64748b;">No public notices or updates posted recently.</li>
+              <% } %>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <%- include('../partials/scripts') %>
+  
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const ctx = document.getElementById('homeExamChart');
+      if (ctx) {
+        new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: <%- (data && data.exams) ? JSON.stringify(data.exams.filter(e=>e.status==='completed').slice(0,5).map(e=>e.subject)) : '[]' %>,
+            datasets: [{
+              data: <%- (data && data.exams) ? JSON.stringify(data.exams.filter(e=>e.status==='completed').slice(0,5).map(e=>e.classAverage)) : '[]' %>,
+              backgroundColor: '#3B4FE0',
+              borderRadius: 6,
+              maxBarThickness: 36
+            }]
+          },
+          options: {
+            plugins: { legend: { display:false } },
+            scales: { 
+              y: { beginAtZero:true, max:100, grid:{ color:'#EEF0F8' }, ticks:{ font:{ family:'IBM Plex Mono', size:11 } } },
+              x: { grid:{ display:false }, ticks:{ font:{ family:'Manrope', size:11, weight:600 } } } 
+            }
+          }
+        });
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+<USER_REQUEST>
+subject faculty can see only it's assign subject syllabus so please change that because right now any subject faculty can set any lt by selecting any suject topic so restrict that .add this biology and maths in syllabus 
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-11-13T10:57:51+05:30.
+
+The user's current state is as follows:
+Active Document: c:\Users\Umesh\Desktop\SMS\combined-dashboard\frontend\src\components\common\Sidebar.jsx (LANGUAGE_UNSPECIFIED)
+Cursor is on line: 24
+Other open documents:
+- c:\Users\Umesh\Desktop\SMS\combined-dashboard\frontend\src\components\principal\PrintableLtReport.jsx (LANGUAGE_UNSPECIFIED)
+- c:\Users\Umesh\Desktop\SMS\combined-dashboard\frontend\src\components\principal\LtReportsWorkspace.jsx (LANGUAGE_UNSPECIFIED)
+- c:\Users\Umesh\Desktop\SMS\combined-dashboard\backend\src\services\ltReportService.js (LANGUAGE_UNSPECIFIED)
+- c:\Users\Umesh\Desktop\SMS\combined-dashboard\backend\src\routes\ltRoutes.js (LANGUAGE_UNSPECIFIED)
+- c:\Users\Umesh\Desktop\SMS\combined-dashboard\backend\src\seedAllSections.js (LANGUAGE_UNSPECIFIED)
+</ADDITIONAL_METADATA>

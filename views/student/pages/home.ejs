@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <%- include('../partials/head', { title: 'Home' }) %>
+</head>
+<body>
+  <div class="app">
+    <%- include('../partials/sidebar', { active: 'home', data: data }) %>
+
+    <div class="main">
+      <%- include('../partials/topbar', { title: 'Hi ' + data.student.name.split(' ')[0] + ' 👋', subtitle: 'Here\'s how this week is going', data: data }) %>
+
+      <div class="content">
+
+        <div class="kpi-grid">
+          <div class="kpi-card is-success">
+            <div class="kpi-card__label">Overall Percentile</div>
+            <div class="kpi-card__value num"><%= data.homeStats.overallPercentile %></div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-card__label">Current Rank</div>
+            <div class="kpi-card__value num">#<%= data.homeStats.currentRank %></div>
+            <div class="kpi-card__hint">of <%= data.student.totalStudentsInClass %> students</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-card__label">This Week's Average</div>
+            <div class="kpi-card__value num"><%= data.homeStats.thisWeekAverage %>%</div>
+          </div>
+          <div class="kpi-card is-success">
+            <div class="kpi-card__label">Growth vs Last Week</div>
+            <div class="kpi-card__value num text-success">+<%= data.homeStats.growthVsLastWeek %>%</div>
+          </div>
+        </div>
+
+        <div class="banner banner-success">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.2 4.2L19 6.8"/></svg>
+          <span><%= data.progressReport.weekly.message %></span>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <div class="card__head">
+              <div>
+                <div class="card__title">Recent Exam Results</div>
+                <div class="card__desc">Latest marks across subjects</div>
+              </div>
+              <a href="/student/exam-result" class="btn btn-ghost btn-sm">View all</a>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Subject</th><th>Date</th><th>Score</th><th>Rank</th></tr></thead>
+                <tbody>
+                  <% data.examResults.slice(0,4).forEach(function(e){ %>
+                    <tr><td><%= e.subject %></td><td class="num"><%= e.examDate %></td><td class="num"><%= e.score %>%</td><td class="num">#<%= e.rank %></td></tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card__head">
+              <div>
+                <div class="card__title">Recent Notices</div>
+                <div class="card__desc">From your school</div>
+              </div>
+              <a href="/student/notice-message" class="btn btn-ghost btn-sm">View all</a>
+            </div>
+            <ul>
+              <% data.notices.forEach(function(n){ %>
+                <li style="padding:10px 0; border-bottom:1px solid var(--line-soft);">
+                  <div class="text-slate num" style="font-size:11.5px; margin-bottom:4px;"><%= n.date %></div>
+                  <div style="font-size:13px; color:var(--ink-soft);"><%= n.message.length > 90 ? n.message.slice(0,90)+'…' : n.message %></div>
+                </li>
+              <% }) %>
+            </ul>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <%- include('../partials/scripts') %>
+</body>
+</html>
+
