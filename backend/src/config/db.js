@@ -21,7 +21,11 @@ const connectDB = async () => {
     return conn;
   } catch (err) {
     console.error(`❌ MongoDB Connection Error: ${err.message}`);
-    throw err;
+    console.log(`⚠️ Server running in resilient mode. Retrying MongoDB in background...`);
+    setTimeout(() => {
+      connectDB().catch(() => {});
+    }, 20000);
+    return null;
   }
 };
 

@@ -15,6 +15,7 @@ const reportRoutes = require('./routes/reportRoutes');
 const examRoutes = require('./routes/examRoutes');
 const disciplineRoutes = require('./routes/disciplineRoutes');
 const noticeRoutes = require('./routes/noticeRoutes');
+const cbtRoutes = require('./routes/cbtRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -51,6 +52,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/exams', examRoutes);
 app.use('/api/discipline', disciplineRoutes);
 app.use('/api/notices', noticeRoutes);
+app.use('/api/cbt', cbtRoutes);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {
@@ -76,20 +78,25 @@ if (fs.existsSync(frontendDistPath)) {
 // Start Server with MongoDB Connection
 const startServer = async () => {
   try {
-    await connectDB();
-    await syllabusService.ensureStd11ChemCurriculum(['Division A', 'Division B']);
-    await syllabusService.ensureStd11PhysicsCurriculum(['Division A', 'Division B']);
-    await syllabusService.ensureStd11MathsCurriculum(['Division A', 'Division B']);
-    await syllabusService.ensureStd11BiologyCurriculum(['Division A', 'Division B']);
+    const conn = await connectDB();
+    if (conn) {
+      try {
+        await syllabusService.ensureStd11ChemCurriculum(['Division A', 'Division B']);
+        await syllabusService.ensureStd11PhysicsCurriculum(['Division A', 'Division B']);
+        await syllabusService.ensureStd11MathsCurriculum(['Division A', 'Division B']);
+        await syllabusService.ensureStd11BiologyCurriculum(['Division A', 'Division B']);
+      } catch (err) {
+        console.warn('Curriculum check warning:', err.message);
+      }
+    }
     app.listen(PORT, () => {
       console.log(`🚀 SMS Backend API running on http://localhost:${PORT}`);
-      console.log(`🍃 Connected to MongoDB: ${process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/sms_db'}`);
+      console.log(`📡 CBT endpoints: http://localhost:${PORT}/api/cbt/exams`);
       console.log(`📡 Student endpoints: http://localhost:${PORT}/api/students`);
       console.log(`📡 Faculty endpoints: http://localhost:${PORT}/api/faculty`);
     });
   } catch (err) {
-    console.error('Failed to start server due to MongoDB connection issue:', err.message);
-    process.exit(1);
+    console.error('Server startup error:', err.message);
   }
 };
 

@@ -239,6 +239,16 @@ export default function Sidebar({ isOpen, onClose }) {
                 LT & Timer
               </NavLink>
 
+              <NavLink to="/assistant/cbt-exam" className={({ isActive }) => `navlink ${isActive ? 'is-active' : ''}`} onClick={onClose}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect width="20" height="14" x="2" y="3" rx="2" />
+                  <line x1="8" x2="16" y1="21" y2="21" />
+                  <line x1="12" x2="12" y1="17" y2="21" />
+                  <path d="m9 10 2 2 4-4" />
+                </svg>
+                CBT Exam
+              </NavLink>
+
               <NavLink to="/assistant/exam" className={({ isActive }) => `navlink ${isActive ? 'is-active' : ''}`} onClick={onClose}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="3.5" y="3.5" width="17" height="17" rx="2.4" />
@@ -301,6 +311,18 @@ export default function Sidebar({ isOpen, onClose }) {
                   <polyline points="9 22 9 12 15 12 15 22" />
                 </svg>
                 Home
+              </NavLink>
+
+              <div className="sidebar__group-label">Examination</div>
+
+              <NavLink to="/student/cbt-exam" className={({ isActive }) => `navlink ${isActive ? 'is-active' : ''}`} onClick={onClose}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect width="20" height="14" x="2" y="3" rx="2" />
+                  <line x1="8" x2="16" y1="21" y2="21" />
+                  <line x1="12" x2="12" y1="17" y2="21" />
+                  <path d="m9 10 2 2 4-4" />
+                </svg>
+                CBT Exam
               </NavLink>
 
               <div className="sidebar__group-label">Performance</div>

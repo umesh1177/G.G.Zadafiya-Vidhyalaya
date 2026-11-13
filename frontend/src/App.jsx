@@ -36,6 +36,7 @@ import AssistantLt from './pages/assistant/Lt'
 import LtHistoryDetail from './pages/assistant/LtHistoryDetail'
 import LtEnterMarks from './pages/assistant/LtEnterMarks'
 import AssistantExam from './pages/assistant/Exam'
+import AssistantCbtExam from './pages/assistant/CbtExam'
 import ExamEnterMarks from './pages/assistant/ExamEnterMarks'
 import ExamViewMarks from './pages/assistant/ExamViewMarks'
 import AssistantResult from './pages/assistant/Result'
@@ -46,6 +47,7 @@ import AssistantProfile from './pages/assistant/Profile'
 
 // Student pages
 import StudentHome from './pages/student/Home'
+import StudentCbtExam from './pages/student/CbtExam'
 import StudentLtAnalysis from './pages/student/LtAnalysis'
 import StudentProgressReport from './pages/student/ProgressReport'
 import StudentExamResult from './pages/student/ExamResult'
@@ -119,6 +121,7 @@ export default function App() {
               <Route path="lt" element={<AssistantLt />} />
               <Route path="lt/history/:id" element={<LtHistoryDetail />} />
               <Route path="lt/enter-marks/:id" element={<LtEnterMarks />} />
+              <Route path="cbt-exam" element={<AssistantCbtExam />} />
               <Route path="exam" element={<AssistantExam />} />
               <Route path="exam/enter-marks/:id" element={<ExamEnterMarks />} />
               <Route path="exam/view-marks/:id" element={<ExamViewMarks />} />
@@ -139,6 +142,7 @@ export default function App() {
               }
             >
               <Route index element={<StudentHome />} />
+              <Route path="cbt-exam" element={<StudentCbtExam />} />
               <Route path="lt-analysis" element={<StudentLtAnalysis />} />
               <Route path="progress-report" element={<StudentProgressReport />} />
               <Route path="exam-result" element={<StudentExamResult />} />

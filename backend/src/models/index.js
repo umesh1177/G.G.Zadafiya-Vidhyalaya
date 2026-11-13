@@ -9,6 +9,8 @@ const Syllabus = require('./Syllabus');
 const DisciplineRemark = require('./DisciplineRemark');
 const DisciplineType = require('./DisciplineType');
 const Notice = require('./Notice');
+const CbtExam = require('./CbtExam');
+const CbtAttempt = require('./CbtAttempt');
 
 module.exports = {
   User,
@@ -22,5 +24,6 @@ module.exports = {
   DisciplineRemark,
   DisciplineType,
   Notice,
+  CbtExam,
+  CbtAttempt,
 };
-
