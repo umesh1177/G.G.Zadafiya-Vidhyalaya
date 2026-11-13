@@ -70,6 +70,16 @@ export default defineConfig({
   server: {
     port: 5173,
     open: false,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+      '/syllabus': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+    },
   },
   preview: {
     port: 4173,

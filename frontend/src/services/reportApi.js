@@ -1,4 +1,6 @@
-const API_BASE_URL = 'http://localhost:5000/api/reports';
+import { API_ROOT } from './apiConfig';
+
+const API_BASE_URL = `${API_ROOT}/api/reports`;
 
 export const reportApi = {
   async createFacultyReport(payload) {

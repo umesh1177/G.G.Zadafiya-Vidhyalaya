@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState } from 'react';
+import { API_ROOT } from '../services/apiConfig';
 
 const AuthContext = createContext(null);
 
@@ -194,7 +195,7 @@ export function AuthProvider({ children }) {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 3500);
 
-      const res = await fetch('http://localhost:5000/api/auth/login', {
+      const res = await fetch(`${API_ROOT}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identifier: trimmedId, password: trimmedPass }),

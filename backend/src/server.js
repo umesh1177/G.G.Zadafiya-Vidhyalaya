@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 const { connectDB } = require('./config/db');
@@ -23,14 +24,7 @@ app.set('etag', false);
 
 // Middlewares
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:5174',
-    'http://localhost:4173',
-    'http://localhost:3000',
-    'http://127.0.0.1:5173',
-    'http://127.0.0.1:4173',
-  ],
+  origin: true,
   credentials: true,
 }));
 app.use(express.json({ limit: '25mb' }));
@@ -66,6 +60,18 @@ app.use((err, req, res, next) => {
 
 // Serve static syllabus images
 app.use('/syllabus', express.static(path.join(__dirname, '../public/syllabus')));
+
+// Serve frontend static build files in production if dist exists
+const frontendDistPath = path.join(__dirname, '../../frontend/dist');
+if (fs.existsSync(frontendDistPath)) {
+  app.use(express.static(frontendDistPath));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/syllabus')) {
+      return next();
+    }
+    res.sendFile(path.join(frontendDistPath, 'index.html'));
+  });
+}
 
 // Start Server with MongoDB Connection
 const startServer = async () => {

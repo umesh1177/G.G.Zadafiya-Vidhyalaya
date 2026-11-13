@@ -4,7 +4,9 @@
  * Provides automatic fallback to local persistence if backend is offline.
  */
 
-const API_BASE_URL = 'http://localhost:5000/api/faculty';
+import { API_ROOT } from './apiConfig';
+
+const API_BASE_URL = `${API_ROOT}/api/faculty`;
 
 export const facultyApi = {
   /**

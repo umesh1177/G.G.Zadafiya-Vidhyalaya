@@ -1,4 +1,6 @@
-const API_BASE_URL = 'http://localhost:5000/api/notices';
+import { API_ROOT } from './apiConfig';
+
+const API_BASE_URL = `${API_ROOT}/api/notices`;
 const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024; // 10 MB
 
 export function readNoticeAttachmentAsPayload(file) {

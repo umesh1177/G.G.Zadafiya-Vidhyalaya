@@ -4,7 +4,9 @@
  * Provides automatic fallback to DataContext mock data if backend is offline.
  */
 
-const API_BASE_URL = 'http://localhost:5000/api/students';
+import { API_ROOT } from './apiConfig';
+
+const API_BASE_URL = `${API_ROOT}/api/students`;
 
 export const studentApi = {
   /**

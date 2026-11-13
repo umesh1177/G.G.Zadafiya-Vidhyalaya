@@ -1,4 +1,6 @@
-const API_BASE_URL = 'http://localhost:5000/api/discipline';
+import { API_ROOT } from './apiConfig';
+
+const API_BASE_URL = `${API_ROOT}/api/discipline`;
 
 export const disciplineApi = {
   async getTypes() {

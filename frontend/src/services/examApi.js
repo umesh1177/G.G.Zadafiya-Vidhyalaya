@@ -1,4 +1,6 @@
-const API_BASE_URL = 'http://localhost:5000/api/exams';
+import { API_ROOT } from './apiConfig';
+
+const API_BASE_URL = `${API_ROOT}/api/exams`;
 const MAX_PDF_SIZE_BYTES = 15 * 1024 * 1024;
 
 export function readPdfFileAsPayload(file) {

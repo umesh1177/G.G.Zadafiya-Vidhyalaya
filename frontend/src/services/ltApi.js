@@ -1,4 +1,6 @@
-const API_BASE_URL = 'http://localhost:5000/api/lt';
+import { API_ROOT } from './apiConfig';
+
+const API_BASE_URL = `${API_ROOT}/api/lt`;
 
 export const ltApi = {
   async getAllLts(params = {}) {
