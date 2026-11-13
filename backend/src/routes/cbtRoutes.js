@@ -20,6 +20,7 @@ router.post('/exams/:id/grant-retry', cbtController.grantRetry);
 router.post('/exams/:id/evaluate', cbtController.evaluateExam);
 router.get('/exams/:id/analysis', cbtController.getExamAnalysis);
 router.get('/exams/:id/live-monitor', cbtController.getLiveMonitor);
+router.get('/exams/:id/monitor', cbtController.getLiveMonitor);
 
 module.exports = router;
 

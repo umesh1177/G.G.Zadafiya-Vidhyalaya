@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, useNavigate } from 'react-router-dom';
 import {
   Users,
   Building2,
@@ -18,10 +18,10 @@ import { useAuth } from '../../context/AuthContext';
 import { fetchCbtExams, startCbtExam } from '../../services/cbtService';
 import CbtInstructionsModal from '../../components/cbt/CbtInstructionsModal';
 import CbtExamPlayer from '../../components/cbt/CbtExamPlayer';
-import CbtAnalysisModal from '../../components/cbt/CbtAnalysisModal';
 
 export default function StudentCbtExam() {
   const outlet = useOutletContext();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [exams, setExams] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,7 +29,6 @@ export default function StudentCbtExam() {
   // Flow State
   const [selectedExamForInstructions, setSelectedExamForInstructions] = useState(null);
   const [activePlayerState, setActivePlayerState] = useState(null); // { exam, attempt, questions }
-  const [viewResultExamId, setViewResultExamId] = useState(null);
   const [nowTime, setNowTime] = useState(new Date());
 
   const rollNo = user?.rollNo || 1;
@@ -324,7 +323,7 @@ export default function StudentCbtExam() {
                       exam.isResultPublished ? (
                         <button
                           className="cbt-btn-view-result"
-                          onClick={() => setViewResultExamId(exam._id)}
+                          onClick={() => navigate(`/student/cbt-exam/analysis/${exam._id}`)}
                         >
                           <BarChart2 size={14} />
                           View Result
@@ -338,18 +337,13 @@ export default function StudentCbtExam() {
                       <button className="cbt-btn-start disabled" disabled>
                         Disqualified
                       </button>
-                    ) : startStatus.canStart || canRetry ? (
+                    ) : (
                       <button
                         className="cbt-btn-start"
                         onClick={() => handleCardStartClick(exam)}
                       >
                         <Play size={14} fill="currentColor" />
                         Start
-                      </button>
-                    ) : (
-                      <button className="cbt-btn-start disabled" disabled>
-                        <Clock size={13} />
-                        {startStatus.label}
                       </button>
                     )}
                   </div>
@@ -366,14 +360,6 @@ export default function StudentCbtExam() {
           exam={selectedExamForInstructions}
           onProceed={handleProceedToExam}
           onClose={() => setSelectedExamForInstructions(null)}
-        />
-      )}
-
-      {/* View Result & Analysis Modal (Photo 1) */}
-      {viewResultExamId && (
-        <CbtAnalysisModal
-          examId={viewResultExamId}
-          onClose={() => setViewResultExamId(null)}
         />
       )}
     </div>

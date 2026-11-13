@@ -121,29 +121,50 @@ exports.createExam = async (req, res) => {
       division = 'ALL',
       streamGroup = 'ALL',
       durationMinutes = 60,
-      totalMarks = 100,
-      marksPerQuestion = 4,
-      negativeMarks = 1,
+      totalMarks,
+      marksPerQuestion,
+      negativeMarks,
       scheduleTime,
       startTime,
       windowEndTime,
       questionsText,
       questions: providedQuestions,
+      subjectPapers = [],
     } = req.body;
 
     const examCode = `CBT-${examType}-${Date.now().toString().slice(-6)}`;
+
+    // Default marking scheme according to requirement:
+    // JEE / NEET: Correct +4, Wrong -1
+    // GUJCET: Correct +1, Wrong -0.25
+    const defaultPosMarks = examType === 'GUJCET' ? 1 : 4;
+    const defaultNegMarks = examType === 'GUJCET' ? 0.25 : 1;
+
+    const finalMarksPerQuestion = marksPerQuestion !== undefined && marksPerQuestion !== null && marksPerQuestion !== ''
+      ? Number(marksPerQuestion)
+      : defaultPosMarks;
+
+    const finalNegativeMarks = negativeMarks !== undefined && negativeMarks !== null && negativeMarks !== ''
+      ? Number(negativeMarks)
+      : defaultNegMarks;
 
     // Parse questions from raw text if provided, or use sample questions if empty
     let questions = [];
     if (providedQuestions && Array.isArray(providedQuestions) && providedQuestions.length > 0) {
       questions = providedQuestions;
     } else if (questionsText && typeof questionsText === 'string' && questionsText.trim()) {
-      questions = parseMcqText(questionsText, 'Physics', Number(marksPerQuestion), Number(negativeMarks));
+      questions = parseMcqText(questionsText, 'Physics', finalMarksPerQuestion, finalNegativeMarks);
     }
 
     if (questions.length === 0) {
       // Auto-load high quality sample question bank matching exam type and stream
       questions = getSampleQuestionsForExam(examType, streamGroup);
+      // Ensure marking scheme matches
+      questions = questions.map(q => ({
+        ...q,
+        marks: finalMarksPerQuestion,
+        negativeMarks: finalNegativeMarks,
+      }));
     }
 
     // Determine subjects from questions
@@ -156,7 +177,7 @@ exports.createExam = async (req, res) => {
     const startDate = startTime ? new Date(startTime) : new Date(now.getTime() + 10 * 60000); // 10 mins from now
     const endDate = windowEndTime ? new Date(windowEndTime) : new Date(now.getTime() + 7 * 24 * 3600000); // 7 days
 
-    const calculatedTotalMarks = Number(totalMarks) || (questions.length * Number(marksPerQuestion));
+    const calculatedTotalMarks = Number(totalMarks) || (questions.length * finalMarksPerQuestion);
 
     const newExam = new CbtExam({
       examCode,
@@ -169,11 +190,12 @@ exports.createExam = async (req, res) => {
       subjects,
       durationMinutes: Number(durationMinutes) || 60,
       totalMarks: calculatedTotalMarks,
-      marksPerQuestion: Number(marksPerQuestion),
-      negativeMarks: Number(negativeMarks),
+      marksPerQuestion: finalMarksPerQuestion,
+      negativeMarks: finalNegativeMarks,
       scheduleTime: schedDate,
       startTime: startDate,
       windowEndTime: endDate,
+      subjectPapers,
       questions,
       status: 'SCHEDULED',
       createdBy: req.body.createdBy || 'Assistant Faculty',
@@ -398,15 +420,50 @@ exports.saveProgress = async (req, res) => {
 exports.recordViolation = async (req, res) => {
   try {
     const { id } = req.params;
-    const { studentRollNo, action = 'Forbidden action detected' } = req.body;
+    const { attemptId, studentRollNo, studentEmail, studentName, action = 'Forbidden action detected' } = req.body;
 
-    const attempt = await CbtAttempt.findOne({ examId: id, studentRollNo: Number(studentRollNo) });
+    let attempt;
+    if (attemptId && mongoose.isValidObjectId(attemptId)) {
+      attempt = await CbtAttempt.findById(attemptId);
+    }
+    if (!attempt && studentRollNo !== undefined && studentRollNo !== null) {
+      attempt = await CbtAttempt.findOne({ examId: id, studentRollNo: Number(studentRollNo) });
+    }
+    if (!attempt && studentEmail) {
+      attempt = await CbtAttempt.findOne({
+        examId: id,
+        studentEmail: { $regex: new RegExp(`^${studentEmail.trim()}$`, 'i') },
+      });
+    }
+
+    // Safety fallback: if attempt record didn't exist yet, create it so violation is never lost
     if (!attempt) {
-      return res.status(404).json({ success: false, message: 'Attempt not found' });
+      const exam = await CbtExam.findById(id).lean();
+      if (!exam) {
+        return res.status(404).json({ success: false, message: 'Exam not found' });
+      }
+      attempt = new CbtAttempt({
+        examId: id,
+        studentRollNo: Number(studentRollNo || 1),
+        studentName: studentName || 'Student',
+        studentEmail: studentEmail || `student${studentRollNo || 1}@ggzv.edu.in`,
+        standard: exam.standard,
+        division: exam.division,
+        streamGroup: exam.streamGroup,
+        status: 'IN_PROGRESS',
+        violationsCount: 0,
+        violationLogs: [],
+      });
     }
 
     if (attempt.status === 'SUBMITTED' || attempt.status === 'DISQUALIFIED') {
-      return res.json({ success: true, isDisqualified: attempt.status === 'DISQUALIFIED' });
+      return res.json({
+        success: true,
+        violationsCount: attempt.violationsCount,
+        remainingWarnings: 0,
+        disqualified: attempt.status === 'DISQUALIFIED',
+        message: attempt.disqualificationReason || 'Exam already concluded',
+      });
     }
 
     attempt.violationsCount = (attempt.violationsCount || 0) + 1;
@@ -546,11 +603,16 @@ exports.evaluateExam = async (req, res) => {
       };
     });
 
-    // Grade each student attempt
-    const scoredAttempts = [];
-    const posMarks = exam.marksPerQuestion || 4;
-    const negMarks = exam.negativeMarks !== undefined ? exam.negativeMarks : 1;
+    // Grade each student attempt dynamically based on exam type marking scheme:
+    // JEE / NEET: +4, -1
+    // GUJCET: +1, -0.25
+    const defaultPosMarks = exam.examType === 'GUJCET' ? 1 : 4;
+    const defaultNegMarks = exam.examType === 'GUJCET' ? 0.25 : 1;
+    const posMarks = exam.marksPerQuestion !== undefined && exam.marksPerQuestion !== null ? Number(exam.marksPerQuestion) : defaultPosMarks;
+    const negMarks = exam.negativeMarks !== undefined && exam.negativeMarks !== null ? Number(exam.negativeMarks) : defaultNegMarks;
     const totalPossibleMarks = exam.totalMarks || (exam.questions.length * posMarks);
+
+    const scoredAttempts = [];
 
     for (const att of attempts) {
       let correct = 0;
@@ -572,7 +634,7 @@ exports.evaluateExam = async (req, res) => {
           if (stat) stat.skippedCount++;
         } else {
           if (stat) stat.attendedCount++;
-          if (selected.toUpperCase() === correctOpt.toUpperCase()) {
+          if (selected.toUpperCase() === (correctOpt || '').toUpperCase()) {
             correct++;
             if (stat) stat.rightCount++;
           } else {
@@ -582,9 +644,9 @@ exports.evaluateExam = async (req, res) => {
         }
       });
 
-      // Calculate score with negative marking
+      // Calculate score with negative marking dynamically
       let score = (correct * posMarks) - (wrong * negMarks);
-      if (score < 0) score = 0; // standard non-negative floor if desired
+      if (score < 0) score = 0;
 
       const percentage = Math.round((score / totalPossibleMarks) * 100 * 10) / 10;
 
@@ -604,7 +666,6 @@ exports.evaluateExam = async (req, res) => {
 
     scoredAttempts.forEach((att, index) => {
       att.rank = index + 1;
-      // Percentile formula: (count of students scoring less than student / total) * 100
       const strictlyLower = scoredAttempts.filter(s => s.score < att.score).length;
       att.percentile = totalStudents > 1
         ? Math.round(((strictlyLower / (totalStudents - 1)) * 100) * 10) / 10
@@ -723,6 +784,118 @@ exports.getExamAnalysis = async (req, res) => {
       .sort({ rank: 1, score: -1 })
       .lean();
 
+    const totalStudents = attempts.length;
+    const defaultPosMarks = exam.examType === 'GUJCET' ? 1 : 4;
+    const posMarks = exam.marksPerQuestion !== undefined && exam.marksPerQuestion !== null ? Number(exam.marksPerQuestion) : defaultPosMarks;
+    const totalPossibleMarks = exam.totalMarks || ((exam.questions ? exam.questions.length : 0) * posMarks);
+
+    // Compute dynamic analytics from actual attempts so there is ZERO static/mock data
+    let analytics = exam.analytics || {};
+    
+    if (totalStudents > 0) {
+      const percentages = attempts.map(a => Number(a.percentage || 0));
+      const avgScore = Math.round((percentages.reduce((acc, p) => acc + p, 0) / totalStudents) * 100) / 100;
+      
+      const sortedPct = [...percentages].sort((a, b) => a - b);
+      const mid = Math.floor(sortedPct.length / 2);
+      const medScore = sortedPct.length % 2 !== 0
+        ? sortedPct[mid]
+        : Math.round(((sortedPct[mid - 1] + sortedPct[mid]) / 2) * 10) / 10;
+
+      const lowScore = Math.min(...percentages);
+      const highScore = Math.max(...percentages);
+
+      const times = attempts.map(a => a.timeSpentSeconds || 0);
+      const avgTimeSec = Math.round(times.reduce((acc, t) => acc + t, 0) / totalStudents);
+      const sortedTimes = [...times].sort((a, b) => a - b);
+      const medTimeSec = sortedTimes[Math.floor(sortedTimes.length / 2)] || 0;
+      const allottedSec = (exam.durationMinutes || 60) * 60;
+      const timeUtil = Math.round((avgTimeSec / allottedSec) * 10000) / 100;
+
+      const attemptedCounts = attempts.map(a => (a.correctCount || 0) + (a.wrongCount || 0));
+      const avgAttempted = Math.round((attemptedCounts.reduce((acc, c) => acc + c, 0) / totalStudents) * 10) / 10;
+      const fullCompletions = attempts.filter(a => (a.unansweredCount || 0) === 0).length;
+      const fullCompRate = Math.round((fullCompletions / totalStudents) * 10000) / 100;
+
+      const totalQ = exam.questions ? exam.questions.length : 0;
+      const totalPossibleAns = totalStudents * totalQ;
+      const totalSkipped = attempts.reduce((acc, a) => acc + (a.unansweredCount || 0), 0);
+      const skippedRate = totalPossibleAns > 0
+        ? Math.round((totalSkipped / totalPossibleAns) * 10000) / 100
+        : 0;
+
+      const scoreDist = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+      percentages.forEach(p => {
+        let b = Math.floor(p / 10);
+        if (b >= 10) b = 9;
+        if (b < 0) b = 0;
+        scoreDist[b]++;
+      });
+
+      const subCount = attempts.filter(a => a.status === 'SUBMITTED').length;
+      const disqCount = attempts.filter(a => a.status === 'DISQUALIFIED').length;
+      const inProgCount = attempts.filter(a => a.status === 'IN_PROGRESS').length;
+
+      // Dynamic question analysis if not already pre-stored
+      let qAnalysis = (exam.analytics && exam.analytics.questionAnalysis) || [];
+      if (qAnalysis.length === 0 && exam.questions && exam.questions.length > 0) {
+        const keyMap = {};
+        exam.questions.forEach(q => { keyMap[q.id] = q.correctAnswer; });
+        qAnalysis = exam.questions.map(q => {
+          let attCount = 0;
+          let rCount = 0;
+          let wCount = 0;
+          let sCount = 0;
+
+          attempts.forEach(att => {
+            const studentAns = (att.answers || []).find(ans => ans.questionId === q.id);
+            if (!studentAns || !studentAns.selectedOption) {
+              sCount++;
+            } else {
+              attCount++;
+              if (studentAns.selectedOption.toUpperCase() === (keyMap[q.id] || '').toUpperCase()) {
+                rCount++;
+              } else {
+                wCount++;
+              }
+            }
+          });
+
+          return {
+            questionNo: q.questionNo,
+            subject: q.subject,
+            questionText: q.questionText,
+            attendedCount: attCount,
+            skippedCount: sCount,
+            rightCount: rCount,
+            wrongCount: wCount,
+            accuracy: attCount > 0 ? Math.round((rCount / attCount) * 100) : 0,
+          };
+        });
+      }
+
+      analytics = {
+        averageScore: avgScore,
+        medianScore: medScore,
+        lowestScore: lowScore,
+        highestScore: highScore,
+        averageTimeSeconds: avgTimeSec,
+        medianTimeSeconds: medTimeSec,
+        timeUtilization: timeUtil,
+        avgQuestionsAttempted: avgAttempted,
+        fullCompletionRate: fullCompRate,
+        skippedQuestionRate: skippedRate,
+        scoreDistribution: scoreDist,
+        statusCounts: {
+          submitted: subCount,
+          disqualified: disqCount,
+          started: inProgCount,
+          absent: 0,
+        },
+        questionAnalysis: qAnalysis,
+      };
+    }
+
     res.json({
       success: true,
       exam: {
@@ -735,34 +908,36 @@ exports.getExamAnalysis = async (req, res) => {
         streamGroup: exam.streamGroup,
         durationMinutes: exam.durationMinutes,
         totalMarks: exam.totalMarks,
+        marksPerQuestion: exam.marksPerQuestion,
+        negativeMarks: exam.negativeMarks,
         questionsCount: exam.questions ? exam.questions.length : 0,
         isResultPublished: exam.isResultPublished,
         status: exam.status,
       },
-      analytics: exam.analytics || {},
-      students: attempts.map(a => ({
+      analytics,
+      students: attempts.map((a, idx) => ({
         _id: a._id,
-        rank: a.rank || '-',
+        rank: a.rank || idx + 1,
         rollNo: a.studentRollNo,
         name: a.studentName,
         email: a.studentEmail,
         standard: a.standard,
         division: a.division,
         streamGroup: a.streamGroup,
-        score: a.score,
-        totalMarks: a.totalMarks,
-        percentage: a.percentage,
-        percentile: a.percentile,
-        correctCount: a.correctCount,
-        wrongCount: a.wrongCount,
-        unansweredCount: a.unansweredCount,
-        timeSpentSeconds: a.timeSpentSeconds,
+        score: a.score || 0,
+        totalMarks: a.totalMarks || totalPossibleMarks,
+        percentage: a.percentage || 0,
+        percentile: a.percentile || 0,
+        correctCount: a.correctCount || 0,
+        wrongCount: a.wrongCount || 0,
+        unansweredCount: a.unansweredCount || 0,
+        timeSpentSeconds: a.timeSpentSeconds || 0,
         status: a.status,
-        violationsCount: a.violationsCount,
-        disqualificationReason: a.disqualificationReason,
-        violationLogs: a.violationLogs,
+        violationsCount: a.violationsCount || 0,
+        disqualificationReason: a.disqualificationReason || '',
+        violationLogs: a.violationLogs || [],
       })),
-      questions: (exam.analytics && exam.analytics.questionAnalysis) || [],
+      questions: analytics.questionAnalysis || [],
     });
   } catch (err) {
     console.error('Error fetching exam analysis:', err);
@@ -770,7 +945,7 @@ exports.getExamAnalysis = async (req, res) => {
   }
 };
 
-// 13. Assistant Faculty Live Monitoring Endpoint
+// 13. Assistant Faculty Live Monitoring Endpoint (Flags all violations)
 exports.getLiveMonitor = async (req, res) => {
   try {
     const { id } = req.params;
@@ -779,43 +954,80 @@ exports.getLiveMonitor = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Exam not found' });
     }
 
+    // 1. Fetch ALL student attempts for this exam
     const attempts = await CbtAttempt.find({ examId: id }).sort({ studentRollNo: 1 }).lean();
 
-    // Map attempts by rollNo
-    const attemptMap = {};
-    attempts.forEach(a => {
-      attemptMap[a.studentRollNo] = a;
+    const liveData = [];
+    const seenRollNos = new Set();
+
+    // 2. Put every active / submitted / disqualified attempt into liveData
+    attempts.forEach(att => {
+      const roll = Number(att.studentRollNo);
+      seenRollNos.add(roll);
+
+      const answeredCount = att.answers
+        ? att.answers.filter(a => a.status === 'ANSWERED').length
+        : 0;
+
+      liveData.push({
+        attemptId: att._id,
+        studentId: att._id,
+        rollNo: att.studentRollNo,
+        name: att.studentName || `Student ${att.studentRollNo}`,
+        email: att.studentEmail,
+        standard: att.standard || exam.standard,
+        division: att.division || exam.division,
+        streamGroup: att.streamGroup || exam.streamGroup,
+        status: att.status,
+        startedAt: att.startedAt,
+        submittedAt: att.submittedAt,
+        answeredCount,
+        totalQuestions: exam.questions ? exam.questions.length : 0,
+        violationsCount: att.violationsCount || 0,
+        violationLogs: att.violationLogs || [],
+        disqualificationReason: att.disqualificationReason || '',
+        retryAllowed: att.retryAllowed || false,
+      });
     });
 
-    // Fetch registered students in same standard & division
+    // 3. Supplement with registered students in the standard/division who haven't started yet
     const studentQuery = {};
     if (exam.standard && exam.standard !== 'ALL') studentQuery.standard = exam.standard;
     if (exam.division && exam.division !== 'ALL') studentQuery.division = exam.division;
 
     const students = await Student.find(studentQuery).sort({ rollNo: 1 }).lean();
 
-    const liveData = students.map(s => {
-      const att = attemptMap[s.rollNo];
-      const answeredCount = att && att.answers
-        ? att.answers.filter(a => a.status === 'ANSWERED').length
-        : 0;
-      return {
-        studentId: s._id,
-        rollNo: s.rollNo,
-        name: s.fullName || `${s.firstName} ${s.lastName}`,
-        standard: s.standard,
-        division: s.division,
-        streamGroup: s.streamGroup,
-        status: att ? att.status : 'NOT_STARTED',
-        startedAt: att ? att.startedAt : null,
-        submittedAt: att ? att.submittedAt : null,
-        answeredCount,
-        totalQuestions: exam.questions.length,
-        violationsCount: att ? att.violationsCount : 0,
-        violationLogs: att ? att.violationLogs : [],
-        disqualificationReason: att ? att.disqualificationReason : '',
-        retryAllowed: att ? att.retryAllowed : false,
-      };
+    students.forEach(s => {
+      const roll = Number(s.rollNo);
+      if (!seenRollNos.has(roll)) {
+        seenRollNos.add(roll);
+        liveData.push({
+          studentId: s._id,
+          rollNo: s.rollNo,
+          name: s.fullName || `${s.firstName || ''} ${s.lastName || ''}`.trim() || `Student ${s.rollNo}`,
+          email: s.email,
+          standard: s.standard,
+          division: s.division,
+          streamGroup: s.streamGroup,
+          status: 'NOT_STARTED',
+          startedAt: null,
+          submittedAt: null,
+          answeredCount: 0,
+          totalQuestions: exam.questions ? exam.questions.length : 0,
+          violationsCount: 0,
+          violationLogs: [],
+          disqualificationReason: '',
+          retryAllowed: false,
+        });
+      }
+    });
+
+    // Sort: Disqualified or students with violations first, then in-progress, then rollNo
+    liveData.sort((a, b) => {
+      const aScore = (a.status === 'DISQUALIFIED' ? 20 : 0) + (a.violationsCount || 0) * 2 + (a.status === 'IN_PROGRESS' ? 5 : 0);
+      const bScore = (b.status === 'DISQUALIFIED' ? 20 : 0) + (b.violationsCount || 0) * 2 + (b.status === 'IN_PROGRESS' ? 5 : 0);
+      if (aScore !== bScore) return bScore - aScore;
+      return (Number(a.rollNo) || 0) - (Number(b.rollNo) || 0);
     });
 
     res.json({
@@ -824,7 +1036,7 @@ exports.getLiveMonitor = async (req, res) => {
         _id: exam._id,
         title: exam.title,
         durationMinutes: exam.durationMinutes,
-        questionsCount: exam.questions.length,
+        questionsCount: exam.questions ? exam.questions.length : 0,
         status: exam.status,
       },
       students: liveData,

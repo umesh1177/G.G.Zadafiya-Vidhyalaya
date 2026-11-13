@@ -15,6 +15,15 @@ export default function CbtInstructionsModal({ exam, onProceed, onClose }) {
 
   if (!exam) return null;
 
+  const now = new Date();
+  const startTime = exam.startTime ? new Date(exam.startTime) : null;
+  const isBeforeStart = startTime && now < startTime;
+
+  const formatExamTime = (d) => {
+    if (!d) return '';
+    return new Date(d).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
   return (
     <div className="cbt-modal-overlay">
       <div className="cbt-instructions-container">
@@ -110,6 +119,14 @@ export default function CbtInstructionsModal({ exam, onProceed, onClose }) {
 
           {/* Agreement Checkbox */}
           <div className="pt-4 border-t border-slate-200">
+            {isBeforeStart && (
+              <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg text-blue-900 flex items-center gap-2">
+                <Clock size={16} className="text-blue-600 shrink-0" />
+                <span>
+                  Exam entry opens at <strong>{formatExamTime(startTime)}</strong>. Please review instructions while waiting.
+                </span>
+              </div>
+            )}
             <label className="flex items-start gap-3 cursor-pointer select-none p-3 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors">
               <input
                 type="checkbox"
@@ -131,11 +148,11 @@ export default function CbtInstructionsModal({ exam, onProceed, onClose }) {
           </button>
           <button
             className="cbt-btn-primary flex items-center gap-2 text-xs py-2 px-4"
-            disabled={!agreed}
+            disabled={!agreed || isBeforeStart}
             onClick={onProceed}
           >
             <Maximize2 size={15} />
-            <span>Enter Fullscreen Exam</span>
+            <span>{isBeforeStart ? `Starts at ${formatExamTime(startTime)}` : 'Enter Fullscreen Exam'}</span>
           </button>
         </div>
       </div>

@@ -79,6 +79,16 @@ const cbtExamSchema = new mongoose.Schema(
       comment: 'Exam window closes; card disappears or exam cannot be started',
     },
 
+    // Subject Question Papers (PDFs uploaded for Physics, Chemistry, Maths/Biology)
+    subjectPapers: [
+      {
+        subject: { type: String, required: true },
+        fileName: { type: String, default: '' },
+        fileSize: { type: Number, default: 0 },
+        uploadedAt: { type: Date, default: Date.now },
+      },
+    ],
+
     // Questions list
     questions: [cbtQuestionSchema],
 

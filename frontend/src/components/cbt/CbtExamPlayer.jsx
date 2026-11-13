@@ -89,7 +89,10 @@ export default function CbtExamPlayer({
 
       try {
         const res = await recordCbtViolation(exam._id, {
+          attemptId: attempt?._id,
           studentRollNo: rollNo,
+          studentEmail: currentUser?.email,
+          studentName: currentUser?.name,
           action,
         });
 

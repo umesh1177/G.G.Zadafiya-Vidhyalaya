@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, useNavigate } from 'react-router-dom';
 import {
   FileText,
   Plus,
@@ -20,12 +20,12 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { fetchCbtExams, evaluateCbtExam, deleteCbtExam } from '../../services/cbtService';
-import CbtAnalysisModal from '../../components/cbt/CbtAnalysisModal';
 import CbtLiveMonitorModal from '../../components/cbt/CbtLiveMonitorModal';
 import CbtCreateExamModal from '../../components/cbt/CbtCreateExamModal';
 
 export default function AssistantCbtExam() {
   const outlet = useOutletContext();
+  const navigate = useNavigate();
   const [exams, setExams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState('ALL');
@@ -34,7 +34,6 @@ export default function AssistantCbtExam() {
   // Modals
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [examToEdit, setExamToEdit] = useState(null);
-  const [activeAnalysisExamId, setActiveAnalysisExamId] = useState(null);
   const [activeMonitorExamId, setActiveMonitorExamId] = useState(null);
 
   useEffect(() => {
@@ -71,7 +70,7 @@ export default function AssistantCbtExam() {
       if (res.success) {
         alert(res.message);
         loadExams();
-        setActiveAnalysisExamId(exam._id);
+        navigate(`/assistant/cbt-exam/analysis/${exam._id}`);
       } else {
         alert(res.message || 'Evaluation failed.');
       }
@@ -336,11 +335,11 @@ export default function AssistantCbtExam() {
                           <span>Evaluate</span>
                         </button>
 
-                        {/* View Analysis (Photo 1) */}
+                        {/* View Analysis (Full New Page - Photo 1) */}
                         <button
                           className="cbt-action-btn cbt-action-btn--analysis"
                           title="View Analysis & Leaderboard"
-                          onClick={() => setActiveAnalysisExamId(exam._id)}
+                          onClick={() => navigate(`/assistant/cbt-exam/analysis/${exam._id}`)}
                         >
                           <BarChart3 size={14} />
                           <span>Analysis</span>
@@ -376,14 +375,6 @@ export default function AssistantCbtExam() {
           </div>
         )}
       </div>
-
-      {/* Analysis Modal (Photo 1) */}
-      {activeAnalysisExamId && (
-        <CbtAnalysisModal
-          examId={activeAnalysisExamId}
-          onClose={() => setActiveAnalysisExamId(null)}
-        />
-      )}
 
       {/* Live Monitor Modal */}
       {activeMonitorExamId && (

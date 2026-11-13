@@ -36,10 +36,10 @@ export default function CbtLiveMonitorModal({ examId, onClose }) {
 
   useEffect(() => {
     loadData();
-    // Auto-refresh every 6 seconds
+    // Auto-refresh every 3 seconds for instant real-time violation tracking
     const interval = setInterval(() => {
       loadData(true);
-    }, 6000);
+    }, 3000);
     return () => clearInterval(interval);
   }, [examId]);
 
