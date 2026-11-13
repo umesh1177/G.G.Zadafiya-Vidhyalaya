@@ -16,7 +16,7 @@ import {
   ShieldAlert,
   Award,
 } from 'lucide-react';
-import { createCbtExam, updateCbtExam } from '../../services/cbtService';
+import { createCbtExam, updateCbtExam, extractCbtPaper } from '../../services/cbtService';
 
 export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved }) {
   const isEditing = Boolean(examToEdit);
@@ -73,6 +73,7 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
   const [questions, setQuestions] = useState(examToEdit?.questions || []);
   const [activeTab, setActiveTab] = useState('setup'); // 'setup', 'papers', 'questions'
   const [submitting, setSubmitting] = useState(false);
+  const [extractingMap, setExtractingMap] = useState({});
   const [rawText, setRawText] = useState('');
 
   // Handle Exam Type selection with dynamic marking (+4/-1 for JEE/NEET, +1/-0.25 for GUJCET)
@@ -131,8 +132,8 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
     );
   };
 
-  // File selection for 3 Subject PDFs
-  const handleFileSelect = (index, subject, e) => {
+  // Real File selection & parsing for 3 Subject PDFs
+  const handleFileSelect = async (index, subject, e) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
 
@@ -145,47 +146,60 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
     };
     setSubjectPapers(copy);
 
-    // If no questions yet or user wants, generate subject-tailored questions for this paper
-    const subjQuestions = [
-      {
-        id: `q_${subject.toLowerCase()}_1_${Date.now()}`,
+    setExtractingMap((prev) => ({ ...prev, [subject]: true }));
+
+    try {
+      const reader = new FileReader();
+      const fileDataPromise = new Promise((resolve, reject) => {
+        if (file.name.endsWith('.txt')) {
+          reader.readAsText(file);
+          reader.onload = () => resolve({ rawText: reader.result });
+          reader.onerror = reject;
+        } else {
+          reader.readAsDataURL(file);
+          reader.onload = () => resolve({ pdfBase64: reader.result });
+          reader.onerror = reject;
+        }
+      });
+
+      const { pdfBase64, rawText: fileRawText } = await fileDataPromise;
+
+      const res = await extractCbtPaper({
+        pdfBase64,
+        rawText: fileRawText,
         subject,
-        questionNo: questions.length + 1,
         marks: Number(formData.marksPerQuestion),
         negativeMarks: Number(formData.negativeMarks),
-        questionText: `[From ${file.name}] Standard ${subject} MCQ question testing fundamental principles:`,
-        options: [
-          `Fundamental property of ${subject} system (Standard Option A)`,
-          `Conservation principle application in ${subject} (Option B)`,
-          `Calculated equilibrium parameter in ${subject} (Option C)`,
-          `Inverse experimental variation result (Option D)`,
-        ],
-        correctAnswer: 'A',
-      },
-      {
-        id: `q_${subject.toLowerCase()}_2_${Date.now()}`,
-        subject,
-        questionNo: questions.length + 2,
-        marks: Number(formData.marksPerQuestion),
-        negativeMarks: Number(formData.negativeMarks),
-        questionText: `[From ${file.name}] In ${subject}, when initial state variables are doubled under steady condition, the resulting value is:`,
-        options: ['Directly proportional (2x)', 'Inversely proportional (0.5x)', 'Quadrupled (4x)', 'Invariant (1x)'],
-        correctAnswer: 'C',
-      },
-    ];
+      });
 
-    setQuestions((prev) => {
-      // Append these subject questions if not already there
-      const combined = [...prev, ...subjQuestions];
-      // Re-index question numbers
-      return combined.map((q, idx) => ({ ...q, questionNo: idx + 1 }));
-    });
+      if (res.success && res.questions && res.questions.length > 0) {
+        // Replace previous questions of this subject with the newly extracted ones
+        const otherQuestions = questions.filter((q) => q.subject !== subject);
+        const combined = [...otherQuestions, ...res.questions].map((q, idx) => ({
+          ...q,
+          questionNo: idx + 1,
+        }));
 
-    // Update total marks
-    setFormData((prev) => ({
-      ...prev,
-      totalMarks: (questions.length + 2) * Number(formData.marksPerQuestion),
-    }));
+        setQuestions(combined);
+        setFormData((prev) => ({
+          ...prev,
+          totalMarks: combined.length * Number(prev.marksPerQuestion),
+        }));
+
+        if (res.rawText) {
+          setRawText((prev) => (prev ? prev + '\n\n' + res.rawText : res.rawText));
+        }
+
+        alert(res.message || `Extracted ${res.questions.length} MCQs for ${subject} successfully!`);
+      } else {
+        alert(`Could not extract questions from ${file.name}. You can paste question text directly or use the sample question bank.`);
+      }
+    } catch (err) {
+      console.error('File extraction error:', err);
+      alert(`Error extracting from ${file.name}: ${err.message}`);
+    } finally {
+      setExtractingMap((prev) => ({ ...prev, [subject]: false }));
+    }
   };
 
   const handleRemoveSubjectPaper = (index, subject) => {
@@ -753,7 +767,14 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
                     </div>
 
                     <div className="cbt-pdf-box-body">
-                      {paper.fileName ? (
+                      {extractingMap[paper.subject] ? (
+                        <div className="py-6 text-center text-blue-600 bg-blue-50/50 rounded-lg">
+                          <div className="cbt-spinner mx-auto mb-2" style={{ width: 26, height: 26 }}></div>
+                          <span className="text-xs font-semibold">
+                            Extracting MCQs & Answer Key from {paper.subject} PDF...
+                          </span>
+                        </div>
+                      ) : paper.fileName ? (
                         <div className="cbt-file-info-view">
                           <div className="cbt-file-icon-wrap">
                             <FileText size={24} className="text-blue-600" />

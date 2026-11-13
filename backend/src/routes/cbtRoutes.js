@@ -5,6 +5,7 @@ const cbtController = require('../controllers/cbtController');
 // Exam Management
 router.get('/exams', cbtController.listExams);
 router.post('/exams', cbtController.createExam);
+router.post('/exams/extract-paper', cbtController.extractPaper);
 router.get('/exams/:id', cbtController.getExamById);
 router.put('/exams/:id', cbtController.updateExam);
 router.delete('/exams/:id', cbtController.deleteExam);

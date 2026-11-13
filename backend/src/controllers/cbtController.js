@@ -332,25 +332,42 @@ exports.startExam = async (req, res) => {
     // Build the questions array ordered by this student's specific questionOrder
     // Strip `correctAnswer` for security during test taking!
     const questionMap = {};
-    exam.questions.forEach(q => {
+    (exam.questions || []).forEach(q => {
       questionMap[q.id] = {
         id: q.id,
         subject: q.subject,
-        marks: q.marks,
-        negativeMarks: q.negativeMarks,
+        marks: q.marks || exam.marksPerQuestion || 4,
+        negativeMarks: q.negativeMarks || exam.negativeMarks || 1,
         questionText: q.questionText,
-        questionTextGujarati: q.questionTextGujarati,
-        options: q.options,
+        questionTextGujarati: q.questionTextGujarati || '',
+        options: q.options && q.options.length === 4 ? q.options : ['Option A', 'Option B', 'Option C', 'Option D'],
         // correctAnswer is withheld!
       };
     });
 
-    const orderedQuestions = attempt.questionOrder
-      .map((qId, idx) => {
-        const q = questionMap[qId];
-        return q ? { ...q, displayQuestionNo: idx + 1 } : null;
-      })
-      .filter(Boolean);
+    let orderedQuestions = [];
+    if (attempt.questionOrder && Array.isArray(attempt.questionOrder) && attempt.questionOrder.length > 0) {
+      orderedQuestions = attempt.questionOrder
+        .map((qId, idx) => {
+          const q = questionMap[qId];
+          return q ? { ...q, displayQuestionNo: idx + 1 } : null;
+        })
+        .filter(Boolean);
+    }
+
+    // Safety fallback: ensure questions are ALWAYS shown in exam player!
+    if (orderedQuestions.length === 0 && exam.questions && exam.questions.length > 0) {
+      orderedQuestions = exam.questions.map((q, idx) => ({
+        id: q.id || `q_${idx + 1}`,
+        subject: q.subject || 'General',
+        marks: q.marks || exam.marksPerQuestion || 4,
+        negativeMarks: q.negativeMarks || exam.negativeMarks || 1,
+        questionText: q.questionText,
+        questionTextGujarati: q.questionTextGujarati || '',
+        options: q.options && q.options.length === 4 ? q.options : ['Option A', 'Option B', 'Option C', 'Option D'],
+        displayQuestionNo: idx + 1,
+      }));
+    }
 
     // Calculate remaining seconds
     const totalExamSeconds = exam.durationMinutes * 60;
@@ -1043,6 +1060,70 @@ exports.getLiveMonitor = async (req, res) => {
     });
   } catch (err) {
     console.error('Error fetching live monitor:', err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// 14. Extract MCQs from PDF or Raw Text
+exports.extractPaper = async (req, res) => {
+  try {
+    const { pdfBase64, rawText, subject = 'Physics', marks = 4, negativeMarks = 1 } = req.body;
+
+    let textContent = rawText || '';
+
+    // If pdfBase64 is provided, extract text using pdf-parse
+    if (pdfBase64) {
+      try {
+        const cleanBase64 = pdfBase64.replace(/^data:application\/pdf;base64,/, '');
+        const pdfBuffer = Buffer.from(cleanBase64, 'base64');
+        const { PDFParse } = require('pdf-parse');
+        const parser = new PDFParse({ data: pdfBuffer });
+        const pdfResult = await parser.getText();
+        if (pdfResult && pdfResult.text) {
+          textContent = pdfResult.text;
+        } else if (pdfResult && Array.isArray(pdfResult.pages)) {
+          textContent = pdfResult.pages.map(p => p.text).join('\n');
+        } else if (typeof pdfResult === 'string') {
+          textContent = pdfResult;
+        }
+      } catch (pdfErr) {
+        console.warn('PDF parsing error, checking rawText fallback:', pdfErr.message);
+      }
+    }
+
+    let questions = [];
+    if (textContent && textContent.trim()) {
+      questions = parseMcqText(textContent, subject, Number(marks), Number(negativeMarks));
+    }
+
+    // If no questions could be parsed (e.g. scanned image PDF or non-standard format),
+    // provide clean syllabus sample questions for that subject as a fallback so user is never blocked
+    let isFallback = false;
+    if (questions.length === 0) {
+      const { getSampleQuestionsForExam } = require('../data/cbtSampleQuestions');
+      const allSample = getSampleQuestionsForExam('GUJCET', 'ALL');
+      const subjQuestions = allSample.filter(q => q.subject.toLowerCase() === subject.toLowerCase());
+      questions = (subjQuestions.length > 0 ? subjQuestions : allSample.slice(0, 5)).map(q => ({
+        ...q,
+        subject,
+        marks: Number(marks),
+        negativeMarks: Number(negativeMarks),
+      }));
+      isFallback = true;
+    }
+
+    res.json({
+      success: true,
+      questions,
+      rawText: textContent,
+      count: questions.length,
+      isFallback,
+      message: isFallback
+        ? `No selectable text found in the PDF. Loaded standard syllabus question template for ${subject}. You can also edit or paste text directly.`
+        : `Successfully extracted ${questions.length} MCQs for ${subject}!`,
+    });
+  } catch (err) {
+    console.error('Error in extractPaper:', err);
     res.status(500).json({ success: false, message: err.message });
   }
 };

@@ -30,6 +30,7 @@ export default function StudentCbtExam() {
   const [selectedExamForInstructions, setSelectedExamForInstructions] = useState(null);
   const [activePlayerState, setActivePlayerState] = useState(null); // { exam, attempt, questions }
   const [nowTime, setNowTime] = useState(new Date());
+  const [filter, setFilter] = useState('ALL'); // 'ALL', 'LIVE', 'UPCOMING', 'COMPLETED'
 
   const rollNo = user?.rollNo || 1;
   const standard = user?.standard || 'STD_11';
@@ -196,163 +197,247 @@ export default function StudentCbtExam() {
         </div>
       </div>
 
-      {/* Exam Cards Grid matching Photo 3 */}
-      {loading ? (
-        <div style={{ padding: '48px', textAlign: 'center', color: '#64748b', background: '#fff', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
-          <div className="cbt-spinner" style={{ margin: '0 auto 12px' }}></div>
-          Loading scheduled exams...
-        </div>
-      ) : exams.length === 0 ? (
-        <div style={{ padding: '48px', textAlign: 'center', color: '#64748b', background: '#fff', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
-          <Calendar size={42} style={{ margin: '0 auto 12px', color: '#cbd5e1' }} />
-          <p style={{ fontSize: '0.9rem' }}>No CBT exams currently scheduled for your class & stream.</p>
-        </div>
-      ) : (
-        <div className="cbt-cards-grid">
-          {exams.map((exam) => {
-            const startStatus = getStartStatus(exam);
-            const isSubmitted = exam.attemptStatus === 'SUBMITTED';
-            const isDisqualified = exam.attemptStatus === 'DISQUALIFIED';
-            const canRetry = exam.myAttempt?.retryAllowed;
+      {/* Filter Tabs Bar: All, Live, Upcoming, Completed */}
+      {(() => {
+        const liveExams = exams.filter((e) => {
+          const isSub = e.attemptStatus === 'SUBMITTED';
+          const isDisq = e.attemptStatus === 'DISQUALIFIED' && !e.myAttempt?.retryAllowed;
+          const isEnded = nowTime > new Date(e.windowEndTime);
+          const hasStarted = nowTime >= new Date(e.startTime);
+          return hasStarted && !isEnded && !isSub && !isDisq;
+        });
 
-            // Subjects list with max 2 and "+X more" matching Photo 3
-            const subjectsList = exam.subjects || ['Physics', 'Chemistry', 'Mathematics'];
-            const displayedSubjects = subjectsList.slice(0, 2);
-            const extraCount = subjectsList.length - 2;
+        const upcomingExams = exams.filter((e) => {
+          const isEnded = nowTime > new Date(e.windowEndTime);
+          const isSub = e.attemptStatus === 'SUBMITTED';
+          const isDisq = e.attemptStatus === 'DISQUALIFIED';
+          const isBeforeStart = nowTime < new Date(e.startTime);
+          return isBeforeStart && !isEnded && !isSub && !isDisq;
+        });
 
-            return (
-              <div key={exam._id} className="cbt-card-view">
-                {/* Card Top: Title & Takers Count Badge matching Photo 3 */}
-                <div className="cbt-card-top">
-                  <div className="cbt-card-title-wrap">
-                    <h3 className="cbt-card-title">{exam.title}</h3>
-                    <div className="cbt-card-portal-name">
-                      <Building2 size={13} />
-                      <span>{exam.instituteName || 'QuizPortal'}</span>
-                    </div>
-                  </div>
+        const completedExams = exams.filter((e) => {
+          const isSub = e.attemptStatus === 'SUBMITTED';
+          const isDisq = e.attemptStatus === 'DISQUALIFIED' && !e.myAttempt?.retryAllowed;
+          const isEnded = nowTime > new Date(e.windowEndTime);
+          return isSub || isDisq || isEnded;
+        });
 
-                  {/* Dark Blue Ribbon Takers Badge matching Photo 3 */}
-                  <div className="cbt-takers-badge">
-                    <Users size={14} />
-                    <span>{exam.takersCount || 0} takers</span>
-                  </div>
-                </div>
+        const displayedExams =
+          filter === 'LIVE'
+            ? liveExams
+            : filter === 'UPCOMING'
+            ? upcomingExams
+            : filter === 'COMPLETED'
+            ? completedExams
+            : exams;
 
-                {/* Timing Info matching Photo 3 */}
-                <div className="cbt-card-timing-section">
-                  <div className="cbt-timing-row">
-                    <div className="cbt-timing-col">
-                      <div className="cbt-timing-label">
-                        <Calendar size={13} />
-                        STARTS
-                      </div>
-                      <div className="cbt-timing-val">{formatExamDate(exam.startTime)}</div>
-                    </div>
+        return (
+          <>
+            <div className="cbt-student-filters-bar">
+              <button
+                className={`cbt-filter-tab ${filter === 'ALL' ? 'is-active' : ''}`}
+                onClick={() => setFilter('ALL')}
+              >
+                <span>All Exams</span>
+                <span className="cbt-filter-count">{exams.length}</span>
+              </button>
 
-                    <div className="cbt-timing-col">
-                      <div className="cbt-timing-label">
-                        <Calendar size={13} />
-                        ENDS
-                      </div>
-                      <div className="cbt-timing-val">{formatExamDate(exam.windowEndTime)}</div>
-                    </div>
-                  </div>
-                </div>
+              <button
+                className={`cbt-filter-tab ${filter === 'LIVE' ? 'is-active is-live' : ''}`}
+                onClick={() => setFilter('LIVE')}
+              >
+                <span className="cbt-live-dot"></span>
+                <span>Live Exams</span>
+                <span className="cbt-filter-count">{liveExams.length}</span>
+              </button>
 
-                {/* Subjects Tags matching Photo 3 */}
-                <div className="cbt-card-subjects-section">
-                  <div className="cbt-subjects-label">
-                    <BookOpen size={13} />
-                    SUBJECTS
-                  </div>
-                  <div className="cbt-subjects-pills-wrap">
-                    {displayedSubjects.map((sub) => (
-                      <span key={sub} className="cbt-subject-tag-pill">
-                        {sub}
-                      </span>
-                    ))}
-                    {extraCount > 0 && (
-                      <span className="cbt-subject-more-pill">+{extraCount} more</span>
-                    )}
-                  </div>
-                </div>
+              <button
+                className={`cbt-filter-tab ${filter === 'UPCOMING' ? 'is-active is-upcoming' : ''}`}
+                onClick={() => setFilter('UPCOMING')}
+              >
+                <Clock size={13} />
+                <span>Upcoming</span>
+                <span className="cbt-filter-count">{upcomingExams.length}</span>
+              </button>
 
-                {/* Status Badges */}
-                {isSubmitted && (
-                  <div className="cbt-submitted-pill-box">
-                    <span className="cbt-submitted-pill">
-                      <CheckCircle2 size={14} />
-                      Submitted
-                    </span>
-                  </div>
-                )}
+              <button
+                className={`cbt-filter-tab ${filter === 'COMPLETED' ? 'is-active is-completed' : ''}`}
+                onClick={() => setFilter('COMPLETED')}
+              >
+                <CheckCircle2 size={13} />
+                <span>Completed</span>
+                <span className="cbt-filter-count">{completedExams.length}</span>
+              </button>
+            </div>
 
-                {isDisqualified && !canRetry && (
-                  <div className="cbt-submitted-pill-box">
-                    <span className="cbt-disqualified-pill">
-                      <AlertTriangle size={14} />
-                      Disqualified (Contact Faculty)
-                    </span>
-                  </div>
-                )}
-
-                {isDisqualified && canRetry && (
-                  <div className="cbt-submitted-pill-box">
-                    <span className="cbt-retry-ready-pill">
-                      Retry Granted by Faculty! Click Start to Resume
-                    </span>
-                  </div>
-                )}
-
-                {/* Card Footer matching Photo 3 */}
-                <div className="cbt-card-footer">
-                  <div className="cbt-footer-meta">
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                      <Clock size={14} />
-                      {exam.durationMinutes} minutes
-                    </span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                      <Award size={14} />
-                      {exam.totalMarks} marks
-                    </span>
-                  </div>
-
-                  <div className="cbt-footer-action">
-                    {isSubmitted ? (
-                      exam.isResultPublished ? (
-                        <button
-                          className="cbt-btn-view-result"
-                          onClick={() => navigate(`/student/cbt-exam/analysis/${exam._id}`)}
-                        >
-                          <BarChart2 size={14} />
-                          View Result
-                        </button>
-                      ) : (
-                        <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>
-                          Under Evaluation
-                        </span>
-                      )
-                    ) : isDisqualified && !canRetry ? (
-                      <button className="cbt-btn-start disabled" disabled>
-                        Disqualified
-                      </button>
-                    ) : (
-                      <button
-                        className="cbt-btn-start"
-                        onClick={() => handleCardStartClick(exam)}
-                      >
-                        <Play size={14} fill="currentColor" />
-                        Start
-                      </button>
-                    )}
-                  </div>
-                </div>
+            {/* Exam Cards Grid matching Photo 3 */}
+            {loading ? (
+              <div style={{ padding: '48px', textAlign: 'center', color: '#64748b', background: '#fff', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
+                <div className="cbt-spinner" style={{ margin: '0 auto 12px' }}></div>
+                Loading scheduled exams...
               </div>
-            );
-          })}
-        </div>
-      )}
+            ) : displayedExams.length === 0 ? (
+              <div style={{ padding: '48px', textAlign: 'center', color: '#64748b', background: '#fff', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
+                <Calendar size={42} style={{ margin: '0 auto 12px', color: '#cbd5e1' }} />
+                <p style={{ fontSize: '0.9rem' }}>
+                  {filter === 'LIVE'
+                    ? 'No live exams currently in progress.'
+                    : filter === 'UPCOMING'
+                    ? 'No upcoming exams scheduled.'
+                    : filter === 'COMPLETED'
+                    ? 'No completed exams yet.'
+                    : 'No CBT exams currently scheduled for your class & stream.'}
+                </p>
+              </div>
+            ) : (
+              <div className="cbt-cards-grid">
+                {displayedExams.map((exam) => {
+                  const startStatus = getStartStatus(exam);
+                  const isSubmitted = exam.attemptStatus === 'SUBMITTED';
+                  const isDisqualified = exam.attemptStatus === 'DISQUALIFIED';
+                  const canRetry = exam.myAttempt?.retryAllowed;
+
+                  // Subjects list with max 2 and "+X more" matching Photo 3
+                  const subjectsList = exam.subjects || ['Physics', 'Chemistry', 'Mathematics'];
+                  const displayedSubjects = subjectsList.slice(0, 2);
+                  const extraCount = subjectsList.length - 2;
+
+                  return (
+                    <div key={exam._id} className="cbt-card-view">
+                      {/* Card Top: Title & Takers Count Badge matching Photo 3 */}
+                      <div className="cbt-card-top">
+                        <div className="cbt-card-title-wrap">
+                          <h3 className="cbt-card-title">{exam.title}</h3>
+                          <div className="cbt-card-portal-name">
+                            <Building2 size={13} />
+                            <span>{exam.instituteName || 'QuizPortal'}</span>
+                          </div>
+                        </div>
+
+                        {/* Dark Blue Ribbon Takers Badge matching Photo 3 */}
+                        <div className="cbt-takers-badge">
+                          <Users size={14} />
+                          <span>{exam.takersCount || 0} takers</span>
+                        </div>
+                      </div>
+
+                      {/* Timing Info matching Photo 3 */}
+                      <div className="cbt-card-timing-section">
+                        <div className="cbt-timing-row">
+                          <div className="cbt-timing-col">
+                            <div className="cbt-timing-label">
+                              <Calendar size={13} />
+                              STARTS
+                            </div>
+                            <div className="cbt-timing-val">{formatExamDate(exam.startTime)}</div>
+                          </div>
+
+                          <div className="cbt-timing-col">
+                            <div className="cbt-timing-label">
+                              <Calendar size={13} />
+                              ENDS
+                            </div>
+                            <div className="cbt-timing-val">{formatExamDate(exam.windowEndTime)}</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Subjects Tags matching Photo 3 */}
+                      <div className="cbt-card-subjects-section">
+                        <div className="cbt-subjects-label">
+                          <BookOpen size={13} />
+                          SUBJECTS
+                        </div>
+                        <div className="cbt-subjects-pills-wrap">
+                          {displayedSubjects.map((sub) => (
+                            <span key={sub} className="cbt-subject-tag-pill">
+                              {sub}
+                            </span>
+                          ))}
+                          {extraCount > 0 && (
+                            <span className="cbt-subject-more-pill">+{extraCount} more</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Status Badges */}
+                      {isSubmitted && (
+                        <div className="cbt-submitted-pill-box">
+                          <span className="cbt-submitted-pill">
+                            <CheckCircle2 size={14} />
+                            Submitted
+                          </span>
+                        </div>
+                      )}
+
+                      {isDisqualified && !canRetry && (
+                        <div className="cbt-submitted-pill-box">
+                          <span className="cbt-disqualified-pill">
+                            <AlertTriangle size={14} />
+                            Disqualified (Contact Faculty)
+                          </span>
+                        </div>
+                      )}
+
+                      {isDisqualified && canRetry && (
+                        <div className="cbt-submitted-pill-box">
+                          <span className="cbt-retry-ready-pill">
+                            Retry Granted by Faculty! Click Start to Resume
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Card Footer matching Photo 3 */}
+                      <div className="cbt-card-footer">
+                        <div className="cbt-footer-meta">
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <Clock size={14} />
+                            {exam.durationMinutes} minutes
+                          </span>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <Award size={14} />
+                            {exam.totalMarks} marks
+                          </span>
+                        </div>
+
+                        <div className="cbt-footer-action">
+                          {isSubmitted ? (
+                            exam.isResultPublished ? (
+                              <button
+                                className="cbt-btn-view-result"
+                                onClick={() => navigate(`/student/cbt-exam/analysis/${exam._id}`)}
+                              >
+                                <BarChart2 size={14} />
+                                View Result
+                              </button>
+                            ) : (
+                              <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>
+                                Under Evaluation
+                              </span>
+                            )
+                          ) : isDisqualified && !canRetry ? (
+                            <button className="cbt-btn-start disabled" disabled>
+                              Disqualified
+                            </button>
+                          ) : (
+                            <button
+                              className="cbt-btn-start"
+                              onClick={() => handleCardStartClick(exam)}
+                            >
+                              <Play size={14} fill="currentColor" />
+                              Start
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        );
+      })()}
 
       {/* Pre-Exam Instructions Modal */}
       {selectedExamForInstructions && (

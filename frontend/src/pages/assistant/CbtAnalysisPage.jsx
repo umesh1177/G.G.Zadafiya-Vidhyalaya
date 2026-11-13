@@ -764,3 +764,4 @@ export default function CbtAnalysisPage({ userRole = 'assistant' }) {
     </div>
   );
 }
+

@@ -22,6 +22,7 @@ import {
 import { fetchCbtExams, evaluateCbtExam, deleteCbtExam } from '../../services/cbtService';
 import CbtLiveMonitorModal from '../../components/cbt/CbtLiveMonitorModal';
 import CbtCreateExamModal from '../../components/cbt/CbtCreateExamModal';
+import CbtQuestionPaperModal from '../../components/cbt/CbtQuestionPaperModal';
 
 export default function AssistantCbtExam() {
   const outlet = useOutletContext();
@@ -35,6 +36,7 @@ export default function AssistantCbtExam() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [examToEdit, setExamToEdit] = useState(null);
   const [activeMonitorExamId, setActiveMonitorExamId] = useState(null);
+  const [selectedExamForPaper, setSelectedExamForPaper] = useState(null);
 
   useEffect(() => {
     if (outlet?.setHeader) {
@@ -315,6 +317,16 @@ export default function AssistantCbtExam() {
                     </td>
                     <td>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
+                        {/* Show Question Paper */}
+                        <button
+                          className="cbt-action-btn cbt-action-btn--paper"
+                          title="Show Question Paper with Options & Correct Answer Keys"
+                          onClick={() => setSelectedExamForPaper(exam)}
+                        >
+                          <FileText size={14} />
+                          <span>Show Question Paper</span>
+                        </button>
+
                         {/* Live Monitor */}
                         <button
                           className="cbt-action-btn cbt-action-btn--monitor"
@@ -335,15 +347,31 @@ export default function AssistantCbtExam() {
                           <span>Evaluate</span>
                         </button>
 
-                        {/* View Analysis (Full New Page - Photo 1) */}
-                        <button
-                          className="cbt-action-btn cbt-action-btn--analysis"
-                          title="View Analysis & Leaderboard"
-                          onClick={() => navigate(`/assistant/cbt-exam/analysis/${exam._id}`)}
-                        >
-                          <BarChart3 size={14} />
-                          <span>Analysis</span>
-                        </button>
+                        {/* View Analysis (Disabled until results are published) */}
+                        {(() => {
+                          const isPublished = exam.isResultPublished || exam.status === 'EVALUATED';
+                          return (
+                            <button
+                              className={`cbt-action-btn cbt-action-btn--analysis ${!isPublished ? 'opacity-50 cursor-not-allowed pointer-events-auto' : ''}`}
+                              title={
+                                isPublished
+                                  ? 'View Analysis & Leaderboard'
+                                  : 'Analysis disabled until assistant faculty publishes result of exam'
+                              }
+                              disabled={!isPublished}
+                              onClick={() => {
+                                if (isPublished) {
+                                  navigate(`/assistant/cbt-exam/analysis/${exam._id}`);
+                                } else {
+                                  alert('Please evaluate the exam first to publish results and unlock the Analysis page.');
+                                }
+                              }}
+                            >
+                              <BarChart3 size={14} />
+                              <span>Analysis</span>
+                            </button>
+                          );
+                        })()}
 
                         {/* Edit */}
                         <button
@@ -375,6 +403,14 @@ export default function AssistantCbtExam() {
           </div>
         )}
       </div>
+
+      {/* Show Question Paper Modal */}
+      {selectedExamForPaper && (
+        <CbtQuestionPaperModal
+          exam={selectedExamForPaper}
+          onClose={() => setSelectedExamForPaper(null)}
+        />
+      )}
 
       {/* Live Monitor Modal */}
       {activeMonitorExamId && (
