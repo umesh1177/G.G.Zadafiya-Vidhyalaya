@@ -1,113 +1,85 @@
-# Combined Dashboard — SVVS School Management System
+# G.G. Zadafiya Vidhyalaya — School Management & LT Analytics Portal
 
-A single Express + EJS server that combines all four school dashboards with session-based role authentication.
-
-## 🚀 Quick Start
-
-```bash
-cd combined-dashboard
-npm install
-node server.js
-```
-
-Then open **http://localhost:4000**
+A full-stack Academic Management, Lecture Test (LT) Analytics, and Syllabus Tracking System designed for G.G. Zadafiya Vidhyalaya (Std 11 & 12 Science Stream — GSEB, JEE, NEET).
 
 ---
 
-## 🔐 Login Credentials
+## 🏗️ Architecture & Tech Stack
 
-| Role | Username | Password | Redirects To |
-|------|----------|----------|--------------|
-| 🎓 Principal | `admin` | `admin123` | `/principal/` |
-| 📚 Subject Faculty | `faculty` | `faculty123` | `/faculty/` |
-| 🔬 Assistant Faculty | `assistant` | `asst123` | `/assistant/` |
-| 🎒 Student / Parent | `student` | `student123` | `/student/` |
-
-> On the login page, click any role card to auto-fill and sign in instantly.
+- **Frontend**: React 18, Vite, React Router v6, Chart.js / react-chartjs-2, Web Speech API (Gujarati `gu-IN` & English `en-IN`), Custom Gujarati Virtual Keyboard, PWA (Progressive Web App).
+- **Backend**: Node.js, Express.js REST API.
+- **Database**: MongoDB Atlas (`student_management_system`) via Mongoose.
 
 ---
 
 ## 📁 Project Structure
 
 ```
-combined-dashboard/
-├── server.js              ← Main Express server (port 4000)
-├── package.json
-├── data/
-│   ├── principal.js       ← Principal dashboard data
-│   ├── faculty.js         ← Faculty dashboard data
-│   ├── assistant.js       ← Assistant faculty data
-│   └── student.js         ← Student/parent data
-├── views/
-│   ├── login.ejs          ← Login page
-│   ├── principal/         ← Principal views (pages + partials)
-│   ├── faculty/           ← Faculty views
-│   ├── assistant/         ← Assistant Faculty views
-│   └── student/           ← Student/Parent views
-└── public/
-    ├── principal/css/      ← Principal CSS
-    ├── principal/js/       ← Principal JS
-    ├── faculty/css/
-    ├── faculty/js/
-    ├── assistant/css/
-    ├── assistant/js/
-    ├── student/css/
-    └── student/js/
+├── backend/                  # Node.js + Express API server
+│   ├── src/
+│   │   ├── config/           # Database configuration (MongoDB Atlas)
+│   │   ├── controllers/      # Auth, Faculty, Student, LT, Exam, Syllabus, Notice, Discipline
+│   │   ├── data/             # Std 11 & 12 curriculum definitions (Physics, Chemistry, Maths, Biology)
+│   │   ├── models/           # Mongoose schemas (Faculty, Student, Syllabus, LT, Exam, Notice, etc.)
+│   │   ├── routes/           # Express API route endpoints
+│   │   └── services/         # Business logic and ML evaluation algorithms
+│   ├── public/syllabus/      # Diagram images for Physics, Maths, and Chemistry
+│   └── package.json
+├── frontend/                 # React + Vite application
+│   ├── src/
+│   │   ├── components/       # Reusable UI, VoiceInputControl, GujaratiVirtualKeyboard, Modals
+│   │   ├── context/          # Authentication & App Contexts
+│   │   ├── pages/            # Principal, Faculty, Assistant, Student, Login dashboards
+│   │   ├── services/         # Frontend API clients (REST endpoints)
+│   │   └── styles/           # CSS design system
+│   ├── public/syllabus/      # Static image assets
+│   └── package.json
+├── .gitignore
+├── package.json              # Workspace root scripts
+└── README.md
 ```
 
 ---
 
-## 🔗 Dashboard Routes
+## 🚀 Getting Started
 
-### Principal (`/principal/*`)
-- `/principal/` — Home
-- `/principal/student-management` — Manage students
-- `/principal/faculty-management` — Manage faculty
-- `/principal/exam-analysis` — Exam analytics
-- `/principal/lt-analysis` — LT analytics
-- `/principal/syllabus-tracking` — Syllabus progress
-- `/principal/progress-report` — Progress reports (Weekly/Monthly/Advance)
-- `/principal/discipline-remark` — Discipline records
-- `/principal/notice-message` — Send notices
-- `/principal/profile` — Principal profile
+### 1. Prerequisites
+- Node.js (v18+ recommended)
+- MongoDB Atlas connection string configured in `backend/.env`
 
-### Faculty (`/faculty/*`)
-- `/faculty/` — Home
-- `/faculty/set-lt` — Set LT
-- `/faculty/exam-unit` — Exam unit management
-- `/faculty/syllabus` — Syllabus tracking
-- `/faculty/notice` — Notices
-- `/faculty/profile` — Profile
+### 2. Installation
+```bash
+# Install backend dependencies
+cd backend
+npm install
 
-### Assistant Faculty (`/assistant/*`)
-- `/assistant/` — Home
-- `/assistant/lt` — LT management
-- `/assistant/lt/history/:id` — LT history detail
-- `/assistant/lt/enter-marks/:id` — Enter LT marks
-- `/assistant/exam` — Exam management
-- `/assistant/exam/enter-marks/:id` — Enter exam marks
-- `/assistant/exam/view-marks/:id` — View exam marks
-- `/assistant/result` — Result generation
-- `/assistant/hall-ticket` — Hall ticket generation
-- `/assistant/notice` — Notices
-- `/assistant/discipline-remark` — Discipline remarks
+# Install frontend dependencies
+cd ../frontend
+npm install
+```
 
-### Student / Parent (`/student/*`)
-- `/student/` — Home
-- `/student/lt-analysis` — LT performance
-- `/student/progress-report` — Weekly/Monthly progress
-- `/student/exam-result` — Exam results
-- `/student/result` — Result sheets
-- `/student/hall-ticket` — Hall tickets
-- `/student/notice-message` — Notices
-- `/student/discipline-remark` — Discipline records
+### 3. Running the System
+```bash
+# Start backend API (runs on http://localhost:5000)
+npm run backend
+
+# Start frontend application (runs on http://localhost:5173)
+npm run frontend
+```
 
 ---
 
-## ⚙️ Technical Details
+## 🔐 Default Principal Credentials
 
-- **Port**: 4000
-- **Framework**: Express 5 + EJS 6
-- **Auth**: `express-session` (8-hour sessions)
-- **Static assets**: Served per-role under `/principal/`, `/faculty/`, `/assistant/`, `/student/`
-- **Security**: Protected routes redirect to `/login` if unauthenticated; cross-role access redirects to own dashboard
+- **Username / Email**: `admin` or `principal@ggzv.edu.in` or `FAC100`
+- **Password**: `admin123`
+- **Portal**: Principal Dashboard with complete Faculty, Student, Syllabus, LT Analysis, Exam Analysis, and Discipline Management.
+
+---
+
+## ✨ Key Features
+
+- **Lecture Test (LT) Workflow & Analytics**: Daily LT creation, subject faculty isolation, assistant mark entry, performance categorization (`Excellent`, `Better`, `Good`), weekly & monthly reports, growth/downfall tracking, and printable reports.
+- **Syllabus Management**: Standard 11 & 12 complete curriculum for Physics, Chemistry, Mathematics, and Biology with textbook diagram integration, topic status tracking, and progress metrics.
+- **Voice-to-Text & Gujarati Virtual Keyboard**: Speech-to-text supporting Gujarati (`gu-IN`) and English (`en-IN`) with interim preview and a full on-screen virtual Gujarati keyboard across all remark/question/notice fields.
+- **Discipline & Notice Workspace**: Incident recording, behavioral tracking, circular dispatch with PDF and image attachments.
