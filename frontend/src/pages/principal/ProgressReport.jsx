@@ -109,47 +109,59 @@ export default function ProgressReport() {
           <div className="card__head">
             <div className="card__title">Subject Averages ({activeTab.toUpperCase()})</div>
           </div>
-          <div style={{ height: 210, position: 'relative' }}>
-            <Bar
-              data={subjectChartData}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                  y: { beginAtZero: true, max: 100, grid: { color: '#EEF0F8' }, ticks: { font: { family: 'IBM Plex Mono' } } },
-                  x: { grid: { display: false } }
-                }
-              }}
-            />
-          </div>
+          {subjectAverages.length > 0 ? (
+            <div style={{ height: 210, position: 'relative' }}>
+              <Bar
+                data={subjectChartData}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: { legend: { display: false } },
+                  scales: {
+                    y: { beginAtZero: true, max: 100, grid: { color: '#EEF0F8' }, ticks: { font: { family: 'IBM Plex Mono' } } },
+                    x: { grid: { display: false } }
+                  }
+                }}
+              />
+            </div>
+          ) : (
+            <div style={{ height: 210, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748B', fontSize: 13.5 }}>
+              No subject performance data recorded yet.
+            </div>
+          )}
         </div>
 
         <div className="card">
           <div className="card__head">
             <div className="card__title">Score Bracket Breakdown</div>
           </div>
-          <div style={{ height: 210, position: 'relative' }}>
-            <Bar
-              data={bracketsChartData}
-              options={{
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                  y: { beginAtZero: true, grid: { color: '#EEF0F8' }, ticks: { font: { family: 'IBM Plex Mono' } } },
-                  x: { grid: { display: false } }
-                }
-              }}
-            />
-          </div>
+          {brackets.length > 0 ? (
+            <div style={{ height: 210, position: 'relative' }}>
+              <Bar
+                data={bracketsChartData}
+                options={{
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: { legend: { display: false } },
+                  scales: {
+                    y: { beginAtZero: true, grid: { color: '#EEF0F8' }, ticks: { font: { family: 'IBM Plex Mono' } } },
+                    x: { grid: { display: false } }
+                  }
+                }}
+              />
+            </div>
+          ) : (
+            <div style={{ height: 210, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748B', fontSize: 13.5 }}>
+              No score bracket data recorded yet.
+            </div>
+          )}
         </div>
       </div>
 
       <div className="grid-2" style={{ marginTop: 16 }}>
         <div className="card">
           <div className="card__head">
-            <div className="card__title">Top 3 Academic Leaders</div>
+            <div className="card__title">Top Academic Leaders</div>
           </div>
           <div className="table-wrap">
             <table>
@@ -157,15 +169,19 @@ export default function ProgressReport() {
                 <tr><th>Rank</th><th>Roll</th><th>Name</th><th>Subject</th><th>Score</th></tr>
               </thead>
               <tbody>
-                {reportData.top3?.map((s, idx) => (
-                  <tr key={idx}>
-                    <td className="num"><strong>#{idx + 1}</strong></td>
-                    <td className="num">{s.rollNo}</td>
-                    <td><strong>{s.name}</strong></td>
-                    <td>{s.subject}</td>
-                    <td className="num"><span className="chip chip-success">{s.score}%</span></td>
-                  </tr>
-                ))}
+                {Array.isArray(reportData.top3) && reportData.top3.length > 0 ? (
+                  reportData.top3.map((s, idx) => (
+                    <tr key={idx}>
+                      <td className="num"><strong>#{idx + 1}</strong></td>
+                      <td className="num">{s.rollNo}</td>
+                      <td><strong>{s.name}</strong></td>
+                      <td>{s.subject}</td>
+                      <td className="num"><span className="chip chip-success">{s.score}%</span></td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr><td colSpan={5} style={{ textAlign: 'center', color: '#64748b', padding: '24px 0' }}>No academic assessment records yet.</td></tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -181,14 +197,18 @@ export default function ProgressReport() {
                 <tr><th>Roll</th><th>Name</th><th>Score</th><th>Status</th></tr>
               </thead>
               <tbody>
-                {reportData.bottom3?.map((b, idx) => (
-                  <tr key={idx}>
-                    <td className="num">{b.rollNo}</td>
-                    <td>{b.name}</td>
-                    <td className="num"><span className="chip chip-danger">{b.score}%</span></td>
-                    <td>Needs Counseling</td>
-                  </tr>
-                ))}
+                {Array.isArray(reportData.bottom3) && reportData.bottom3.length > 0 ? (
+                  reportData.bottom3.map((b, idx) => (
+                    <tr key={idx}>
+                      <td className="num">{b.rollNo}</td>
+                      <td>{b.name}</td>
+                      <td className="num"><span className="chip chip-danger">{b.score}%</span></td>
+                      <td>Needs Counseling</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr><td colSpan={4} style={{ textAlign: 'center', color: '#64748b', padding: '24px 0' }}>No remedial records found.</td></tr>
+                )}
               </tbody>
             </table>
           </div>

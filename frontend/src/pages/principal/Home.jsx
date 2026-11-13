@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { useData } from '../../context/DataContext';
 import { studentApi } from '../../services/studentApi';
 import { facultyApi } from '../../services/facultyApi';
 import { syllabusApi } from '../../services/syllabusApi';
@@ -24,7 +23,6 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 export default function PrincipalHome() {
   const { setHeader } = useOutletContext();
   const { user } = useAuth();
-  const { principal } = useData();
 
   const [dynamicStats, setDynamicStats] = useState({
     loaded: false,
@@ -44,10 +42,10 @@ export default function PrincipalHome() {
 
   useEffect(() => {
     setHeader({
-      title: `Good morning, ${user?.name || principal.principal?.name || 'Principal'}`,
+      title: `Good morning, ${user?.name || 'Principal'}`,
       subtitle: "Here's how the school is tracking today"
     });
-  }, [setHeader, user, principal]);
+  }, [setHeader, user]);
 
   const fetchLiveCounts = useCallback(async () => {
     try {
@@ -115,12 +113,13 @@ export default function PrincipalHome() {
   const pendingExamCount =
     dynamicStats.examPendingCount !== null && dynamicStats.examPendingCount !== undefined
       ? dynamicStats.examPendingCount
-      : (principal.examStats?.pending || 0);
+      : 0;
 
   const completedExams =
     Array.isArray(dynamicStats.recentCompletedExams) && dynamicStats.recentCompletedExams.length > 0
       ? dynamicStats.recentCompletedExams
-      : (principal.exams?.filter(e => e.status === 'completed').slice(0, 5) || []);
+      : [];
+
   const chartData = {
     labels: completedExams.map(e => e.subject),
     datasets: [{
@@ -150,7 +149,7 @@ export default function PrincipalHome() {
     }
   };
 
-  const syllabusSubjects = dynamicStats.syllabusSubjects || principal.syllabus?.subjects || [];
+  const syllabusSubjects = Array.isArray(dynamicStats.syllabusSubjects) ? dynamicStats.syllabusSubjects : [];
   const avgSyllabus = syllabusSubjects.length
     ? Math.round(syllabusSubjects.reduce((a, s) => a + s.completion, 0) / syllabusSubjects.length)
     : 0;
@@ -160,14 +159,14 @@ export default function PrincipalHome() {
       <div className="kpi-grid">
         <div className="kpi-card">
           <div className="kpi-card__label">Total Students</div>
-          <div className="kpi-card__value num">{dynamicStats.loaded ? dynamicStats.totalStudents : (principal.studentStats?.total || 0)}</div>
+          <div className="kpi-card__value num">{dynamicStats.totalStudents}</div>
           <div className="kpi-card__hint">
             Group A {dynamicStats.groupA} · B {dynamicStats.groupB} · AB {dynamicStats.groupAB}
           </div>
         </div>
         <div className="kpi-card">
           <div className="kpi-card__label">Total Faculty</div>
-          <div className="kpi-card__value num">{dynamicStats.loaded ? dynamicStats.totalFaculty : (principal.facultyStats?.total || 0)}</div>
+          <div className="kpi-card__value num">{dynamicStats.totalFaculty}</div>
           <div className="kpi-card__hint">
             {dynamicStats.subjectFaculty} Subject · {dynamicStats.assistantFaculty} Assistant
           </div>
@@ -205,19 +204,25 @@ export default function PrincipalHome() {
             </div>
             <Link to="/principal/exam-analysis" className="btn btn-ghost btn-sm">View full analysis</Link>
           </div>
-          <div className="chart-row">
-            <div className="chart-box" style={{ height: 170, position: 'relative' }}>
-              <Bar data={chartData} options={chartOptions} />
+          {completedExams.length > 0 ? (
+            <div className="chart-row">
+              <div className="chart-box" style={{ height: 170, position: 'relative' }}>
+                <Bar data={chartData} options={chartOptions} />
+              </div>
+              <div className="legend-list" style={{ marginTop: 10 }}>
+                {completedExams.map((e, idx) => (
+                  <div key={idx} className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, marginBottom: 4 }}>
+                    <span className="legend-dot" style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#123B5D' }}></span>
+                    {e.subject} — <strong className="num">{e.classAverage}%</strong>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="legend-list" style={{ marginTop: 10 }}>
-              {completedExams.map((e, idx) => (
-                <div key={idx} className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, marginBottom: 4 }}>
-                  <span className="legend-dot" style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#123B5D' }}></span>
-                  {e.subject} — <strong className="num">{e.classAverage}%</strong>
-                </div>
-              ))}
+          ) : (
+            <div style={{ padding: '40px 16px', textAlign: 'center', color: '#64748B', fontSize: 13.5 }}>
+              No exam results recorded yet.
             </div>
-          </div>
+          )}
         </div>
 
         <div className="card">
@@ -228,17 +233,23 @@ export default function PrincipalHome() {
             </div>
             <Link to="/principal/syllabus-tracking" className="btn btn-ghost btn-sm">Open</Link>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
-            {syllabusSubjects.map((s, idx) => (
-              <div key={idx} className="progress-row">
-                <div className="progress-row__label" style={{ fontSize: '13.4px', fontWeight: 600, marginBottom: 2 }}>{s.name}</div>
-                <div className="progress-track" style={{ background: '#eef0f8', borderRadius: 4, height: 8, width: '100%', overflow: 'hidden', marginBottom: 4 }}>
-                  <div className="progress-fill" style={{ width: `${s.completion}%`, background: '#123B5D', height: '100%', borderRadius: 4 }} />
+          {syllabusSubjects.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
+              {syllabusSubjects.map((s, idx) => (
+                <div key={idx} className="progress-row">
+                  <div className="progress-row__label" style={{ fontSize: '13.4px', fontWeight: 600, marginBottom: 2 }}>{s.name}</div>
+                  <div className="progress-track" style={{ background: '#eef0f8', borderRadius: 4, height: 8, width: '100%', overflow: 'hidden', marginBottom: 4 }}>
+                    <div className="progress-fill" style={{ width: `${s.completion}%`, background: '#123B5D', height: '100%', borderRadius: 4 }} />
+                  </div>
+                  <div className="progress-row__value num" style={{ fontSize: 12, textAlign: 'right', color: '#64748b' }}>{s.completion}%</div>
                 </div>
-                <div className="progress-row__value num" style={{ fontSize: 12, textAlign: 'right', color: '#64748b' }}>{s.completion}%</div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ padding: '40px 16px', textAlign: 'center', color: '#64748B', fontSize: 13.5 }}>
+              Syllabus progress will appear once curriculum topics are marked finished.
+            </div>
+          )}
         </div>
       </div>
 
@@ -257,8 +268,8 @@ export default function PrincipalHome() {
                 <tr><th>Roll No</th><th>Name</th><th>Type</th><th>Date</th></tr>
               </thead>
               <tbody>
-                {(dynamicStats.recentDisciplineFlags !== null ? dynamicStats.recentDisciplineFlags : (principal.discipline?.undisciplined || [])).length > 0 ? (
-                  (dynamicStats.recentDisciplineFlags !== null ? dynamicStats.recentDisciplineFlags : principal.discipline.undisciplined).slice(0, 5).map((d, i) => (
+                {Array.isArray(dynamicStats.recentDisciplineFlags) && dynamicStats.recentDisciplineFlags.length > 0 ? (
+                  dynamicStats.recentDisciplineFlags.slice(0, 5).map((d, i) => (
                     <tr key={d.id || i}>
                       <td className="num">#{d.rollNo}</td>
                       <td>{d.studentName || d.name}</td>
@@ -267,7 +278,7 @@ export default function PrincipalHome() {
                     </tr>
                   ))
                 ) : (
-                  <tr><td colSpan={4} style={{ textAlign: 'center', color: '#64748b', padding: '14px 0' }}>No recent disciplinary incidents recorded.</td></tr>
+                  <tr><td colSpan={4} style={{ textAlign: 'center', color: '#64748b', padding: '24px 0' }}>No recent disciplinary incidents recorded.</td></tr>
                 )}
               </tbody>
             </table>
@@ -283,8 +294,8 @@ export default function PrincipalHome() {
             <Link to="/principal/notice-message" className="btn btn-ghost btn-sm">View all</Link>
           </div>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            {(dynamicStats.recentNotices !== null ? dynamicStats.recentNotices : (principal.notices || [])).length > 0 ? (
-              (dynamicStats.recentNotices !== null ? dynamicStats.recentNotices : principal.notices).slice(0, 3).map((n, idx) => (
+            {Array.isArray(dynamicStats.recentNotices) && dynamicStats.recentNotices.length > 0 ? (
+              dynamicStats.recentNotices.slice(0, 3).map((n, idx) => (
                 <li key={n.id || idx} style={{ padding: '10px 0', borderBottom: '1px solid var(--line-soft)' }}>
                   <div className="flex items-center gap-8" style={{ marginBottom: 4, flexWrap: 'wrap' }}>
                     <span className="chip chip-neutral">{n.type}</span>
@@ -299,7 +310,7 @@ export default function PrincipalHome() {
                 </li>
               ))
             ) : (
-              <li style={{ padding: '14px 0', textAlign: 'center', color: '#64748b' }}>No public notices or updates posted recently.</li>
+              <li style={{ padding: '24px 0', textAlign: 'center', color: '#64748b' }}>No public notices or updates posted recently.</li>
             )}
           </ul>
         </div>

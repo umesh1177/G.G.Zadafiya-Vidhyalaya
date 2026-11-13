@@ -1,31 +1,73 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { initialPrincipalData } from '../data/principalData';
-import { initialFacultyData } from '../data/facultyData';
-import { initialAssistantData } from '../data/assistantData';
-import { initialStudentData } from '../data/studentData';
 
-const STORAGE_KEY = 'sms_data_ctx_v1';
+
+const STORAGE_KEY = 'sms_data_ctx_v2';
 const DataContext = createContext(null);
+
+const cleanPrincipalData = {
+  principal: {
+    name: "Dr. Jayant R. Zadafiya",
+    school: "G.G. Zadafiya Vidhyalaya",
+    initials: "PR",
+    email: "principal@ggzv.edu.in",
+    contactNo: "+91 99887 11000",
+    username: "admin",
+  },
+  studentStats: { total: 0, groupA: 0, groupB: 0, groupAB: 0 },
+  students: [],
+  alumni: [],
+  facultyStats: { total: 0, subjectFaculty: 0, assistantFaculty: 0 },
+  faculty: [],
+  deactiveFaculty: [],
+  examStats: { total: 0, board: 0, gujcet: 0, jee: 0, neet: 0, pending: 0, completed: 0, subjects: [] },
+  exams: [],
+  syllabus: { subjects: [] },
+  discipline: { undisciplined: [] },
+  notices: [],
+};
+
+const cleanFacultyData = {
+  faculty: {},
+  todaySchedule: [],
+  activeLt: null,
+  notices: [],
+  syllabus: { subjects: [] },
+};
+
+const cleanAssistantData = {
+  assistant: {},
+  todaySchedule: [],
+  pendingExams: [],
+  notices: [],
+};
+
+const cleanStudentData = {
+  student: {},
+  todaySchedule: [],
+  results: [],
+  notices: [],
+};
 
 function getDefaultState() {
   return {
-    principal: initialPrincipalData,
-    faculty: initialFacultyData,
-    assistant: initialAssistantData,
-    student: initialStudentData,
+    principal: cleanPrincipalData,
+    faculty: cleanFacultyData,
+    assistant: cleanAssistantData,
+    student: cleanStudentData,
   };
 }
 
 function loadPersistedState() {
   try {
+    localStorage.removeItem('sms_data_ctx_v1'); // Remove legacy mock storage
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return getDefaultState();
     const parsed = JSON.parse(raw);
     return {
-      principal: { ...initialPrincipalData, ...(parsed.principal || {}) },
-      faculty: { ...initialFacultyData, ...(parsed.faculty || {}) },
-      assistant: { ...initialAssistantData, ...(parsed.assistant || {}) },
-      student: { ...initialStudentData, ...(parsed.student || {}) },
+      principal: { ...cleanPrincipalData, ...(parsed.principal || {}) },
+      faculty: { ...cleanFacultyData, ...(parsed.faculty || {}) },
+      assistant: { ...cleanAssistantData, ...(parsed.assistant || {}) },
+      student: { ...cleanStudentData, ...(parsed.student || {}) },
     };
   } catch {
     return getDefaultState();
@@ -53,10 +95,10 @@ export function DataProvider({ children }) {
         try {
           const parsed = JSON.parse(e.newValue);
           setState({
-            principal: { ...initialPrincipalData, ...(parsed.principal || {}) },
-            faculty: { ...initialFacultyData, ...(parsed.faculty || {}) },
-            assistant: { ...initialAssistantData, ...(parsed.assistant || {}) },
-            student: { ...initialStudentData, ...(parsed.student || {}) },
+            principal: { ...cleanPrincipalData, ...(parsed.principal || {}) },
+            faculty: { ...cleanFacultyData, ...(parsed.faculty || {}) },
+            assistant: { ...cleanAssistantData, ...(parsed.assistant || {}) },
+            student: { ...cleanStudentData, ...(parsed.student || {}) },
           });
         } catch {
           // ignore invalid JSON
