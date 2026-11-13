@@ -132,3 +132,4 @@ const cbtExamSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model('CbtExam', cbtExamSchema);
+

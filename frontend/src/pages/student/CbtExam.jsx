@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import {
   Users,
   Building2,
@@ -20,6 +21,7 @@ import CbtExamPlayer from '../../components/cbt/CbtExamPlayer';
 import CbtAnalysisModal from '../../components/cbt/CbtAnalysisModal';
 
 export default function StudentCbtExam() {
+  const outlet = useOutletContext();
   const { user } = useAuth();
   const [exams, setExams] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,6 +36,15 @@ export default function StudentCbtExam() {
   const standard = user?.standard || 'STD_11';
   const division = user?.division || 'A';
   const streamGroup = user?.streamGroup || 'GROUP_A';
+
+  useEffect(() => {
+    if (outlet?.setHeader) {
+      outlet.setHeader({
+        title: 'CBT Exam Portal',
+        subtitle: 'Live computer based mock tests for JEE, NEET & GUJCET',
+      });
+    }
+  }, [outlet]);
 
   const loadExams = async () => {
     try {
@@ -164,27 +175,23 @@ export default function StudentCbtExam() {
   }
 
   return (
-    <div className="cbt-student-page p-6 max-w-7xl mx-auto space-y-6">
-      {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="p-2 bg-blue-100 text-blue-700 rounded-lg">
-              <MonitorCheck size={24} />
-            </span>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">
-                CBT Examination Portal
-              </h1>
-              <p className="text-sm text-slate-500">
-                Online Computer Based Mock Tests • JEE / NEET / GUJCET
-              </p>
-            </div>
+    <div className="cbt-student-page">
+      {/* Header Banner Card */}
+      <div className="cbt-page-header-card">
+        <div className="cbt-page-header-left">
+          <div className="cbt-header-icon-box">
+            <MonitorCheck size={26} />
+          </div>
+          <div>
+            <h1 className="cbt-page-title">CBT Examination Portal</h1>
+            <p className="cbt-page-subtitle">
+              Online Computer Based Mock Tests • JEE / NEET / GUJCET
+            </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="px-3.5 py-1.5 bg-slate-100 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700">
+        <div>
+          <div className="cbt-user-badge-pill">
             Student: <strong>{user?.name || 'Umesh Pal'}</strong> (Roll #{rollNo} • {standard.replace('_', ' ')} Div {division})
           </div>
         </div>
@@ -192,17 +199,17 @@ export default function StudentCbtExam() {
 
       {/* Exam Cards Grid matching Photo 3 */}
       {loading ? (
-        <div className="p-12 text-center text-slate-400 bg-white rounded-xl border border-slate-200">
-          <div className="cbt-spinner mx-auto mb-2"></div>
+        <div style={{ padding: '48px', textAlign: 'center', color: '#64748b', background: '#fff', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
+          <div className="cbt-spinner" style={{ margin: '0 auto 12px' }}></div>
           Loading scheduled exams...
         </div>
       ) : exams.length === 0 ? (
-        <div className="p-12 text-center text-slate-400 bg-white rounded-xl border border-slate-200">
-          <Calendar size={42} className="mx-auto mb-2 text-slate-300" />
-          <p className="text-sm">No CBT exams currently scheduled for your class & stream.</p>
+        <div style={{ padding: '48px', textAlign: 'center', color: '#64748b', background: '#fff', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
+          <Calendar size={42} style={{ margin: '0 auto 12px', color: '#cbd5e1' }} />
+          <p style={{ fontSize: '0.9rem' }}>No CBT exams currently scheduled for your class & stream.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="cbt-cards-grid">
           {exams.map((exam) => {
             const startStatus = getStartStatus(exam);
             const isSubmitted = exam.attemptStatus === 'SUBMITTED';
@@ -302,11 +309,11 @@ export default function StudentCbtExam() {
                 {/* Card Footer matching Photo 3 */}
                 <div className="cbt-card-footer">
                   <div className="cbt-footer-meta">
-                    <span className="flex items-center gap-1">
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                       <Clock size={14} />
                       {exam.durationMinutes} minutes
                     </span>
-                    <span className="flex items-center gap-1">
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                       <Award size={14} />
                       {exam.totalMarks} marks
                     </span>
@@ -323,7 +330,7 @@ export default function StudentCbtExam() {
                           View Result
                         </button>
                       ) : (
-                        <span className="text-xs text-gray-500 font-semibold px-2">
+                        <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>
                           Under Evaluation
                         </span>
                       )

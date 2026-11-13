@@ -22,3 +22,4 @@ router.get('/exams/:id/analysis', cbtController.getExamAnalysis);
 router.get('/exams/:id/live-monitor', cbtController.getLiveMonitor);
 
 module.exports = router;
+

@@ -142,3 +142,4 @@ export default function CbtInstructionsModal({ exam, onProceed, onClose }) {
     </div>
   );
 }
+

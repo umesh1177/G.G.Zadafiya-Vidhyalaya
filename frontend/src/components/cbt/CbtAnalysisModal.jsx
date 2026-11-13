@@ -600,3 +600,4 @@ export default function CbtAnalysisModal({ examId, onClose }) {
     </div>
   );
 }
+

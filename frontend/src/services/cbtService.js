@@ -134,3 +134,4 @@ export async function fetchCbtLiveMonitor(id) {
   const res = await fetch(`${API_ROOT}/api/cbt/exams/${id}/live-monitor`);
   return await res.json();
 }
+

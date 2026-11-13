@@ -86,3 +86,4 @@ const cbtAttemptSchema = new mongoose.Schema(
 cbtAttemptSchema.index({ examId: 1, studentRollNo: 1 }, { unique: true });
 
 module.exports = mongoose.model('CbtAttempt', cbtAttemptSchema);
+

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import {
   FileText,
   Plus,
@@ -24,6 +25,7 @@ import CbtLiveMonitorModal from '../../components/cbt/CbtLiveMonitorModal';
 import CbtCreateExamModal from '../../components/cbt/CbtCreateExamModal';
 
 export default function AssistantCbtExam() {
+  const outlet = useOutletContext();
   const [exams, setExams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState('ALL');
@@ -34,6 +36,15 @@ export default function AssistantCbtExam() {
   const [examToEdit, setExamToEdit] = useState(null);
   const [activeAnalysisExamId, setActiveAnalysisExamId] = useState(null);
   const [activeMonitorExamId, setActiveMonitorExamId] = useState(null);
+
+  useEffect(() => {
+    if (outlet?.setHeader) {
+      outlet.setHeader({
+        title: 'CBT Exam Management',
+        subtitle: 'Schedule computer-based tests, monitor kiosk security, and evaluate performance',
+      });
+    }
+  }, [outlet]);
 
   const loadExams = async () => {
     try {
@@ -60,7 +71,6 @@ export default function AssistantCbtExam() {
       if (res.success) {
         alert(res.message);
         loadExams();
-        // Automatically open analysis view!
         setActiveAnalysisExamId(exam._id);
       } else {
         alert(res.message || 'Evaluation failed.');
@@ -98,27 +108,23 @@ export default function AssistantCbtExam() {
   const totalTakers = exams.reduce((acc, e) => acc + (e.takersCount || 0), 0);
 
   return (
-    <div className="cbt-assistant-page p-6 max-w-7xl mx-auto space-y-6">
-      {/* Top Banner & Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="p-2 bg-blue-100 text-blue-700 rounded-lg">
-              <MonitorCheck size={24} />
-            </span>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">
-                CBT Examination Management
-              </h1>
-              <p className="text-sm text-slate-500">
-                JEE / NEET / GUJCET Computer-Based Tests, Kiosk Security & Analytics
-              </p>
-            </div>
+    <div className="cbt-assistant-page">
+      {/* Top Banner & Header Card */}
+      <div className="cbt-page-header-card">
+        <div className="cbt-page-header-left">
+          <div className="cbt-header-icon-box">
+            <MonitorCheck size={26} />
+          </div>
+          <div>
+            <h1 className="cbt-page-title">CBT Examination Management</h1>
+            <p className="cbt-page-subtitle">
+              JEE / NEET / GUJCET Computer-Based Tests, Kiosk Security & Analytics
+            </p>
           </div>
         </div>
 
         <button
-          className="cbt-btn-primary flex items-center gap-2 px-4 py-2.5"
+          className="cbt-btn-primary"
           onClick={() => {
             setExamToEdit(null);
             setShowCreateModal(true);
@@ -129,59 +135,59 @@ export default function AssistantCbtExam() {
         </button>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="cbt-stat-card bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+      {/* KPI Cards Summary */}
+      <div className="cbt-kpi-summary-grid">
+        <div className="cbt-stat-card">
+          <div className="cbt-stat-icon-wrap" style={{ background: '#eff6ff', color: '#2563eb' }}>
             <FileText size={24} />
           </div>
           <div>
-            <div className="text-2xl font-bold text-slate-800">{totalExams}</div>
-            <div className="text-xs text-slate-500">Total CBT Exams</div>
+            <div className="cbt-stat-val">{totalExams}</div>
+            <div className="cbt-stat-lbl">Total CBT Exams</div>
           </div>
         </div>
 
-        <div className="cbt-stat-card bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+        <div className="cbt-stat-card">
+          <div className="cbt-stat-icon-wrap" style={{ background: '#fffbeb', color: '#d97706' }}>
             <Clock size={24} />
           </div>
           <div>
-            <div className="text-2xl font-bold text-slate-800">{activeCount}</div>
-            <div className="text-xs text-slate-500">Active Exams</div>
+            <div className="cbt-stat-val">{activeCount}</div>
+            <div className="cbt-stat-lbl">Active Exams</div>
           </div>
         </div>
 
-        <div className="cbt-stat-card bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+        <div className="cbt-stat-card">
+          <div className="cbt-stat-icon-wrap" style={{ background: '#ecfdf5', color: '#059669' }}>
             <Award size={24} />
           </div>
           <div>
-            <div className="text-2xl font-bold text-slate-800">{evaluatedCount}</div>
-            <div className="text-xs text-slate-500">Evaluated & Published</div>
+            <div className="cbt-stat-val">{evaluatedCount}</div>
+            <div className="cbt-stat-lbl">Evaluated & Published</div>
           </div>
         </div>
 
-        <div className="cbt-stat-card bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center">
+        <div className="cbt-stat-card">
+          <div className="cbt-stat-icon-wrap" style={{ background: '#faf5ff', color: '#7c3aed' }}>
             <Users size={24} />
           </div>
           <div>
-            <div className="text-2xl font-bold text-slate-800">{totalTakers}</div>
-            <div className="text-xs text-slate-500">Student Attempts</div>
+            <div className="cbt-stat-val">{totalTakers}</div>
+            <div className="cbt-stat-lbl">Student Attempts</div>
           </div>
         </div>
       </div>
 
       {/* Filter and Table Card */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+      <div className="cbt-table-card">
         {/* Table Filters Bar */}
-        <div className="p-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+        <div className="cbt-table-toolbar">
+          <div className="cbt-toolbar-left">
+            <span className="cbt-toolbar-label">
               <Filter size={14} /> Filter:
             </span>
             <select
-              className="cbt-form-select text-xs py-1.5 px-3 w-auto"
+              className="cbt-toolbar-select"
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
             >
@@ -192,7 +198,7 @@ export default function AssistantCbtExam() {
             </select>
 
             <select
-              className="cbt-form-select text-xs py-1.5 px-3 w-auto"
+              className="cbt-toolbar-select"
               value={filterStandard}
               onChange={(e) => setFilterStandard(e.target.value)}
             >
@@ -202,23 +208,24 @@ export default function AssistantCbtExam() {
             </select>
           </div>
 
-          <span className="text-xs text-slate-500">
+          <span style={{ fontSize: '0.8rem', color: '#64748b' }}>
             Showing {filteredExams.length} of {totalExams} exams
           </span>
         </div>
 
         {/* Exams Table */}
         {loading ? (
-          <div className="p-12 text-center text-slate-400">
-            <div className="cbt-spinner mx-auto mb-2"></div>
+          <div style={{ padding: '48px', textAlign: 'center', color: '#64748b' }}>
+            <div className="cbt-spinner" style={{ margin: '0 auto 12px' }}></div>
             Loading CBT exams...
           </div>
         ) : filteredExams.length === 0 ? (
-          <div className="p-12 text-center text-slate-400">
-            <FileText size={40} className="mx-auto mb-2 text-slate-300" />
-            <p className="text-sm">No CBT exams found matching criteria.</p>
+          <div style={{ padding: '48px', textAlign: 'center', color: '#64748b' }}>
+            <FileText size={40} style={{ margin: '0 auto 12px', color: '#cbd5e1' }} />
+            <p style={{ fontSize: '0.9rem', marginBottom: '14px' }}>No CBT exams found matching criteria.</p>
             <button
-              className="cbt-btn-primary mt-3 text-xs px-3 py-1.5"
+              className="cbt-btn-primary"
+              style={{ fontSize: '0.8rem', padding: '6px 14px' }}
               onClick={() => {
                 setExamToEdit(null);
                 setShowCreateModal(true);
@@ -245,11 +252,13 @@ export default function AssistantCbtExam() {
                 {filteredExams.map((exam) => (
                   <tr key={exam._id}>
                     <td>
-                      <div className="font-bold text-slate-900">{exam.title}</div>
-                      <div className="text-xs text-slate-400 font-mono mt-0.5">{exam.examCode}</div>
+                      <div style={{ fontWeight: 800, color: '#0f172a' }}>{exam.title}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#64748b', fontFamily: 'monospace', marginTop: '2px' }}>
+                        {exam.examCode}
+                      </div>
                     </td>
                     <td>
-                      <div className="flex items-center gap-1.5 mb-1">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
                         <span
                           className={`cbt-type-badge ${
                             exam.examType === 'JEE'
@@ -261,14 +270,14 @@ export default function AssistantCbtExam() {
                         >
                           {exam.examType}
                         </span>
-                        <span className="cbt-group-pill text-[11px]">{exam.streamGroup}</span>
+                        <span className="cbt-group-pill">{exam.streamGroup}</span>
                       </div>
-                      <div className="text-xs text-slate-500">
+                      <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
                         {exam.subjects?.join(', ') || 'Physics, Chemistry, Maths'}
                       </div>
                     </td>
                     <td>
-                      <div className="text-xs text-slate-700">
+                      <div style={{ fontSize: '0.78rem', color: '#1e293b' }}>
                         <strong>Starts:</strong>{' '}
                         {new Date(exam.startTime).toLocaleDateString('en-GB', {
                           day: '2-digit',
@@ -278,21 +287,21 @@ export default function AssistantCbtExam() {
                           minute: '2-digit',
                         })}
                       </div>
-                      <div className="text-xs text-slate-400">
+                      <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
                         Ends: {new Date(exam.windowEndTime).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
                       </div>
                     </td>
                     <td>
-                      <div className="text-xs font-semibold text-slate-800">
+                      <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#0f172a' }}>
                         {exam.durationMinutes} mins • {exam.totalMarks} Marks
                       </div>
-                      <div className="text-xs text-slate-400">
+                      <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
                         {exam.questions?.length || 0} Questions
                       </div>
                     </td>
                     <td>
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
-                        <Users size={14} className="text-blue-600" />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem', fontWeight: 800, color: '#0f172a' }}>
+                        <Users size={14} style={{ color: '#2563eb' }} />
                         <span>{exam.takersCount || 0}</span>
                       </div>
                     </td>
@@ -306,15 +315,15 @@ export default function AssistantCbtExam() {
                       )}
                     </td>
                     <td>
-                      <div className="flex items-center justify-end gap-1.5">
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
                         {/* Live Monitor */}
                         <button
                           className="cbt-action-btn cbt-action-btn--monitor"
                           title="Live Monitor & Anti-Cheating Control"
                           onClick={() => setActiveMonitorExamId(exam._id)}
                         >
-                          <MonitorCheck size={15} />
-                          <span className="hidden xl:inline text-xs">Monitor</span>
+                          <MonitorCheck size={14} />
+                          <span>Monitor</span>
                         </button>
 
                         {/* Evaluate button */}
@@ -323,8 +332,8 @@ export default function AssistantCbtExam() {
                           title="Evaluate & Calculate Results"
                           onClick={() => handleEvaluate(exam)}
                         >
-                          <Award size={15} />
-                          <span className="hidden xl:inline text-xs">Evaluate</span>
+                          <Award size={14} />
+                          <span>Evaluate</span>
                         </button>
 
                         {/* View Analysis (Photo 1) */}
@@ -333,8 +342,8 @@ export default function AssistantCbtExam() {
                           title="View Analysis & Leaderboard"
                           onClick={() => setActiveAnalysisExamId(exam._id)}
                         >
-                          <BarChart3 size={15} />
-                          <span className="hidden xl:inline text-xs">Analysis</span>
+                          <BarChart3 size={14} />
+                          <span>Analysis</span>
                         </button>
 
                         {/* Edit */}
@@ -351,7 +360,8 @@ export default function AssistantCbtExam() {
 
                         {/* Delete */}
                         <button
-                          className="cbt-action-icon-btn text-red-500 hover:text-red-700"
+                          className="cbt-action-icon-btn"
+                          style={{ color: '#ef4444' }}
                           title="Delete Exam"
                           onClick={() => handleDelete(exam)}
                         >

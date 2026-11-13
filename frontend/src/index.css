@@ -5,6 +5,7 @@
 @import './styles/principal.css';
 @import './styles/principal-assistant.css';
 @import './styles/login.css';
+@import './styles/cbt.css';
 
 /* React Root & Layout Fixes */
 html,
