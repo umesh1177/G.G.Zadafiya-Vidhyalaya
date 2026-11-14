@@ -182,6 +182,19 @@ export default function CbtQuestionPaperModal({ exam, onClose }) {
                   </p>
                 )}
 
+                {/* Question Diagram / Image if present */}
+                {q.imageUrl && (
+                  <div className="mb-3 text-center">
+                    <img
+                      src={q.imageUrl}
+                      alt={`Q${q.questionNo || idx + 1} Diagram`}
+                      className="max-h-60 max-w-full rounded-lg border border-slate-200 mx-auto object-contain bg-white p-2 shadow-sm cursor-pointer hover:scale-[1.01] transition-transform"
+                      onClick={() => window.open(q.imageUrl, '_blank')}
+                      title="Click to view full image in a new tab"
+                    />
+                  </div>
+                )}
+
                 {/* Options 2x2 Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">
                   {q.options?.map((opt, oIdx) => {

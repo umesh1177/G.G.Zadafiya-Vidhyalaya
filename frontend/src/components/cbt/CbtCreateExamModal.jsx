@@ -15,6 +15,7 @@ import {
   AlertCircle,
   ShieldAlert,
   Award,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { createCbtExam, updateCbtExam, extractCbtPaper } from '../../services/cbtService';
 
@@ -34,6 +35,7 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
     streamGroup: examToEdit?.streamGroup || (initialType === 'NEET' ? 'GROUP_B' : 'GROUP_A'),
     durationMinutes: examToEdit?.durationMinutes || 60,
     totalMarks: examToEdit?.totalMarks || 100,
+    passingMarks: examToEdit?.passingMarks !== undefined ? examToEdit.passingMarks : 35,
     marksPerQuestion: examToEdit?.marksPerQuestion !== undefined ? examToEdit.marksPerQuestion : defaultPos,
     negativeMarks: examToEdit?.negativeMarks !== undefined ? examToEdit.negativeMarks : defaultNeg,
     scheduleTime: examToEdit?.scheduleTime
@@ -774,7 +776,7 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
               </div>
 
               {/* Dynamic Marks Config */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200">
                 <div>
                   <label className="cbt-form-label">Marks Per Question (+)</label>
                   <input
@@ -816,6 +818,22 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
                   />
                   <span className="text-[11px] text-gray-500 mt-1 block">
                     Calculated from questions ({questions.length} × {formData.marksPerQuestion})
+                  </span>
+                </div>
+
+                <div>
+                  <label className="cbt-form-label text-indigo-900 font-bold">Passing Marks (Cutoff)</label>
+                  <input
+                    type="number"
+                    className="cbt-form-input font-bold text-indigo-700 border-indigo-300"
+                    value={formData.passingMarks}
+                    onChange={(e) => setFormData({ ...formData, passingMarks: Number(e.target.value) })}
+                    placeholder="e.g. 35"
+                    min="0"
+                    max={formData.totalMarks || 720}
+                  />
+                  <span className="text-[11px] text-indigo-600 mt-1 block">
+                    Used to calculate Pass / Fail student counts
                   </span>
                 </div>
               </div>
@@ -1049,7 +1067,78 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
                           </div>
                         </div>
 
-                        <p className="text-xs font-medium text-slate-800 mb-2">{q.questionText}</p>
+                        {/* Question Statement & Diagram Attachment */}
+                        <div className="mb-2">
+                          <textarea
+                            rows={2}
+                            className="cbt-form-textarea text-xs w-full mb-1.5 font-medium text-slate-800"
+                            value={q.questionText}
+                            onChange={(e) => {
+                              const copy = [...questions];
+                              copy[idx].questionText = e.target.value;
+                              setQuestions(copy);
+                            }}
+                            placeholder="Question statement..."
+                          />
+
+                          {/* Image preview & attachment */}
+                          {q.imageUrl ? (
+                            <div className="relative inline-block border rounded-lg p-1 bg-slate-50 mb-2">
+                              <img
+                                src={q.imageUrl}
+                                alt={`Q${idx + 1} Diagram`}
+                                className="max-h-36 max-w-xs object-contain rounded"
+                              />
+                              <button
+                                type="button"
+                                className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 shadow hover:bg-red-700"
+                                onClick={() => {
+                                  const copy = [...questions];
+                                  copy[idx].imageUrl = '';
+                                  setQuestions(copy);
+                                }}
+                                title="Remove Image"
+                              >
+                                <X size={12} />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2 mb-2">
+                              <label className="inline-flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-800 cursor-pointer bg-blue-50 px-2 py-1 rounded border border-blue-200">
+                                <ImageIcon size={13} />
+                                <span>Attach Diagram / Image</span>
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (file) {
+                                      const reader = new FileReader();
+                                      reader.onload = () => {
+                                        const copy = [...questions];
+                                        copy[idx].imageUrl = reader.result;
+                                        setQuestions(copy);
+                                      };
+                                      reader.readAsDataURL(file);
+                                    }
+                                  }}
+                                />
+                              </label>
+                              <input
+                                type="text"
+                                className="text-[11px] px-2 py-1 rounded border border-slate-200 flex-1"
+                                placeholder="Or paste image URL (e.g. https://... or /images/...)"
+                                value={q.imageUrl || ''}
+                                onChange={(e) => {
+                                  const copy = [...questions];
+                                  copy[idx].imageUrl = e.target.value;
+                                  setQuestions(copy);
+                                }}
+                              />
+                            </div>
+                          )}
+                        </div>
 
                         <div className="grid grid-cols-2 gap-2 text-xs">
                           {q.options?.map((opt, oIdx) => (

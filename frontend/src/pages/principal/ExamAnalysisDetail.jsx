@@ -290,6 +290,10 @@ export default function ExamAnalysisDetail() {
       marksList.length > 0 ? Math.round((marksList.reduce((a, b) => a + b, 0) / marksList.length) * 10) / 10 : 0;
     const maxMarks = Math.round(((cbtExam?.totalMarks || exam?.totalMarks || 100) / (availableSubjectKeys.length || 1)));
     const avgPct = maxMarks > 0 ? Math.round((avgScore / maxMarks) * 100 * 10) / 10 : 0;
+    const subPassingMarks = Math.round(maxMarks * 0.33);
+    const passedCount = marksList.filter((m) => m >= subPassingMarks).length;
+    const failedCount = Math.max(0, marksList.length - passedCount);
+    const passPct = marksList.length > 0 ? Math.round((passedCount / marksList.length) * 1000) / 10 : 0;
 
     return {
       subject: selectedSubjectTab,
@@ -299,6 +303,10 @@ export default function ExamAnalysisDetail() {
       averagePercentage: avgPct,
       highestScore: marksList.length > 0 ? Math.max(...marksList) : 0,
       lowestScore: marksList.length > 0 ? Math.min(...marksList) : 0,
+      passedCount,
+      failedCount,
+      passPercentage: passPct,
+      passingMarks: subPassingMarks,
       overallAccuracy: avgPct,
       avgResponseTimeSeconds: 65,
       growthRate: comparison?.growthRate || 0,
@@ -309,28 +317,62 @@ export default function ExamAnalysisDetail() {
   }, [analysis, exam, subjectWiseMetrics, selectedSubjectTab, cbtStudents, availableSubjectKeys, cbtExam, comparison]);
 
   // Open Generate Report modal helper
-  const openGenerateReportModal = () => {
+  const openGenerateReportModal = (subj) => {
     setModalError(null);
     lastReportSubjRef.current = '';
-    if (exam?.isMultiSubject) {
-      // Prompt requirement: for JEE/NEET/GUJCET, Principal must first select subject!
-      setSelectedReportSubject('');
-      setPrincipalMessage('');
-    } else {
-      const defaultSubj = exam?.subject || 'Physics';
-      setSelectedReportSubject(defaultSubj);
-    }
+    const targetSubj =
+      subj ||
+      selectedSubjectTab ||
+      (availableSubjectKeys.length > 0 ? availableSubjectKeys[0] : (exam?.subject || 'Physics'));
+    setSelectedReportSubject(targetSubj);
     setShowReportModal(true);
   };
 
   // Resolve selected subject metrics inside Generate Report modal
   const selectedSubjectMetrics = useMemo(() => {
-    if (!selectedReportSubject || !subjectReportSummaries.length) return null;
-    const match = subjectReportSummaries.find(
-      (s) => s.subject.toLowerCase() === selectedReportSubject.toLowerCase()
+    if (!selectedReportSubject) return null;
+    const match = (subjectReportSummaries || []).find(
+      (s) => s.subject && s.subject.toLowerCase() === selectedReportSubject.toLowerCase()
     );
-    return match || subjectReportSummaries[0] || null;
-  }, [selectedReportSubject, subjectReportSummaries]);
+    const swmMatch =
+      subjectWiseMetrics &&
+      (subjectWiseMetrics[selectedReportSubject] ||
+        Object.values(subjectWiseMetrics).find(
+          (s) => s.subject && s.subject.toLowerCase() === selectedReportSubject.toLowerCase()
+        ));
+
+    if (match && swmMatch) {
+      return {
+        ...swmMatch,
+        ...match,
+        passedCount: swmMatch.passedCount !== undefined ? swmMatch.passedCount : match.passedCount,
+        failedCount: swmMatch.failedCount !== undefined ? swmMatch.failedCount : match.failedCount,
+        passPercentage: swmMatch.passPercentage !== undefined ? swmMatch.passPercentage : match.passPercentage,
+        passingMarks: swmMatch.passingMarks !== undefined ? swmMatch.passingMarks : match.passingMarks,
+        avgResponseTimeSeconds: swmMatch.avgResponseTimeSeconds || 65,
+        overallAccuracy: swmMatch.overallAccuracy || swmMatch.averagePercentage || 0,
+      };
+    }
+    if (match) return match;
+    if (swmMatch) return swmMatch;
+    if (selectedSubjectTab.toLowerCase() === selectedReportSubject.toLowerCase()) {
+      return activeSubjectData;
+    }
+    return null;
+  }, [selectedReportSubject, subjectReportSummaries, subjectWiseMetrics, activeSubjectData, selectedSubjectTab]);
+
+  // Questions filtered for the selected report subject
+  const questionsForSelectedReport = useMemo(() => {
+    const list =
+      questionWiseReport && questionWiseReport.length > 0
+        ? questionWiseReport
+        : cbtQuestions || [];
+    if (!selectedReportSubject || selectedReportSubject === 'ALL') return list;
+    const filtered = list.filter(
+      (q) => q.subject && q.subject.toLowerCase() === selectedReportSubject.toLowerCase()
+    );
+    return filtered.length > 0 ? filtered : list;
+  }, [selectedReportSubject, questionWiseReport, cbtQuestions]);
 
   // Populate intelligent editable default message when subject is chosen
   useEffect(() => {
@@ -877,7 +919,7 @@ export default function ExamAnalysisDetail() {
         </div>
       </div>
 
-      {/* 6 Tabs Bar */}
+      {/* 5 Tabs Bar */}
       <div className="tabs" style={{ marginBottom: 18, flexWrap: 'wrap', gap: 6 }}>
         <button
           type="button"
@@ -913,14 +955,6 @@ export default function ExamAnalysisDetail() {
         </button>
         <button
           type="button"
-          className={`tab-btn ${activeTab === 'faculty-report' ? 'is-active' : ''}`}
-          onClick={() => setActiveTab('faculty-report')}
-        >
-          <FileSpreadsheet size={15} style={{ marginRight: 6, display: 'inline' }} />
-          Generate Report for Faculty
-        </button>
-        <button
-          type="button"
           className={`tab-btn ${activeTab === 'performance' ? 'is-active' : ''}`}
           onClick={() => setActiveTab('performance')}
         >
@@ -934,8 +968,8 @@ export default function ExamAnalysisDetail() {
       {/* ═══════════════════════════════════════════════════════════════════════ */}
       {activeTab === 'overview' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          {/* Top 4 Score Metric Cards matching Photo 1 */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Top 5 Score Metric Cards matching Photo 1 + Pass/Fail */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {/* Average Score */}
             <div className="cbt-kpi-card">
               <div className="cbt-kpi-top">
@@ -1000,6 +1034,25 @@ export default function ExamAnalysisDetail() {
                     : '0%'}
               </div>
               <div className="cbt-kpi-subtext">Highest score obtained by a student</div>
+            </div>
+
+            {/* Pass / Fail Students */}
+            <div className="cbt-kpi-card">
+              <div className="cbt-kpi-top">
+                <span className="cbt-kpi-label">Pass / Fail Students</span>
+                <div className="cbt-kpi-icon-wrap" style={{ color: '#059669', background: '#ecfdf5' }}>
+                  <CheckCircle size={18} />
+                </div>
+              </div>
+              <div className="cbt-kpi-value text-emerald-600" style={{ fontSize: '1.2rem', whiteSpace: 'nowrap' }}>
+                <span>{cbtStats.passedCount ?? overview.passedCount ?? 0}</span>{' '}
+                <span className="text-xs text-slate-400 font-normal">Pass / </span>
+                <span className="text-rose-600">{cbtStats.failedCount ?? overview.failedCount ?? 0}</span>{' '}
+                <span className="text-xs text-slate-400 font-normal">Fail</span>
+              </div>
+              <div className="cbt-kpi-subtext">
+                {cbtStats.passPercentage ?? overview.passPercentage ?? 0}% Pass Rate (Cutoff: {cbtStats.passingMarks ?? cbtExam?.passingMarks ?? 35})
+              </div>
             </div>
           </div>
 
@@ -1286,26 +1339,38 @@ export default function ExamAnalysisDetail() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                {availableSubjectKeys.map((sub) => (
-                  <button
-                    key={sub}
-                    type="button"
-                    className={`btn btn-sm ${selectedSubjectTab.toLowerCase() === sub.toLowerCase() ? 'btn-primary' : 'btn-ghost'}`}
-                    onClick={() => {
-                      setSelectedSubjectTab(sub);
-                      setSubjectStudentPage(1);
-                    }}
-                  >
-                    {sub}
-                  </button>
-                ))}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                  {availableSubjectKeys.map((sub) => (
+                    <button
+                      key={sub}
+                      type="button"
+                      className={`btn btn-sm ${selectedSubjectTab.toLowerCase() === sub.toLowerCase() ? 'btn-primary' : 'btn-ghost'}`}
+                      onClick={() => {
+                        setSelectedSubjectTab(sub);
+                        setSubjectStudentPage(1);
+                      }}
+                    >
+                      {sub}
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm flex items-center gap-1.5"
+                  style={{ background: '#123B5D', borderColor: '#123B5D', fontWeight: 600 }}
+                  onClick={() => openGenerateReportModal(selectedSubjectTab)}
+                >
+                  <FileSpreadsheet size={15} />
+                  <span>Generate Report for Faculty</span>
+                </button>
               </div>
             </div>
           </div>
 
           {/* Subject Metric Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {/* Subject Average */}
             <div className="cbt-kpi-card">
               <div className="cbt-kpi-top">
@@ -1367,6 +1432,25 @@ export default function ExamAnalysisDetail() {
               </div>
               <div className="cbt-kpi-subtext">
                 {activeSubjectData.isGrowth ? 'Growth rate vs previous exam' : 'Downfall rate vs previous exam'} (Prev: {activeSubjectData.previousExamAverage}%)
+              </div>
+            </div>
+
+            {/* Pass / Fail Students */}
+            <div className="cbt-kpi-card">
+              <div className="cbt-kpi-top">
+                <span className="cbt-kpi-label">Pass / Fail ({selectedSubjectTab})</span>
+                <div className="cbt-kpi-icon-wrap" style={{ color: '#059669', background: '#ecfdf5' }}>
+                  <CheckCircle size={18} />
+                </div>
+              </div>
+              <div className="cbt-kpi-value text-emerald-600" style={{ fontSize: '1.2rem', whiteSpace: 'nowrap' }}>
+                <span>{activeSubjectData.passedCount ?? 0}</span>{' '}
+                <span className="text-xs text-slate-400 font-normal">Pass / </span>
+                <span className="text-rose-600">{activeSubjectData.failedCount ?? 0}</span>{' '}
+                <span className="text-xs text-slate-400 font-normal">Fail</span>
+              </div>
+              <div className="cbt-kpi-subtext">
+                {activeSubjectData.passPercentage ?? 0}% Pass Rate (Cutoff: {activeSubjectData.passingMarks ?? Math.round((activeSubjectData.maxMarks || 100) * 0.33)} marks)
               </div>
             </div>
           </div>
@@ -1493,328 +1577,6 @@ export default function ExamAnalysisDetail() {
               onPageChange={setSubjectStudentPage}
               itemLabel="students"
             />
-          </div>
-        </div>
-      )}
-
-      {/* ═══════════════════════════════════════════════════════════════════════ */}
-      {/* TAB 5: GENERATE REPORT FOR FACULTY (Requirement 2)                      */}
-      {/* ═══════════════════════════════════════════════════════════════════════ */}
-      {activeTab === 'faculty-report' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          {/* Top Action Bar */}
-          <div className="card" style={{ padding: '16px 20px', background: '#F8FAFC' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-              <div>
-                <div style={{ fontSize: 16, fontWeight: 800, color: '#1C2340' }}>
-                  Faculty Examination Handover &amp; Diagnostic Report
-                </div>
-                <div style={{ fontSize: 12.5, color: 'var(--slate)', marginTop: 2 }}>
-                  Official evaluation report containing question statements, options A-D, right answer keys, attendance, and response time
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                <button
-                  type="button"
-                  className="btn btn-primary btn-sm flex items-center gap-1.5"
-                  onClick={handlePrintFacultyReport}
-                >
-                  <Printer size={15} />
-                  <span>Print / Save as PDF</span>
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  onClick={openGenerateReportModal}
-                >
-                  ✉️ Send to Faculty Handover Tab
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Exam Details & Summary Card */}
-          <div className="card" style={{ padding: '20px 24px' }}>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4 pb-4 border-b border-slate-100 text-xs">
-              <div>
-                <span className="text-slate-400 block font-medium">Exam Name &amp; No:</span>
-                <strong className="text-slate-800 text-sm">Exam #{exam.examNo} — {exam.subject}</strong>
-              </div>
-              <div>
-                <span className="text-slate-400 block font-medium">Exam Code:</span>
-                <strong className="text-slate-800 text-sm">{cbtExam?.examCode || (exam ? `EXAM-${exam.examNo}` : 'EXAM')}</strong>
-              </div>
-              <div>
-                <span className="text-slate-400 block font-medium">Standard &amp; Division:</span>
-                <strong className="text-slate-800 text-sm">{exam.standardLabel} · {exam.division !== 'ALL' ? `Div ${exam.division}` : 'All Divisions'}</strong>
-              </div>
-              <div>
-                <span className="text-slate-400 block font-medium">Exam Stream / Type:</span>
-                <strong className="text-slate-800 text-sm">{formatExamTypeLabel(exam.examType)}</strong>
-              </div>
-              <div>
-                <span className="text-slate-400 block font-medium">Conducted Date:</span>
-                <strong className="text-slate-800 text-sm">{formatDate(exam.examDate)}</strong>
-              </div>
-              <div>
-                <span className="text-slate-400 block font-medium">Duration:</span>
-                <strong className="text-slate-800 text-sm">{cbtExam?.durationMinutes || exam?.durationMinutes || 60} Minutes</strong>
-              </div>
-              <div>
-                <span className="text-slate-400 block font-medium">Total Questions:</span>
-                <strong className="text-slate-800 text-sm">{questionWiseReport.length || cbtExam?.questionsCount || 45} Questions</strong>
-              </div>
-              <div>
-                <span className="text-slate-400 block font-medium">Total Max Marks:</span>
-                <strong className="text-slate-800 text-sm">{cbtExam?.totalMarks || exam?.totalMarks || 100} Marks</strong>
-              </div>
-            </div>
-
-            {/* Class Average & Growth / Downfall Rate */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-4 flex items-center justify-between">
-                <div>
-                  <div className="text-emerald-800 font-semibold text-xs">CLASS AVERAGE MARKS</div>
-                  <div className="text-2xl font-black text-emerald-700 mt-0.5">
-                    {cbtStats.averageScore !== undefined ? `${cbtStats.averageScore}%` : `${overview.classAveragePercent || 0}%`}
-                  </div>
-                  <div className="text-xs text-emerald-600 mt-1">
-                    Mean Score: {overview.averageMarks || Math.round(((cbtStats.averageScore || 0) * (exam.totalMarks || 100)) / 100)} marks ({overview.presentCount || cbtStudents.length} appeared)
-                  </div>
-                </div>
-                <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700">
-                  <Gauge size={22} />
-                </div>
-              </div>
-
-              <div className="bg-blue-50/70 border border-blue-200 rounded-xl p-4 flex items-center justify-between">
-                <div>
-                  <div className="text-blue-800 font-semibold text-xs">COMPARISON WITH PREVIOUS EXAM</div>
-                  <div className="text-2xl font-black text-blue-700 mt-0.5">
-                    {comparison.growthRate !== null && comparison.growthRate !== undefined ? (
-                      <span className="text-emerald-700">+{Number(comparison.growthRate).toFixed(1)}% Growth</span>
-                    ) : comparison.downfallRate !== null && comparison.downfallRate !== undefined ? (
-                      <span className="text-red-600">-{Number(comparison.downfallRate).toFixed(1)}% Downfall</span>
-                    ) : (
-                      <span className="text-slate-600 text-base">Baseline Examination</span>
-                    )}
-                  </div>
-                  <div className="text-xs text-blue-600 mt-1">
-                    {comparison.previousExam
-                      ? `Compared vs Exam #${comparison.previousExam.examNo} (Avg: ${comparison.previousAveragePercent}%)`
-                      : 'First evaluated exam in this series'}
-                  </div>
-                </div>
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-700">
-                  <Scale size={22} />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Subject Filter Pills & Search */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--slate)', marginRight: 4 }}>FILTER SUBJECT:</span>
-              <button
-                type="button"
-                className={`btn btn-sm ${facultyReportSubjFilter === 'ALL' ? 'btn-primary' : 'btn-ghost'}`}
-                onClick={() => setFacultyReportSubjFilter('ALL')}
-              >
-                All Subjects
-              </button>
-              {availableSubjectKeys.map((sub) => (
-                <button
-                  key={sub}
-                  type="button"
-                  className={`btn btn-sm ${facultyReportSubjFilter.toLowerCase() === sub.toLowerCase() ? 'btn-primary' : 'btn-ghost'}`}
-                  onClick={() => setFacultyReportSubjFilter(sub)}
-                >
-                  {sub}
-                </button>
-              ))}
-            </div>
-
-            <div style={{ minWidth: 220, flex: '0 1 260px' }}>
-              <input
-                type="text"
-                className="field-input w-full"
-                placeholder="Search question statement..."
-                value={facultyQuestionsSearch}
-                onChange={(e) => setFacultyQuestionsSearch(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Question-Wise Diagnostic Cards */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            {questionWiseReport
-              .filter((q) => {
-                if (facultyReportSubjFilter !== 'ALL') {
-                  const qSubj = String(q.subject || '').toLowerCase();
-                  const fSubj = facultyReportSubjFilter.toLowerCase();
-                  if (!qSubj.includes(fSubj) && !fSubj.includes(qSubj)) return false;
-                }
-                if (facultyQuestionsSearch) {
-                  const term = facultyQuestionsSearch.toLowerCase();
-                  return (
-                    String(q.questionNo || '').includes(term) ||
-                    String(q.questionText || '').toLowerCase().includes(term) ||
-                    String(q.subject || '').toLowerCase().includes(term)
-                  );
-                }
-                return true;
-              })
-              .map((q, idx) => {
-                const optLetters = ['A', 'B', 'C', 'D'];
-                const opts = Array.isArray(q.options) && q.options.length > 0 ? q.options : ['Option A', 'Option B', 'Option C', 'Option D'];
-
-                return (
-                  <div key={q.id || idx} className="card" style={{ padding: '20px 22px' }}>
-                    {/* Header */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontWeight: 800, fontSize: 13.5, color: '#0F172A', background: '#F1F5F9', padding: '4px 10px', borderRadius: 6 }}>
-                          Question #{q.questionNo || idx + 1}
-                        </span>
-                        <span className="cbt-subject-tag text-xs font-semibold">{q.subject}</span>
-                      </div>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--slate)' }}>
-                        Marks: <strong style={{ color: '#059669' }}>+{q.marks || 4}</strong> / <strong style={{ color: '#DC2626' }}>-{q.negativeMarks !== undefined ? q.negativeMarks : 1}</strong>
-                      </span>
-                    </div>
-
-                    {/* Question Statement */}
-                    <div style={{ marginBottom: 16 }}>
-                      <p style={{ fontSize: 14, fontWeight: 600, color: '#0F172A', lineHeight: 1.6, margin: 0 }}>
-                        {q.questionText}
-                      </p>
-                      {q.questionTextGujarati && (
-                        <p style={{ fontSize: 12.5, color: 'var(--slate)', fontWeight: 500, marginTop: 4, lineHeight: 1.5, margin: '4px 0 0' }}>
-                          {q.questionTextGujarati}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* 4 Options Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 mb-4">
-                      {opts.slice(0, 4).map((opt, oi) => {
-                        const letter = optLetters[oi];
-                        const isRight =
-                          String(q.correctAnswer || '').toUpperCase() === letter ||
-                          String(opt || '').toUpperCase().startsWith(letter);
-
-                        const cleanText =
-                          typeof opt === 'string'
-                            ? opt.replace(/^(?:\(?([A-Da-dઅબકડ])[\.\)\:\-]|\b([A-Da-dઅબકડ])[\.\)])\s*/, '').trim()
-                            : String(opt || '');
-
-                        return (
-                          <div
-                            key={oi}
-                            style={{
-                              padding: '10px 14px',
-                              borderRadius: 8,
-                              border: isRight ? '1.5px solid #10B981' : '1px solid #E2E8F0',
-                              background: isRight ? '#ECFDF5' : '#F8FAFC',
-                              color: isRight ? '#065F46' : '#334155',
-                              fontWeight: isRight ? 700 : 500,
-                              fontSize: 12.5,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                            }}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                              <span
-                                style={{
-                                  width: 24,
-                                  height: 24,
-                                  borderRadius: '50%',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  fontWeight: 800,
-                                  fontSize: 11.5,
-                                  background: isRight ? '#059669' : '#FFFFFF',
-                                  color: isRight ? '#FFFFFF' : '#475569',
-                                  border: isRight ? 'none' : '1px solid #CBD5E1',
-                                }}
-                              >
-                                {letter}
-                              </span>
-                              <span>{cleanText}</span>
-                            </div>
-                            {isRight && (
-                              <span style={{ fontSize: 11, fontWeight: 800, color: '#047857', background: '#D1FAE5', padding: '2px 8px', borderRadius: 4, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                                <CheckCircle2 size={13} /> Right Answer
-                              </span>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-
-                    {/* Analysis Counts Strip */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 pt-3 border-t border-slate-100 text-xs">
-                      <div style={{ background: '#F8FAFC', padding: '10px 12px', borderRadius: 8, border: '1px solid #E2E8F0' }}>
-                        <div style={{ color: 'var(--slate)', fontSize: 11, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <Users size={12} className="text-blue-500" /> Attended Count
-                        </div>
-                        <div style={{ fontWeight: 800, fontSize: 14, color: '#0F172A', marginTop: 2 }}>
-                          {q.attemptCount || 0} students
-                        </div>
-                      </div>
-
-                      <div style={{ background: '#F8FAFC', padding: '10px 12px', borderRadius: 8, border: '1px solid #E2E8F0' }}>
-                        <div style={{ color: 'var(--slate)', fontSize: 11, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <SkipForward size={12} className="text-amber-500" /> Skip Count
-                        </div>
-                        <div style={{ fontWeight: 800, fontSize: 14, color: '#0F172A', marginTop: 2 }}>
-                          {q.skipCount || 0} students
-                        </div>
-                      </div>
-
-                      <div style={{ background: '#F0FDF4', padding: '10px 12px', borderRadius: 8, border: '1px solid #BBF7D0' }}>
-                        <div style={{ color: '#166534', fontSize: 11, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <CheckCircle2 size={12} className="text-emerald-600" /> Correct Count
-                        </div>
-                        <div style={{ fontWeight: 800, fontSize: 14, color: '#166534', marginTop: 2 }}>
-                          {q.correctCount || 0} students
-                        </div>
-                      </div>
-
-                      <div style={{ background: '#FEF2F2', padding: '10px 12px', borderRadius: 8, border: '1px solid #FECACA' }}>
-                        <div style={{ color: '#991B1B', fontSize: 11, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <XCircle size={12} className="text-red-600" /> Wrong Count
-                        </div>
-                        <div style={{ fontWeight: 800, fontSize: 14, color: '#991B1B', marginTop: 2 }}>
-                          {q.wrongCount || 0} students
-                        </div>
-                      </div>
-
-                      <div style={{ background: '#EFF6FF', padding: '10px 12px', borderRadius: 8, border: '1px solid #BFDBFE' }}>
-                        <div style={{ color: '#1E40AF', fontSize: 11, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <Clock size={12} className="text-blue-600" /> Avg Response Time
-                        </div>
-                        <div style={{ fontWeight: 800, fontSize: 14, color: '#1E40AF', marginTop: 2 }}>
-                          {q.avgResponseTimeSeconds || 0}s
-                        </div>
-                      </div>
-
-                      <div style={{ background: '#F8FAFC', padding: '10px 12px', borderRadius: 8, border: '1px solid #E2E8F0' }}>
-                        <div style={{ color: 'var(--slate)', fontSize: 11, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <Gauge size={12} className="text-indigo-500" /> Accuracy
-                        </div>
-                        <div style={{ fontWeight: 800, fontSize: 14, color: '#0F172A', marginTop: 2 }}>
-                          {q.accuracy || 0}%
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
           </div>
         </div>
       )}
@@ -2961,7 +2723,8 @@ export default function ExamAnalysisDetail() {
           <div
             className="modal-box"
             style={{
-              maxWidth: 660,
+              maxWidth: 960,
+              width: '95vw',
               padding: 0,
               borderRadius: 18,
               display: 'flex',
@@ -2973,7 +2736,7 @@ export default function ExamAnalysisDetail() {
             <div style={{ background: 'linear-gradient(135deg, #123B5D 0%, #1B4E78 100%)', color: '#fff', padding: '18px 22px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontSize: 11.5, color: '#BEDBFF', fontWeight: 700, textTransform: 'uppercase' }}>
-                  Principal → Subject Faculty Exam Report
+                  Principal → Subject Faculty Examination Handover Report
                 </div>
                 <h2 style={{ margin: '2px 0 0', fontSize: 19, fontWeight: 800, color: '#fff' }}>
                   Generate Report — Exam #{exam.examNo} ({formatExamTypeLabel(exam.examType)})
@@ -3005,11 +2768,11 @@ export default function ExamAnalysisDetail() {
                   </div>
                 )}
 
-                {/* Subject Selector (Mandatory first step for JEE/NEET/GUJCET; auto-filled for Board) */}
+                {/* Subject Selector (Pre-selected from Subject Wise Analysis tab, switchable anytime) */}
                 <div>
                   <label className="field-label" htmlFor="report-subject-select">
                     {exam.isMultiSubject
-                      ? 'Select Subject First * (Loads Subject Stats & Historical Comparison)'
+                      ? 'Select Subject * (Loads Subject Stats, Accuracy & Questions)'
                       : 'Exam Subject'}
                   </label>
                   {exam.isMultiSubject ? (
@@ -3021,7 +2784,7 @@ export default function ExamAnalysisDetail() {
                       required
                     >
                       <option value="">-- Select Subject --</option>
-                      {(exam.availableSubjects || []).map((subj) => (
+                      {availableSubjectKeys.map((subj) => (
                         <option key={subj} value={subj}>
                           {subj}
                         </option>
@@ -3054,6 +2817,17 @@ export default function ExamAnalysisDetail() {
                   </div>
                 ) : selectedSubjectMetrics ? (
                   <>
+                    {/* Exam Overview Details Strip */}
+                    <div style={{ background: '#F8FAFC', padding: '12px 14px', borderRadius: 10, border: '1px solid #E2E8F0', display: 'flex', flexWrap: 'wrap', gap: 16, fontSize: '12px' }}>
+                      <div><span style={{ color: 'var(--slate)' }}>Exam:</span> <strong>Exam #{exam.examNo} ({formatExamTypeLabel(exam.examType)})</strong></div>
+                      <div><span style={{ color: 'var(--slate)' }}>Code:</span> <strong>{cbtExam?.examCode || `EXAM-${exam.examNo}`}</strong></div>
+                      <div><span style={{ color: 'var(--slate)' }}>Standard:</span> <strong>{exam.standardLabel} · {exam.division !== 'ALL' ? `Div ${exam.division}` : 'All Divisions'}</strong></div>
+                      <div><span style={{ color: 'var(--slate)' }}>Date:</span> <strong>{formatDate(exam.examDate)}</strong></div>
+                      <div><span style={{ color: 'var(--slate)' }}>Duration:</span> <strong>{cbtExam?.durationMinutes || exam?.durationMinutes || 60} Mins</strong></div>
+                      <div><span style={{ color: 'var(--slate)' }}>Subject Max Marks:</span> <strong>{selectedSubjectMetrics.totalMaxMarks || 100} Marks</strong></div>
+                      <div><span style={{ color: 'var(--slate)' }}>Passing Cutoff:</span> <strong>{selectedSubjectMetrics.passingMarks || cbtStats.passingMarks || 35} Marks</strong></div>
+                    </div>
+
                     {/* Alert Summary Pill */}
                     <div
                       style={{
@@ -3076,11 +2850,11 @@ export default function ExamAnalysisDetail() {
                         fontWeight: 700,
                       }}
                     >
-                      {selectedSubjectMetrics.alertTitle}
+                      {selectedSubjectMetrics.alertTitle || 'Subject Performance Evaluation Summary'}
                     </div>
 
-                    {/* Subject Metrics Grid (Class Average, Highest Marks, Lowest Marks, Growth or Downfall Rate) */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 10 }}>
+                    {/* Subject Metrics Grid (Class Average, Highest Marks, Lowest Marks, Trend, Pass/Fail, Accuracy) */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 10 }}>
                       <div style={{ background: '#F6F7FB', padding: '10px 12px', borderRadius: 10, border: '1px solid #E4E7F2' }}>
                         <div style={{ fontSize: 11, color: 'var(--slate)', fontWeight: 700, textTransform: 'uppercase' }}>
                           Average of Class
@@ -3153,6 +2927,101 @@ export default function ExamAnalysisDetail() {
                           <div style={{ fontSize: 11, color: 'var(--slate)' }}>First exam record</div>
                         </div>
                       )}
+
+                      {/* Pass / Fail Students Count */}
+                      <div style={{ background: '#F0FDF4', padding: '10px 12px', borderRadius: 10, border: '1px solid #BBF7D0' }}>
+                        <div style={{ fontSize: 11, color: '#166534', fontWeight: 700, textTransform: 'uppercase' }}>
+                          Pass / Fail Count
+                        </div>
+                        <div className="num" style={{ fontSize: 14, fontWeight: 800, color: '#166534', marginTop: 2, whiteSpace: 'nowrap' }}>
+                          {selectedSubjectMetrics.passedCount ?? 0} Pass / {selectedSubjectMetrics.failedCount ?? 0} Fail
+                        </div>
+                        <div style={{ fontSize: 11, color: '#166534' }}>
+                          {selectedSubjectMetrics.passPercentage ?? 0}% Pass Rate
+                        </div>
+                      </div>
+
+                      {/* Accuracy & Response Time */}
+                      <div style={{ background: '#EFF6FF', padding: '10px 12px', borderRadius: 10, border: '1px solid #BFDBFE' }}>
+                        <div style={{ fontSize: 11, color: '#1E40AF', fontWeight: 700, textTransform: 'uppercase' }}>
+                          Accuracy &amp; Time
+                        </div>
+                        <div className="num" style={{ fontSize: 14, fontWeight: 800, color: '#1E40AF', marginTop: 2 }}>
+                          {selectedSubjectMetrics.overallAccuracy ?? selectedSubjectMetrics.classAveragePercent ?? 0}% Accuracy
+                        </div>
+                        <div style={{ fontSize: 11, color: '#1E40AF' }}>
+                          Avg: {formatSeconds(selectedSubjectMetrics.avgResponseTimeSeconds || 65)}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Question-Wise Diagnostic Preview for Selected Subject */}
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                        <label className="field-label" style={{ margin: 0, fontWeight: 800, color: '#1E293B' }}>
+                          Question-Wise Diagnostic Analysis ({questionsForSelectedReport.length} Questions for {selectedReportSubject})
+                        </label>
+                        <span style={{ fontSize: 11.5, color: 'var(--slate)' }}>
+                          Included in printable PDF report
+                        </span>
+                      </div>
+
+                      <div style={{ maxHeight: '200px', overflowY: 'auto', border: '1px solid #E2E8F0', borderRadius: 10, background: '#F8FAFC' }}>
+                        {questionsForSelectedReport.length === 0 ? (
+                          <div style={{ padding: 14, textAlign: 'center', color: 'var(--slate)', fontSize: 12.5 }}>
+                            No questions found for {selectedReportSubject}.
+                          </div>
+                        ) : (
+                          <table style={{ width: '100%', fontSize: '11px', borderCollapse: 'collapse' }}>
+                            <thead>
+                              <tr style={{ background: '#F1F5F9', borderBottom: '1px solid #CBD5E1', textAlign: 'left', color: '#475569' }}>
+                                <th style={{ padding: '6px 8px', width: '40px' }}>Q#</th>
+                                <th style={{ padding: '6px 8px' }}>Question &amp; Options</th>
+                                <th style={{ padding: '6px 8px', width: '45px', textAlign: 'center' }}>Ans</th>
+                                <th style={{ padding: '6px 8px', width: '55px', textAlign: 'center' }}>Attended</th>
+                                <th style={{ padding: '6px 8px', width: '50px', textAlign: 'center' }}>Right</th>
+                                <th style={{ padding: '6px 8px', width: '50px', textAlign: 'center' }}>Wrong</th>
+                                <th style={{ padding: '6px 8px', width: '60px', textAlign: 'right' }}>Accuracy</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {questionsForSelectedReport.map((q, qi) => (
+                                <tr key={qi} style={{ borderBottom: '1px solid #E2E8F0', background: qi % 2 === 0 ? '#FFFFFF' : '#F8FAFC' }}>
+                                  <td style={{ padding: '6px 8px', fontWeight: 700 }}>Q{q.questionNo || qi + 1}</td>
+                                  <td style={{ padding: '6px 8px' }}>
+                                    <div style={{ fontWeight: 600, color: '#0F172A', marginBottom: 2 }}>{q.questionText}</div>
+                                    {q.imageUrl && (
+                                      <img src={q.imageUrl} alt="Diagram" style={{ maxHeight: 55, maxWidth: 110, objectFit: 'contain', margin: '2px 0', border: '1px solid #CBD5E1', borderRadius: 4 }} />
+                                    )}
+                                    {q.options && q.options.length > 0 && (
+                                      <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', fontSize: '10px', color: '#475569' }}>
+                                        {q.options.map((opt, oi) => {
+                                          const letter = ['A', 'B', 'C', 'D'][oi];
+                                          const isRight = String(q.correctAnswer || '').toUpperCase() === letter;
+                                          return (
+                                            <span key={oi} style={{ padding: '1px 4px', borderRadius: 3, background: isRight ? '#D1FAE5' : '#F1F5F9', color: isRight ? '#065F46' : '#475569', fontWeight: isRight ? 700 : 400 }}>
+                                              <strong>{letter}.</strong> {String(opt || '').slice(0, 25)}
+                                            </span>
+                                          );
+                                        })}
+                                      </div>
+                                    )}
+                                  </td>
+                                  <td style={{ padding: '6px 8px', textAlign: 'center', fontWeight: 800, color: '#059669' }}>
+                                    {q.correctAnswer || 'A'}
+                                  </td>
+                                  <td style={{ padding: '6px 8px', textAlign: 'center' }}>{q.attemptCount || 0}</td>
+                                  <td style={{ padding: '6px 8px', textAlign: 'center', fontWeight: 700, color: '#059669' }}>{q.correctCount || 0}</td>
+                                  <td style={{ padding: '6px 8px', textAlign: 'center', fontWeight: 700, color: '#DC2626' }}>{q.wrongCount || 0}</td>
+                                  <td style={{ padding: '6px 8px', textAlign: 'right', fontWeight: 700, color: (q.accuracy || 0) >= 60 ? '#059669' : '#DC2626' }}>
+                                    {q.accuracy || 0}%
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        )}
+                      </div>
                     </div>
 
                     {/* Message for Faculty */}
@@ -3164,12 +3033,12 @@ export default function ExamAnalysisDetail() {
                         id="exam-report-message"
                         ref={principalExamMessageRef}
                         className="field-input w-full"
-                        rows={4}
+                        rows={3}
                         value={principalMessage}
                         onChange={(e) => setPrincipalMessage(e.target.value)}
                         placeholder="Write guidance, remedial focus areas, or speak in Gujarati/English..."
                         required
-                        style={{ resize: 'vertical', fontSize: 13.5 }}
+                        style={{ resize: 'vertical', fontSize: 13 }}
                       />
                       <VoiceInputControl
                         value={principalMessage}
@@ -3185,22 +3054,27 @@ export default function ExamAnalysisDetail() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10, borderTop: '1px solid var(--line-soft)', padding: '14px 22px', background: '#FAFBFD', flexShrink: 0 }}>
                 <button
                   type="button"
-                  className="btn btn-ghost"
+                  className="btn btn-ghost flex items-center gap-1.5"
                   disabled={!selectedSubjectMetrics}
                   onClick={() => {
                     if (!selectedSubjectMetrics) return;
                     triggerFacultyReportPrint(
                       {
                         reportType: 'EXAM',
-                        examId: exam.id,
+                        examId: exam.id || exam._id,
                         examNo: exam.examNo,
+                        examCode: cbtExam?.examCode || (exam ? `EXAM-${exam.examNo}` : 'EXAM'),
                         examType: exam.examType,
-                        subject: selectedSubjectMetrics.subject,
-                        targetSubject: selectedSubjectMetrics.subject,
+                        subject: selectedSubjectMetrics.subject || selectedReportSubject,
+                        targetSubject: selectedSubjectMetrics.subject || selectedReportSubject,
                         standard: exam.standard,
+                        standardLabel: exam.standardLabel,
                         division: exam.division,
-                        facultyName: exam.facultyName || `${selectedSubjectMetrics.subject} Faculty`,
+                        facultyName: exam.facultyName || `${selectedSubjectMetrics.subject || selectedReportSubject} Faculty`,
                         examDate: exam.examDate,
+                        durationMinutes: cbtExam?.durationMinutes || exam?.durationMinutes || 60,
+                        totalMarks: selectedSubjectMetrics.totalMaxMarks || cbtExam?.totalMarks || 100,
+                        passingMarks: selectedSubjectMetrics.passingMarks || cbtStats.passingMarks || cbtExam?.passingMarks || 35,
                         markEntryDate: exam.marksEnteredAt,
                         marksEnteredByName: exam.marksEnteredByName,
                         unitSummary: exam.unitSummary,
@@ -3209,16 +3083,18 @@ export default function ExamAnalysisDetail() {
                         alertMessage: selectedSubjectMetrics.alertMessage,
                         classAveragePercent: selectedSubjectMetrics.classAveragePercent,
                         averageMarks: selectedSubjectMetrics.averageMarks,
-                        totalMarks: selectedSubjectMetrics.totalMaxMarks,
                         highestMarks: selectedSubjectMetrics.highestMarks,
                         lowestMarks: selectedSubjectMetrics.lowestMarks,
-                        passCount: selectedSubjectMetrics.passCount,
-                        failCount: selectedSubjectMetrics.failCount,
-                        absentCount: selectedSubjectMetrics.absentCount,
+                        passedCount: selectedSubjectMetrics.passedCount,
+                        failedCount: selectedSubjectMetrics.failedCount,
+                        passPercentage: selectedSubjectMetrics.passPercentage,
+                        avgResponseTimeSeconds: selectedSubjectMetrics.avgResponseTimeSeconds,
+                        overallAccuracy: selectedSubjectMetrics.overallAccuracy,
                         growthRate: selectedSubjectMetrics.growthRate,
                         downfallRate: selectedSubjectMetrics.downfallRate,
                         previousExamNo: selectedSubjectMetrics.previousExam?.examNo,
                         previousExamAveragePercent: selectedSubjectMetrics.previousExam?.averagePercent,
+                        questions: questionsForSelectedReport,
                         principalMessage,
                         sentByName: user?.name || 'Principal',
                         createdAt: new Date().toISOString(),
@@ -3227,7 +3103,8 @@ export default function ExamAnalysisDetail() {
                     );
                   }}
                 >
-                  🖨️ Print Report
+                  <Printer size={15} />
+                  <span>Print / Save as PDF</span>
                 </button>
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                   <button type="button" className="btn btn-ghost" onClick={() => setShowReportModal(false)}>

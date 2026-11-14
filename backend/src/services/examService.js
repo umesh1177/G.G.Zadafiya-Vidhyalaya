@@ -563,17 +563,44 @@ class ExamService {
       const saved = savedByStudentId.get(sid);
       const mapBySub = new Map();
       (saved?.subjectMarks || []).forEach((sm) => {
-        mapBySub.set(String(sm.subject || '').toLowerCase(), sm.marksObtained);
+        mapBySub.set(String(sm.subject || '').toLowerCase().trim(), sm.marksObtained);
       });
 
-      const phyVal = isMulti && saved && !saved.ab ? String(mapBySub.get('physics') ?? 0) : '';
-      const chemVal = isMulti && saved && !saved.ab ? String(mapBySub.get('chemistry') ?? 0) : '';
+      const getSubjectMark = (targetKey) => {
+        if (!saved || saved.ab) return 0;
+        const lowTarget = String(targetKey || '').toLowerCase().trim();
+        if (mapBySub.has(lowTarget)) return mapBySub.get(lowTarget);
+        for (const [sub, val] of mapBySub.entries()) {
+          if (lowTarget.includes('math') && sub.includes('math')) return val;
+          if (lowTarget.includes('bio') && sub.includes('bio')) return val;
+          if (lowTarget.includes('phys') && sub.includes('phys')) return val;
+          if (lowTarget.includes('chem') && sub.includes('chem')) return val;
+        }
+        return 0;
+      };
+
+      const phyVal = isMulti && saved && !saved.ab ? String(getSubjectMark('physics')) : '';
+      const chemVal = isMulti && saved && !saved.ab ? String(getSubjectMark('chemistry')) : '';
       const thirdKey = thirdLabel.toLowerCase();
-      const thirdVal = isMulti && saved && !saved.ab ? String(mapBySub.get(thirdKey) ?? 0) : '';
+      const thirdVal = isMulti && saved && !saved.ab ? String(getSubjectMark(thirdKey)) : '';
       const singleVal =
         !isMulti && saved && !saved.ab
           ? String(saved.subjectMarks?.[0]?.marksObtained ?? saved.totalObtained ?? 0)
           : '';
+
+      const calculatedTotal = isMulti && saved && !saved.ab
+        ? Math.round(((Number(phyVal) || 0) + (Number(chemVal) || 0) + (Number(thirdVal) || 0)) * 100) / 100
+        : (saved ? saved.totalObtained : 0);
+
+      const totalMax = saved
+        ? saved.totalMaxMarks
+        : isMulti
+        ? (exam.marksPerSubject || 100) * 3
+        : exam.marksPerSubject || 100;
+
+      const calcPct = saved && totalMax > 0
+        ? Math.round((calculatedTotal / totalMax) * 1000) / 10
+        : 0;
 
       return {
         studentId: sid,
@@ -588,13 +615,9 @@ class ExamService {
         chem: chemVal,
         third: thirdVal,
         single: singleVal,
-        totalObtained: saved ? saved.totalObtained : 0,
-        totalMaxMarks: saved
-          ? saved.totalMaxMarks
-          : isMulti
-          ? (exam.marksPerSubject || 100) * 3
-          : exam.marksPerSubject || 100,
-        percentage: saved ? saved.percentage : 0,
+        totalObtained: calculatedTotal,
+        totalMaxMarks: totalMax,
+        percentage: calcPct,
         subjectMarks: saved?.subjectMarks || [],
         hasSavedRecord: Boolean(saved),
       };
@@ -1013,6 +1036,11 @@ class ExamService {
               : 0;
           const avgTimeSec = attempts.length > 0 ? Math.round(totalTimeSec / attempts.length) : 0;
 
+          const subPassingMarks = Math.round(maxMarks * 0.33);
+          const passedCount = studentScores.filter((s) => s.marks >= subPassingMarks).length;
+          const failedCount = Math.max(0, studentScores.length - passedCount);
+          const passPercentage = studentScores.length > 0 ? Math.round((passedCount / studentScores.length) * 1000) / 10 : 0;
+
           // Comparison with previous exam result (Growth / Downfall rate)
           const prevExamsForSub = (allEvaluatedExams || []).filter(
             (e) => e._id.toString() !== curId && (e.subject === sub || e.examType === foundCbt.examType)
@@ -1033,6 +1061,10 @@ class ExamService {
             averagePercentage: maxMarks > 0 ? Math.round((avgScore / maxMarks) * 100 * 10) / 10 : 0,
             highestScore,
             lowestScore,
+            passedCount,
+            failedCount,
+            passPercentage,
+            passingMarks: subPassingMarks,
             overallAccuracy,
             avgResponseTimeSeconds: avgTimeSec,
             growthRate,
@@ -1173,6 +1205,18 @@ class ExamService {
             },
           };
         }
+
+        const passMarksVal = foundCbt.passingMarks !== undefined && foundCbt.passingMarks !== null
+          ? Number(foundCbt.passingMarks)
+          : Math.round((foundCbt.totalMarks || 100) * 0.33);
+        const overallPassed = formattedStudents.filter(s => s.score >= passMarksVal).length;
+        const overallFailed = Math.max(0, formattedStudents.length - overallPassed);
+        const overallPassPct = formattedStudents.length > 0 ? Math.round((overallPassed / formattedStudents.length) * 1000) / 10 : 0;
+
+        cbtAnalytics.passedCount = cbtAnalytics.passedCount !== undefined ? cbtAnalytics.passedCount : overallPassed;
+        cbtAnalytics.failedCount = cbtAnalytics.failedCount !== undefined ? cbtAnalytics.failedCount : overallFailed;
+        cbtAnalytics.passPercentage = cbtAnalytics.passPercentage !== undefined ? cbtAnalytics.passPercentage : overallPassPct;
+        cbtAnalytics.passingMarks = passMarksVal;
 
         cbtAnalysis = {
           exam: foundCbt,

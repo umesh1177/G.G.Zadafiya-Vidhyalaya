@@ -819,6 +819,15 @@ exports.evaluateExam = async (req, res) => {
     const lowestScore = Math.min(...percentages);
     const highestScore = Math.max(...percentages);
 
+    // Pass / Fail student counts (Requirement 5)
+    const passingMarksThreshold = exam.passingMarks !== undefined && exam.passingMarks !== null
+      ? Number(exam.passingMarks)
+      : Math.round(totalPossibleMarks * 0.33);
+
+    const passedCount = scoredAttempts.filter(a => a.score >= passingMarksThreshold).length;
+    const failedCount = Math.max(0, totalStudents - passedCount);
+    const passPercentage = totalStudents > 0 ? Math.round((passedCount / totalStudents) * 1000) / 10 : 0;
+
     // Time Statistics
     const times = scoredAttempts.map(a => a.timeSpentSeconds || 0);
     const avgTimeSec = Math.round(times.reduce((acc, t) => acc + t, 0) / totalStudents);
@@ -868,6 +877,10 @@ exports.evaluateExam = async (req, res) => {
       medianScore,
       lowestScore,
       highestScore,
+      passedCount,
+      failedCount,
+      passPercentage,
+      passingMarks: passingMarksThreshold,
       averageTimeSeconds: avgTimeSec,
       medianTimeSeconds: medianTimeSec,
       timeUtilization,
@@ -940,16 +953,22 @@ exports.evaluateExam = async (req, res) => {
                   ? subQuestions.reduce((sum, q) => sum + (Number(q.marks) || posPerQ), 0)
                   : Math.round(mappedExam.marksPerSubject || 100));
 
-            subQuestions.forEach((q) => {
+            subQuestions.forEach((q, qIdx) => {
               const qId = String(q.id);
               const ansObj = (att.answers || []).find(
-                (a) => a && (String(a.questionId) === qId || String(a.questionId) === String(q.questionNo))
+                (a) =>
+                  a &&
+                  (String(a.questionId) === qId ||
+                    String(a.questionId) === `q_${qIdx + 1}` ||
+                    String(a.questionId) === String(q.questionNo) ||
+                    String(a.questionId) === String(qIdx + 1))
               );
               const qPos = Number(q.marks) || posPerQ;
               const qNeg = Number(q.negativeMarks) !== undefined ? Number(q.negativeMarks) : negPerQ;
 
               if (ansObj && ansObj.selectedOption) {
-                if (String(ansObj.selectedOption).trim().toUpperCase() === String(q.correctAnswer || '').trim().toUpperCase()) {
+                const correct = String(keyMap[q.id] || q.correctAnswer || '').trim().toUpperCase();
+                if (String(ansObj.selectedOption).trim().toUpperCase() === correct) {
                   subScore += qPos;
                 } else {
                   subScore -= qNeg;
@@ -960,8 +979,18 @@ exports.evaluateExam = async (req, res) => {
             subScore = Math.round(subScore * 100) / 100;
             if (subScore < 0) subScore = 0;
 
+            const normalizedSub = /math/i.test(sub)
+              ? 'Maths'
+              : /bio/i.test(sub)
+              ? 'Biology'
+              : /phys/i.test(sub)
+              ? 'Physics'
+              : /chem/i.test(sub)
+              ? 'Chemistry'
+              : sub;
+
             subjectMarks.push({
-              subject: sub,
+              subject: normalizedSub,
               marksObtained: subScore,
               totalMarks: subMax,
             });
@@ -969,6 +998,7 @@ exports.evaluateExam = async (req, res) => {
 
           const groupKey = mappedExam.streamGroup === 'GROUP_B' ? 'B' : 'A';
           const calculatedSubTotal = subjectMarks.reduce((sum, s) => sum + s.totalMarks, 0);
+          const totalObtainedSum = Math.round(subjectMarks.reduce((sum, s) => sum + s.marksObtained, 0) * 100) / 100;
 
           await ExamMarks.findOneAndUpdate(
             { examId: mappedExam._id, studentId: studentDoc._id, examGroup: groupKey },
@@ -981,9 +1011,9 @@ exports.evaluateExam = async (req, res) => {
               examGroup: groupKey,
               ab: att.status === 'DISQUALIFIED' ? true : false,
               subjectMarks,
-              totalObtained: att.score,
+              totalObtained: totalObtainedSum,
               totalMaxMarks: mappedExam.totalMarks || exam.totalMarks || calculatedSubTotal || 300,
-              percentage: att.percentage,
+              percentage: calculatedSubTotal > 0 ? Math.round((totalObtainedSum / calculatedSubTotal) * 1000) / 10 : att.percentage,
               enteredByName: 'CBT Auto-Evaluation',
               enteredAt: new Date(),
             },
@@ -1320,10 +1350,7 @@ exports.extractPaper = async (req, res) => {
     // If file payload is provided (PDF or DOCX or TXT)
     if (pdfBase64 && typeof pdfBase64 === 'string') {
       try {
-        const cleanBase64 = pdfBase64.includes(';base64,')
-          ? pdfBase64.split(';base64,')[1].replace(/\s+/g, '')
-          : pdfBase64.replace(/^data:[^,]+,/, '').replace(/\s+/g, '');
-
+        const cleanBase64 = pdfBase64.replace(/^data:[^;]+;base64,/, '').trim();
         if (cleanBase64.length > 0) {
           const fileBuffer = Buffer.from(cleanBase64, 'base64');
 

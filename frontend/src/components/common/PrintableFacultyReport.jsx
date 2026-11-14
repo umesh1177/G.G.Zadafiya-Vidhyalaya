@@ -153,9 +153,9 @@ export default function PrintableFacultyReport({ report, onClose }) {
             </div>
           </div>
           <div className="print-kpi-cell">
-            <div className="print-kpi-label">Pass / Fail</div>
-            <div className="print-kpi-val">{report.passCount || 0} / {report.failCount || 0}</div>
-            <div className="print-kpi-sub">{report.absentCount || 0} Absent</div>
+            <div className="print-kpi-label">Pass / Fail Students</div>
+            <div className="print-kpi-val">{report.passedCount ?? report.passCount ?? 0} / {report.failedCount ?? report.failCount ?? 0}</div>
+            <div className="print-kpi-sub">{report.passPercentage !== undefined ? `${report.passPercentage}% Pass Rate` : `${report.absentCount || 0} Absent`}</div>
           </div>
         </div>
       ) : (
@@ -229,6 +229,15 @@ export default function PrintableFacultyReport({ report, onClose }) {
                     <div style={{ fontWeight: 600, color: '#0f172a', marginBottom: 4 }}>
                       {q.questionText || '—'}
                     </div>
+                    {q.imageUrl && (
+                      <div style={{ margin: '6px 0' }}>
+                        <img
+                          src={q.imageUrl}
+                          alt="Question diagram"
+                          style={{ maxHeight: '110px', maxWidth: '240px', objectFit: 'contain', borderRadius: '4px', border: '1px solid #cbd5e1' }}
+                        />
+                      </div>
+                    )}
                     {q.options && q.options.length > 0 && (
                       <div
                         style={{

@@ -20,18 +20,87 @@ function toAsciiDigits(str) {
   return String(str).replace(/[૦-૯]/g, d => String(d.charCodeAt(0) - 0x0AE6));
 }
 
-// Clean and normalize Gujarati & Unicode text
+// Clean, repair and normalize Gujarati & Unicode text from PDF/OCR extractions
+function repairGujaratiText(txt) {
+  if (!txt || typeof txt !== 'string') return '';
+  let s = txt.normalize('NFC');
+
+  // Fix known character drops caused by PDF font encoding / missing ToUnicode CMaps
+  const replacements = [
+    [/[\u0000\uFFFD■\s]*ુદ્ધ/g, 'શુદ્ધ'],
+    [/[\u0000\uFFFD■\s]*ૂલ્\s*ય/g, 'મૂલ્ય'],
+    [/[\u0000\uFFFD■\s]*ૂલ્ય/g, 'મૂલ્ય'],
+    [/પાણી\s*[\u0000\uFFFD■\s]*ું/g, 'પાણીનું'],
+    [/કેટ\s*[\u0000\uFFFD■\s]*ું/g, 'કેટલું'],
+    [/ક\s*[\u0000\uFFFD■\s]*ું/g, 'કયું'],
+    [/વા\s*[\u0000\uFFFD■\s]*ુ/g, 'વાયુ'],
+    [/ધા\s*[\u0000\uFFFD■\s]*ુ/g, 'ધાતુ'],
+    [/[\u0000\uFFFD■\s]*ુક્\s*ત/g, 'મુક્ત'],
+    [/[\u0000\uFFFD■\s]*વ\s*ુત/g, 'વિદ્યુત'],
+    [/[\u0000\uFFFD■\s]*ુરુ/g, 'ગુરુ'],
+    [/[\u0000\uFFFD■\s]*ૂન્\s*ય/g, 'શૂન્ય'],
+    [/[\u0000\uFFFD■\s]*ૂત્ર/g, 'સૂત્ર'],
+    [/[\u0000\uFFFD■\s]*કલોવોટ/g, 'કિલોવોટ'],
+    [/[\u0000\uFFFD■\s]*ઘાત/g, 'દ્વિઘાત'],
+    [/[\u0000\uFFFD■\s]*ક\s*મત/g, 'કિંમત'],
+    [/[\u0000\uFFFD■\s]*બ\s*દુ/g, 'બિંદુ'],
+    [/[\u0000\uFFFD■\s]*ુગ્\s*મ/g, 'યુગ્મ'],
+    [/[\u0000\uFFFD■\s]*ા(\s*કેટલી)/g, 'ત્રિજ્યા$1'],
+    [/સં\s*[\u0000\uFFFD■\s]*ા/g, 'સંખ્યા'],
+    [/[\u0000\uFFFD■\s]*નયોન/g, 'નિયોન'],
+    [/[\u0000\uFFFD■\s]*ન\s*ક્ર\s*ય/g, 'નિષ્ક્રિય'],
+    [/[\u0000\uFFFD■\s]*ઝ\s*ક/g, 'ઝિંક'],
+    [/એ\s*[\u0000\uFFFD■\s]*સડ/g, 'એસિડ'],
+    [/ક્\s*લો\s*[\u0000\uFFFD■\s]*રન/g, 'ક્લોરિન'],
+    [/ઓ\s*ક્\s*સજન/g, 'ઓક્સિજન'],
+    [/હાઈ\s*ોજન/g, 'હાઇડ્રોજન'],
+    [/હાઈ\s*ોક્\s*લો\s*રક/g, 'હાઇડ્રોક્લોરિક'],
+    [/નાઈ\s*ોજન/g, 'નાઇટ્રોજન'],
+    [/અર\s*સો/g, 'અરીસો'],
+    [/અંતગ\s*ળ/g, 'અંતર્ગોળ'],
+    [/બ\s*હગ\s*ળ/g, 'બહિર્ગોળ'],
+    [/સ્\s*વરૂ\s*પ/g, 'સ્વરૂપ'],
+    [/પ્ર\s*વાહ\s*([^\u0A85-\u0AB9]|$)/g, 'પ્રવાહી$1'],
+    [/આલ્\s*કેન/g, 'આલ્કેન'],
+    [/કાબ\s*ન/g, 'કાર્બન'],
+    [/કાબ\s*ો/g, 'કાર્બો'],
+    [/આવત\s*કોષ્ટ\s*ક/g, 'આવર્ત કોષ્ટક'],
+    [/સ\s*ૂહ/g, 'સમૂહ'],
+    [/દ્રશ્\s*ય/g, 'દ્રશ્ય'],
+    [/ત્\s*વાકષ\s*ણ/g, 'ત્વાકર્ષણ'],
+    [/વૈ\s*ા\s*નકે/g, 'વૈજ્ઞાનિકે'],
+    [/સમાંતર\s*ેણી/g, 'સમાંતર શ્રેણી'],
+    [/વ\s*ુ\s*ળ/g, 'વર્તુળ'],
+  ];
+
+  for (const [re, rep] of replacements) {
+    s = s.replace(re, rep);
+  }
+
+  // Broken virama ligature: Consonant + Virama + whitespace + Consonant => Consonant + Virama + Consonant
+  // e.g. સ્ + space + વ => સ્વ, લ્ + space + ય => લ્ય, ચ્ + space + ચ => ચ્ચ, ન્ + space + ય => ન્ય
+  s = s.replace(/([\u0A85-\u0AB9]\u0ACD)\s+([\u0A85-\u0AB9])/g, '$1$2');
+
+  // Fix detached Gujarati matras/vowel signs (consonant followed by space then matra/virama)
+  s = s.replace(/([\u0A85-\u0AB9])\s+([\u0ABE-\u0ACD\u0A81-\u0A83])/g, '$1$2');
+
+  // Trailing question markers from options: e.g. "14 પ્રશ્ન", "18 જવાબવહ"
+  s = s.replace(/\s*(?:પ્રશ્ન|Question|Que|Q|MCQ)\s*[0-9૦-૯]*\s*$/i, '');
+  s = s.replace(/\s*(?:જવાબવહ|ઉત્તરવહ|Answer\s*Key|Key).*$/i, '');
+
+  // Strip remaining null bytes, replacement characters, BOM, soft hyphens, zero-width spaces
+  s = s.replace(/[\u0000\uFFFD■\u00AD\u200B\uFEFF]/g, '');
+
+  // Collapse multiple spaces
+  s = s.replace(/[ \t]+/g, ' ').trim();
+
+  return s;
+}
+
+// Clean and normalize text
 function cleanText(text) {
   if (!text || typeof text !== 'string') return '';
-  let cleaned = text.normalize('NFC');
-  
-  // Remove soft hyphens, zero-width spaces, BOM
-  cleaned = cleaned.replace(/[\u00AD\u200B\uFEFF]/g, '');
-
-  // Fix detached Gujarati matras/vowel signs (e.g. consonant followed by space then matra/virama)
-  cleaned = cleaned.replace(/([\u0A85-\u0AB9])\s+([\u0ABE-\u0ACD\u0A81-\u0A83])/g, '$1$2');
-
-  return cleaned;
+  return repairGujaratiText(text);
 }
 
 function parseMcqText(rawText, defaultSubject = 'Physics', marks = 4, negativeMarks = 1) {
@@ -98,6 +167,7 @@ function parseMcqText(rawText, defaultSubject = 'Physics', marks = 4, negativeMa
         // Remove leading option marker like (A), (1), (અ), (૧), [A], [1], or "A. ", "1. ", "A) ", "1) "
         // MUST require parentheses OR delimiter + whitespace so Gujarati words starting with ક/અ/બ/ડ (e.g. કાર્બન, અવરોધ, બળ) never lose their first letter!
         s = s.replace(/^(?:\([A-Da-dઅબકડ1-4૧-૪]\)|\[[A-Da-dઅબકડ1-4૧-૪]\]|[A-Da-dઅબકડ][\.\)\:\-]\s+)\s*/, '').trim();
+        s = repairGujaratiText(s);
         return s || fallbackLabel;
       };
 
@@ -116,7 +186,8 @@ function parseMcqText(rawText, defaultSubject = 'Physics', marks = 4, negativeMa
         questionNo: qNum,
         marks: Number(marks) || 4,
         negativeMarks: Number(negativeMarks) || 1,
-        questionText: currentQ.questionText.trim(),
+        questionText: repairGujaratiText(currentQ.questionText.trim()),
+        imageUrl: currentQ.imageUrl || '',
         options: [optA, optB, optC, optD],
         correctAnswer: correct,
         explanation: currentQ.explanation || '',
@@ -158,10 +229,10 @@ function parseMcqText(rawText, defaultSubject = 'Physics', marks = 4, negativeMa
     }
 
     // 2. Check inline answer in question
-    const ansMatch = line.match(/(?:Ans(?:wer)?|Correct(?:\s*Option)?|ઉત્તર|જવાબ|Key)\s*[\:\-\=]?\s*[\(\[]?([A-Da-dઅબકડ1-4૧-૪])[\)\]]?/i);
+    const ansMatch = line.match(/(?:Ans(?:wer)?|Correct(?:\s*Option)?|ઉત્તર|જવાબ|Key)\s*[\:\-\=]?\s*\(?([A-Da-dઅબકડ])\)?/i);
     if (ansMatch && currentQ) {
       const k = ansMatch[1].toUpperCase();
-      currentQ.correctAnswer = gujOptionMap[k] || gujOptionMap[ansMatch[1]] || k;
+      currentQ.correctAnswer = gujOptionMap[k] || k;
       continue;
     }
 
@@ -271,11 +342,8 @@ function extractAnswerKeyBlock(rawText) {
     let m;
     while ((m = pairRegex.exec(line)) !== null) {
       const qNum = parseInt(toAsciiDigits(m[1]), 10);
-      const rawAns = m[2];
-      const mapped = gujOptionMap[rawAns] || gujOptionMap[rawAns.toUpperCase()] || rawAns.toUpperCase();
-      if (qNum && ['A', 'B', 'C', 'D'].includes(mapped)) {
-        map[qNum] = mapped;
-      }
+      let ans = m[2].toUpperCase();
+      map[qNum] = gujOptionMap[ans] || ans;
     }
   }
 
@@ -286,5 +354,6 @@ module.exports = {
   parseMcqText,
   extractAnswerKeyBlock,
   cleanText,
+  repairGujaratiText,
   toAsciiDigits,
 };

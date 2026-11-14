@@ -9,6 +9,7 @@ const cbtQuestionSchema = new mongoose.Schema(
     negativeMarks: { type: Number, default: 1 },
     questionText: { type: String, required: true, trim: true },
     questionTextGujarati: { type: String, trim: true, default: '' },
+    imageUrl: { type: String, trim: true, default: '' },
     options: {
       type: [String],
       validate: [val => val.length === 4, 'Must provide exactly 4 options (A, B, C, D)'],
@@ -59,6 +60,7 @@ const cbtExamSchema = new mongoose.Schema(
     },
     durationMinutes: { type: Number, required: true, default: 60 },
     totalMarks: { type: Number, required: true, default: 100 },
+    passingMarks: { type: Number, default: 35 },
     marksPerQuestion: { type: Number, default: 4 },
     negativeMarks: { type: Number, default: 1 },
 
@@ -116,6 +118,9 @@ const cbtExamSchema = new mongoose.Schema(
       medianScore: { type: Number, default: 0 },
       lowestScore: { type: Number, default: 0 },
       highestScore: { type: Number, default: 0 },
+      passedCount: { type: Number, default: 0 },
+      failedCount: { type: Number, default: 0 },
+      passPercentage: { type: Number, default: 0 },
       averageTimeSeconds: { type: Number, default: 0 },
       medianTimeSeconds: { type: Number, default: 0 },
       timeUtilization: { type: Number, default: 0 },
@@ -137,6 +142,7 @@ const cbtExamSchema = new mongoose.Schema(
           questionNo: Number,
           subject: String,
           questionText: String,
+          imageUrl: { type: String, default: '' },
           attendedCount: Number,
           skippedCount: Number,
           rightCount: Number,

@@ -506,6 +506,17 @@ export default function CbtExamPlayer({
                   {currentQ.questionTextGujarati}
                 </p>
               )}
+              {currentQ?.imageUrl && (
+                <div className="cbt-question-image-box mt-3 text-center">
+                  <img
+                    src={currentQ.imageUrl}
+                    alt={`Question ${currentQ.questionNo} diagram`}
+                    className="max-h-72 max-w-full rounded-lg border border-slate-200 shadow-sm mx-auto object-contain bg-white p-2 hover:scale-[1.02] transition-transform cursor-pointer"
+                    onClick={() => window.open(currentQ.imageUrl, '_blank')}
+                    title="Click to view full image in a new tab"
+                  />
+                </div>
+              )}
             </div>
 
             {/* Options A, B, C, D directly below question statement matching Photo 2 */}

@@ -181,11 +181,32 @@ export default function AssistantExam() {
         examTimeVal = d.toTimeString().slice(0, 5);
       }
 
-      let subVal = 'Physics';
-      if (found.subjects && found.subjects.length > 0) {
-        subVal = found.subjects[0];
+      let subVal = 'PCM';
+      const hasMaths = found.subjects?.some((s) => /math/i.test(s));
+      const hasBio = found.subjects?.some((s) => /bio/i.test(s));
+      const hasPhys = found.subjects?.some((s) => /phys/i.test(s));
+      const hasChem = found.subjects?.some((s) => /chem/i.test(s));
+
+      if (hasPhys && hasChem && hasMaths && hasBio) {
+        subVal = 'PCMB';
+      } else if (hasPhys && hasChem && hasBio) {
+        subVal = 'PCB';
+      } else if (hasPhys && hasChem && hasMaths) {
+        subVal = 'PCM';
+      } else if (type === 'JEE') {
+        subVal = 'PCM';
       } else if (type === 'NEET') {
-        subVal = 'Biology';
+        subVal = 'PCB';
+      } else if (found.streamGroup === 'GROUP_B') {
+        subVal = 'PCB';
+      } else if (found.streamGroup === 'GROUP_AB') {
+        subVal = 'PCMB';
+      } else if (type === 'GUJCET') {
+        subVal = found.streamGroup === 'GROUP_B' ? 'PCB' : 'PCM';
+      } else if (found.subjects && found.subjects.length === 1) {
+        subVal = found.subjects[0];
+      } else if (found.subjects && found.subjects.length > 0) {
+        subVal = 'PCM';
       }
 
       setCreateForm((prev) => ({
