@@ -396,11 +396,13 @@ exports.startExam = async (req, res) => {
 
       const qObj = {
         id: qId,
+        questionNo: q.questionNo || idx + 1,
         subject: q.subject || 'General',
         marks: q.marks || exam.marksPerQuestion || 4,
         negativeMarks: q.negativeMarks || exam.negativeMarks || 1,
         questionText: q.questionText || q.question || q.text || `Question ${idx + 1}`,
         questionTextGujarati: q.questionTextGujarati || '',
+        imageUrl: q.imageUrl || q.image || q.diagramUrl || '',
         options: cleanOpts,
         // correctAnswer is withheld!
       };
@@ -435,11 +437,13 @@ exports.startExam = async (req, res) => {
         }
         return {
           id: q.id || (q._id ? q._id.toString() : `q_${idx + 1}`),
+          questionNo: q.questionNo || idx + 1,
           subject: q.subject || 'General',
           marks: q.marks || exam.marksPerQuestion || 4,
           negativeMarks: q.negativeMarks || exam.negativeMarks || 1,
           questionText: q.questionText || q.question || q.text || `Question ${idx + 1}`,
           questionTextGujarati: q.questionTextGujarati || '',
+          imageUrl: q.imageUrl || q.image || q.diagramUrl || '',
           options: cleanOpts.slice(0, 4),
           displayQuestionNo: idx + 1,
         };
@@ -1329,6 +1333,7 @@ function extractDocxText(buf) {
     const XLSX = require('xlsx');
     const zip = XLSX.CFB.read(buf, { type: 'buffer' });
     const entry =
+      (zip.FileIndex || []).find(x => x.name === 'document.xml' || (x.name && x.name.endsWith('/document.xml'))) ||
       XLSX.CFB.find(zip, 'Root Entry/word/document.xml') ||
       XLSX.CFB.find(zip, 'word/document.xml');
     if (!entry || !entry.content) return '';

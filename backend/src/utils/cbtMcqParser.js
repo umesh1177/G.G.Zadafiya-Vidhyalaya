@@ -388,21 +388,35 @@ function extractImagesFromDocx(buf) {
     const XLSX = require('xlsx');
     const zip = XLSX.CFB.read(buf, { type: 'buffer' });
     if (zip && Array.isArray(zip.FileIndex)) {
-      for (const entry of zip.FileIndex) {
-        if (!entry.name || !entry.content) continue;
+      const imgEntries = zip.FileIndex.filter(entry => {
+        if (!entry.name || !entry.content) return false;
         const name = String(entry.name).toLowerCase();
-        if (name.includes('word/media/')) {
-          let mime = 'image/png';
-          if (name.endsWith('.jpg') || name.endsWith('.jpeg')) mime = 'image/jpeg';
-          else if (name.endsWith('.gif')) mime = 'image/gif';
-          else if (name.endsWith('.webp')) mime = 'image/webp';
-          const contentBuf = Buffer.isBuffer(entry.content) ? entry.content : Buffer.from(entry.content);
-          if (contentBuf.length >= 200) {
-            images.push({
-              name: entry.name,
-              dataUrl: `data:${mime};base64,${contentBuf.toString('base64')}`,
-            });
-          }
+        if (name.includes('thumbnail')) return false;
+        return /\.(png|jpe?g|gif|webp|bmp)$/i.test(name) || name.includes('image');
+      });
+
+      // Sort naturally so image1, image2, image3 ... image10 are in sequential order
+      imgEntries.sort((a, b) => {
+        const numA = parseInt(String(a.name).replace(/\D/g, ''), 10) || 0;
+        const numB = parseInt(String(b.name).replace(/\D/g, ''), 10) || 0;
+        return numA - numB;
+      });
+
+      for (const entry of imgEntries) {
+        const name = String(entry.name).toLowerCase();
+        let mime = 'image/png';
+        if (name.endsWith('.jpg') || name.endsWith('.jpeg')) mime = 'image/jpeg';
+        else if (name.endsWith('.gif')) mime = 'image/gif';
+        else if (name.endsWith('.webp')) mime = 'image/webp';
+        else if (name.endsWith('.bmp')) mime = 'image/bmp';
+        
+        const contentBuf = Buffer.isBuffer(entry.content) ? entry.content : Buffer.from(entry.content);
+        if (contentBuf.length >= 200) {
+          images.push({
+            name: entry.name,
+            size: contentBuf.length,
+            dataUrl: `data:${mime};base64,${contentBuf.toString('base64')}`,
+          });
         }
       }
     }
@@ -423,17 +437,21 @@ async function extractImagesFromPdf(cleanPdfBuf) {
   try {
     const { PDFParse } = require('pdf-parse');
     const parser = new PDFParse({ data: cleanPdfBuf });
-    const imgResult = await parser.getImage({ imageDataUrl: true, imageBuffer: false });
+    const imgResult = await parser.getImage({ imageDataUrl: true, imageBuffer: true });
     if (imgResult && Array.isArray(imgResult.pages)) {
       for (const p of imgResult.pages) {
         if (Array.isArray(p.images)) {
           for (const img of p.images) {
-            if (img.dataUrl && typeof img.dataUrl === 'string' && img.dataUrl.startsWith('data:image/')) {
+            let dataUrl = img.dataUrl;
+            if (!dataUrl && img.data && img.data.length > 0) {
+              dataUrl = `data:image/png;base64,${Buffer.from(img.data).toString('base64')}`;
+            }
+            if (dataUrl && typeof dataUrl === 'string' && dataUrl.startsWith('data:image/')) {
               // Ignore tiny icons or spacer dots (under 25x25)
               if ((img.width && img.width < 25) || (img.height && img.height < 25)) continue;
               images.push({
                 pageNumber: p.pageNumber,
-                dataUrl: img.dataUrl,
+                dataUrl,
                 width: img.width || 300,
                 height: img.height || 200,
               });
@@ -474,12 +492,14 @@ function associateImagesWithQuestions(questions, extractedImages) {
   if (!extractedImages || extractedImages.length === 0 || !questions || questions.length === 0) return;
 
   let imgIdx = 0;
-  const diagramKeywords = /આકૃતિ|પરિપથ|આલેખ|ચિત્ર|દર્શાવ્યા મુજબ|નીચે દર્શાવેલ|આપેલ આકૃતિ|સમતુલ્ય|પ્રતિબિંબ|કિરણ|રેખાકૃતિ|સંયોજન|figure|diagram|graph|circuit|chart|shown below|following figure|image|refer to/i;
+  // Broad list of keywords indicating diagrams in English and Gujarati
+  const diagramKeywords = /આકૃતિ|પરિપથ|આલેખ|ચિત્ર|દર્શાવ્યા|દર્શાવેલ|નીચે|રચના|બંધરેખા|માળખાંકીય|સમતુલ્ય|પ્રતિબિંબ|કિરણ|રેખાકૃતિ|સંયોજન|જોડાણ|લુઈસ|કોયડો|સ્વાધ્યાય|figure|diagram|graph|circuit|chart|shown below|following figure|image|refer to|structure|formula|as shown|given below/i;
 
   // Pass 1: Assign images to questions with explicit diagram keywords
   for (const q of questions) {
     if (imgIdx >= extractedImages.length) break;
-    if (!q.imageUrl && diagramKeywords.test(q.questionText || '')) {
+    const combinedText = `${q.questionText || ''} ${q.questionTextGujarati || ''}`;
+    if (!q.imageUrl && diagramKeywords.test(combinedText)) {
       q.imageUrl = extractedImages[imgIdx].dataUrl;
       imgIdx++;
     }

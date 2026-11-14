@@ -183,17 +183,24 @@ export default function CbtQuestionPaperModal({ exam, onClose }) {
                 )}
 
                 {/* Question Diagram / Image if present */}
-                {q.imageUrl && (
-                  <div className="mb-3 text-center">
-                    <img
-                      src={q.imageUrl}
-                      alt={`Q${q.questionNo || idx + 1} Diagram`}
-                      className="max-h-60 max-w-full rounded-lg border border-slate-200 mx-auto object-contain bg-white p-2 shadow-sm cursor-pointer hover:scale-[1.01] transition-transform"
-                      onClick={() => window.open(q.imageUrl, '_blank')}
-                      title="Click to view full image in a new tab"
-                    />
-                  </div>
-                )}
+                {(() => {
+                  const imgSource = q.imageUrl || q.image || q.diagramUrl;
+                  if (!imgSource) return null;
+                  return (
+                    <div className="mb-3 text-center bg-slate-50/60 p-2 rounded-lg border border-slate-200">
+                      <div className="text-[11px] font-semibold text-slate-500 mb-1 flex items-center justify-center gap-1">
+                        <span>📸 Question Diagram / Figure</span>
+                      </div>
+                      <img
+                        src={imgSource}
+                        alt={`Q${q.questionNo || idx + 1} Diagram`}
+                        className="max-h-60 max-w-full rounded-lg border border-slate-200 mx-auto object-contain bg-white p-2 shadow-sm cursor-pointer hover:scale-[1.01] transition-transform"
+                        onClick={() => window.open(imgSource, '_blank')}
+                        title="Click to view full image in a new tab"
+                      />
+                    </div>
+                  );
+                })()}
 
                 {/* Options 2x2 Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs">

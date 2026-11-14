@@ -506,17 +506,25 @@ export default function CbtExamPlayer({
                   {currentQ.questionTextGujarati}
                 </p>
               )}
-              {currentQ?.imageUrl && (
-                <div className="cbt-question-image-box mt-3 text-center">
-                  <img
-                    src={currentQ.imageUrl}
-                    alt={`Question ${currentQ.questionNo} diagram`}
-                    className="max-h-72 max-w-full rounded-lg border border-slate-200 shadow-sm mx-auto object-contain bg-white p-2 hover:scale-[1.02] transition-transform cursor-pointer"
-                    onClick={() => window.open(currentQ.imageUrl, '_blank')}
-                    title="Click to view full image in a new tab"
-                  />
-                </div>
-              )}
+              {/* Question Image / Diagram Display */}
+              {(() => {
+                const imgSource = currentQ?.imageUrl || currentQ?.image || currentQ?.diagramUrl;
+                if (!imgSource) return null;
+                return (
+                  <div className="cbt-question-image-box mt-3 mb-2 text-center bg-slate-50/60 p-2.5 rounded-lg border border-slate-200">
+                    <div className="text-[11px] font-semibold text-slate-500 mb-1.5 flex items-center justify-center gap-1">
+                      <span>📸 Question Diagram / Figure</span>
+                    </div>
+                    <img
+                      src={imgSource}
+                      alt={`Question ${currentQ?.displayQuestionNo || currentQ?.questionNo || currentIndex + 1} Diagram`}
+                      className="max-h-80 max-w-full rounded border border-slate-200 shadow-sm mx-auto object-contain bg-white p-2 hover:scale-[1.01] transition-transform cursor-pointer"
+                      onClick={() => window.open(imgSource, '_blank')}
+                      title="Click to view diagram in full size"
+                    />
+                  </div>
+                );
+              })()}
             </div>
 
             {/* Options A, B, C, D directly below question statement matching Photo 2 */}

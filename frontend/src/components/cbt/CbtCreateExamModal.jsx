@@ -1082,19 +1082,21 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
                           />
 
                           {/* Extracted Diagram / Image preview */}
-                          {q.imageUrl ? (
+                          {(q.imageUrl || q.image || q.diagramUrl) ? (
                             <div className="flex items-center gap-3 p-2 bg-indigo-50/70 border border-indigo-200 rounded-lg mb-2">
                               <img
-                                src={q.imageUrl}
+                                src={q.imageUrl || q.image || q.diagramUrl}
                                 alt={`Q${idx + 1} Diagram`}
-                                className="max-h-24 max-w-[140px] object-contain rounded bg-white p-1 border border-indigo-200 shrink-0"
+                                className="max-h-24 max-w-[140px] object-contain rounded bg-white p-1 border border-indigo-200 shrink-0 cursor-pointer"
+                                onClick={() => window.open(q.imageUrl || q.image || q.diagramUrl, '_blank')}
+                                title="Click to view full size"
                               />
                               <div className="flex-1 min-w-0">
                                 <span className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-800 bg-indigo-100 px-2 py-0.5 rounded">
                                   <ImageIcon size={12} /> Question Diagram (Extracted from PDF / Document)
                                 </span>
                                 <p className="text-[11px] text-slate-500 mt-1">
-                                  Automatically extracted from uploaded question paper PDF
+                                  Automatically extracted from uploaded question paper
                                 </p>
                               </div>
                               <button
@@ -1103,6 +1105,8 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
                                 onClick={() => {
                                   const copy = [...questions];
                                   copy[idx].imageUrl = '';
+                                  delete copy[idx].image;
+                                  delete copy[idx].diagramUrl;
                                   setQuestions(copy);
                                 }}
                                 title="Remove Image"
