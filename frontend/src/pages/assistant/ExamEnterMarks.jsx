@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate, useOutletContext } from 'react-router-dom
 import { useAuth } from '../../context/AuthContext';
 import { examApi, getQuestionPaperUrl } from '../../services/examApi';
 import PaginationBar from '../../components/common/PaginationBar';
+import { triggerBrowserExcelDownload } from '../../utils/excelDownloadHelper';
 
 function formatExamTypeLabel(t) {
   const map = {
@@ -192,11 +193,22 @@ export default function ExamEnterMarks() {
         ...prev,
         [currentGroupKey]: (savedRes.rows || []).map((r) => ({ ...r })),
       }));
-      setSubmittedMsg(
-        isGUJCET
-          ? `Group ${currentGroupKey} (${currentGroupKey === 'A' ? 'PCM' : 'PCB'}) marks saved & published!`
-          : `Exam #${savedRes.exam?.examNo} marks saved & published to Completed Exam!`
-      );
+
+      // Automatically trigger browser download of marks Excel
+      if (savedRes?.excelDownload) {
+        triggerBrowserExcelDownload(savedRes.excelDownload);
+      }
+
+      const dlInfo = savedRes?.excelDownload;
+      let successNote = isGUJCET
+        ? `Group ${currentGroupKey} (${currentGroupKey === 'A' ? 'PCM' : 'PCB'}) marks saved & published!`
+        : `Exam #${savedRes.exam?.examNo} marks saved & published to Completed Exam!`;
+
+      if (dlInfo?.fileName) {
+        successNote += ` 📊 Excel file (${dlInfo.fileName}) saved to Desktop/Exam Marks folder and downloaded automatically.`;
+      }
+
+      setSubmittedMsg(successNote);
     } catch (err) {
       setErrorMsg(err.message || 'Failed to save exam marks');
     } finally {

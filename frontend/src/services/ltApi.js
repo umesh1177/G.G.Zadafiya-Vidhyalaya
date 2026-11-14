@@ -84,7 +84,10 @@ export const ltApi = {
     if (!res.ok) {
       throw new Error(json.message || 'Failed to save LT marks');
     }
-    return json.data;
+    return {
+      ...(json.data || {}),
+      excelDownload: json.excelDownload || json.data?.excelDownload,
+    };
   },
 
   async getAnalyticsOverview() {

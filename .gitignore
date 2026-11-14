@@ -16,6 +16,10 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# Uploads
+backend/uploads/
+uploads/
+
 # Environment files
 .env
 .env.*

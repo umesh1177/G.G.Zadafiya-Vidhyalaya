@@ -1,7 +1,28 @@
 const Faculty = require('../models/Faculty');
 const Student = require('../models/Student');
+const SystemSetting = require('../models/SystemSetting');
 
 const SCHOOL_NAME = 'G.G. Zadafiya Vidhyalaya';
+
+// In-memory cache for ultra-fast checks
+let cachedStudentLoginEnabled = null;
+let lastCacheTime = 0;
+
+async function checkStudentLoginAllowed() {
+  const now = Date.now();
+  if (cachedStudentLoginEnabled !== null && now - lastCacheTime < 3000) {
+    return cachedStudentLoginEnabled;
+  }
+  try {
+    const setting = await SystemSetting.findOne({ key: 'studentLoginEnabled' });
+    cachedStudentLoginEnabled = setting !== null ? Boolean(setting.value) : true;
+    lastCacheTime = now;
+    return cachedStudentLoginEnabled;
+  } catch (err) {
+    console.warn('Failed to read studentLoginEnabled from DB, defaulting to true:', err.message);
+    return true;
+  }
+}
 
 class AuthController {
   async login(req, res) {
@@ -79,6 +100,16 @@ class AuthController {
 
       if (student) {
         if (pass === 'student123' || pass === 'password123') {
+          // Gate check: Assistant Faculty Student Login Permission
+          const isAllowed = await checkStudentLoginAllowed();
+          if (!isAllowed) {
+            return res.status(403).json({
+              success: false,
+              studentLoginDisabled: true,
+              message: 'Student login is currently disabled by Assistant Faculty. Please contact your faculty or try again later.',
+            });
+          }
+
           return res.json({
             success: true,
             user: {
@@ -253,6 +284,15 @@ class AuthController {
       }
 
       if (lower === 'student' && pass === 'student123') {
+        const isAllowed = await checkStudentLoginAllowed();
+        if (!isAllowed) {
+          return res.status(403).json({
+            success: false,
+            studentLoginDisabled: true,
+            message: 'Student login is currently disabled by Assistant Faculty. Please contact your faculty or try again later.',
+          });
+        }
+
         return res.json({
           success: true,
           user: {
@@ -282,6 +322,57 @@ class AuthController {
         success: false,
         message: 'Internal server error during authentication.',
       });
+    }
+  }
+
+  // GET /api/auth/student-login-status
+  async getStudentLoginStatus(req, res) {
+    try {
+      const isAllowed = await checkStudentLoginAllowed();
+      const setting = await SystemSetting.findOne({ key: 'studentLoginEnabled' });
+      return res.json({
+        success: true,
+        enabled: isAllowed,
+        updatedBy: setting?.updatedBy || 'Assistant Faculty',
+        updatedAt: setting?.updatedAt || new Date(),
+      });
+    } catch (err) {
+      console.error('Error fetching student login status:', err);
+      return res.status(500).json({ success: false, message: err.message, enabled: true });
+    }
+  }
+
+  // POST /api/auth/student-login-status
+  async setStudentLoginStatus(req, res) {
+    try {
+      const { enabled, updatedBy = 'Assistant Faculty' } = req.body;
+      const isEnabled = Boolean(enabled);
+
+      const setting = await SystemSetting.findOneAndUpdate(
+        { key: 'studentLoginEnabled' },
+        {
+          key: 'studentLoginEnabled',
+          value: isEnabled,
+          description: 'Controls whether students can login to the dashboard and CBT exam portal',
+          updatedBy,
+          updatedAt: new Date(),
+        },
+        { upsert: true, returnDocument: 'after' }
+      );
+
+      // Update in-memory cache
+      cachedStudentLoginEnabled = isEnabled;
+      lastCacheTime = Date.now();
+
+      return res.json({
+        success: true,
+        enabled: isEnabled,
+        message: `Student login has been ${isEnabled ? 'enabled' : 'disabled'} successfully.`,
+        setting,
+      });
+    } catch (err) {
+      console.error('Error setting student login status:', err);
+      return res.status(500).json({ success: false, message: err.message });
     }
   }
 }

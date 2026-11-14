@@ -150,7 +150,10 @@ export const examApi = {
     if (!res.ok) {
       throw new Error(json.message || 'Failed to submit exam marks');
     }
-    return json.data;
+    return {
+      ...(json.data || {}),
+      excelDownload: json.excelDownload || json.data?.excelDownload,
+    };
   },
 
   async updateStudentMark(idOrNo, studentKey, payload) {

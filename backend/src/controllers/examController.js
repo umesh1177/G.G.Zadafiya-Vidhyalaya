@@ -126,10 +126,36 @@ class ExamController {
         assistantFacultyId,
         assistantName,
       });
+
+      // Generate Excel file and save to Desktop/Exam Marks folder, returning base64 for browser download
+      let excelExport = null;
+      try {
+        const { exportMarksToDesktopExcel } = require('../utils/examMarksExcelExporter');
+        excelExport = exportMarksToDesktopExcel({
+          examTitle: data?.exam?.title || `Exam #${data?.exam?.examNo}`,
+          subject: data?.exam?.subject,
+          standard: data?.exam?.standard,
+          division: data?.exam?.division,
+          examType: data?.exam?.examType,
+          examDate: data?.exam?.examDate,
+          assistantName,
+          rows: data?.rows || marks || [],
+          isMulti: Boolean(data?.isMulti),
+          marksPerSubject: data?.marksPerSubject,
+          thirdLabel: data?.thirdLabel,
+        });
+      } catch (exErr) {
+        console.warn('Excel export error in saveExamMarks:', exErr.message);
+      }
+
       res.json({
         success: true,
         message: 'Exam marks saved successfully',
-        data,
+        data: {
+          ...data,
+          excelDownload: excelExport,
+        },
+        excelDownload: excelExport,
       });
     } catch (err) {
       console.error('Error saving exam marks:', err);

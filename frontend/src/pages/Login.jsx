@@ -34,6 +34,17 @@ export default function Login() {
     }
   }, [user, navigate]);
 
+  // Check if user was automatically logged out due to disabled student login
+  useEffect(() => {
+    try {
+      const logoutReason = sessionStorage.getItem('sms_logout_reason');
+      if (logoutReason) {
+        setError(logoutReason);
+        sessionStorage.removeItem('sms_logout_reason');
+      }
+    } catch (e) {}
+  }, []);
+
   const handleInstallClick = async () => {
     if (canInstall) {
       const result = await promptInstall();

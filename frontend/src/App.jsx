@@ -143,7 +143,7 @@ export default function App() {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<StudentHome />} />
+              <Route index element={<Navigate to="cbt-exam" replace />} />
               <Route path="cbt-exam" element={<StudentCbtExam />} />
               <Route path="cbt-exam/analysis/:id" element={<CbtAnalysisPage userRole="student" />} />
               <Route path="lt-analysis" element={<StudentLtAnalysis />} />

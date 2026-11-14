@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { ltApi } from '../../services/ltApi';
 import { studentApi } from '../../services/studentApi';
 import PaginationBar from '../../components/common/PaginationBar';
+import { triggerBrowserExcelDownload } from '../../utils/excelDownloadHelper';
 
 export default function LtEnterMarks() {
   const { id } = useParams();
@@ -106,7 +107,7 @@ export default function LtEnterMarks() {
     setErrorMsg(null);
     setIsSaving(true);
     try {
-      await ltApi.saveLtMarks(
+      const savedRes = await ltApi.saveLtMarks(
         id,
         marksState.map(s => ({
           studentId: s.studentId,
@@ -117,6 +118,12 @@ export default function LtEnterMarks() {
         user?.id || user?._id,
         user?.name || user?.fullName || 'Assistant Faculty'
       );
+
+      // Trigger automatic browser download of Excel
+      if (savedRes?.excelDownload) {
+        triggerBrowserExcelDownload(savedRes.excelDownload);
+      }
+
       navigate(`/assistant/lt/history/${id}`);
     } catch (err) {
       setErrorMsg(err.message || 'Failed to save LT marks');

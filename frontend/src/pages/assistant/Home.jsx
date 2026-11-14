@@ -5,6 +5,7 @@ import { useData } from '../../context/DataContext';
 import { studentApi } from '../../services/studentApi';
 import { ltApi } from '../../services/ltApi';
 import { examApi } from '../../services/examApi';
+import { API_ROOT } from '../../services/apiConfig';
 import PaginationBar from '../../components/common/PaginationBar';
 import ViewFullLtModal from '../../components/common/ViewFullLtModal';
 
@@ -20,6 +21,11 @@ export default function AssistantHome() {
   const [viewingLt, setViewingLt] = useState(null);
   const LT_PAGE_SIZE = 5;
 
+  // Student Login Control States
+  const [studentLoginEnabled, setStudentLoginEnabled] = useState(true);
+  const [isTogglingLogin, setIsTogglingLogin] = useState(false);
+  const [loginStatusMessage, setLoginStatusMessage] = useState(null);
+
   useEffect(() => {
     setHeader({
       title: `Good morning, ${user?.name || assistant.assistant?.name || 'Assistant Faculty'}`,
@@ -27,13 +33,16 @@ export default function AssistantHome() {
     });
   }, [setHeader, user, assistant]);
 
-  // Load dynamic students, LTs & Exams from MongoDB
+  // Load dynamic students, LTs, Exams & Login Status
   const fetchData = useCallback(async () => {
     try {
-      const [students, lts, exams] = await Promise.all([
+      const [students, lts, exams, statusRes] = await Promise.all([
         studentApi.getStudents({ status: 'ACTIVE' }).catch(() => null),
         ltApi.getAllLts({}).catch(() => null),
         examApi.getAllExams({}).catch(() => null),
+        fetch(`${API_ROOT}/api/auth/student-login-status`, { cache: 'no-store' })
+          .then((r) => r.json())
+          .catch(() => null),
       ]);
       if (Array.isArray(students)) {
         setActiveStudentsTotal(students.filter(s => s.status === 'ACTIVE').length);
@@ -44,10 +53,49 @@ export default function AssistantHome() {
       if (Array.isArray(exams)) {
         setLiveExams(exams);
       }
+      if (statusRes && typeof statusRes.enabled === 'boolean') {
+        setStudentLoginEnabled(statusRes.enabled);
+      }
     } catch (e) {
       console.warn('Could not fetch dashboard data for Assistant:', e);
     }
   }, []);
+
+  const handleToggleStudentLogin = async (newStatus) => {
+    if (!newStatus) {
+      const confirmed = window.confirm(
+        '⚠️ Are you sure you want to DISABLE student login?\n\n' +
+        '• All currently logged-in students will be immediately logged out.\n' +
+        '• No student will be able to log in to their dashboard or CBT exams until you re-enable it.'
+      );
+      if (!confirmed) return;
+    }
+
+    setIsTogglingLogin(true);
+    setLoginStatusMessage(null);
+    try {
+      const res = await fetch(`${API_ROOT}/api/auth/student-login-status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: newStatus }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setStudentLoginEnabled(data.enabled);
+        setLoginStatusMessage(
+          data.enabled
+            ? '✓ Student login is now ENABLED. Students can log in to their dashboard and CBT exams.'
+            : '✓ Student login is now DISABLED. All active students have been logged out and cannot log in.'
+        );
+      } else {
+        setLoginStatusMessage('Failed to update student login status: ' + (data.message || 'Server error'));
+      }
+    } catch (err) {
+      setLoginStatusMessage('Network error updating student login status');
+    } finally {
+      setIsTogglingLogin(false);
+    }
+  };
 
   useEffect(() => {
     fetchData();
@@ -75,6 +123,157 @@ export default function AssistantHome() {
 
   return (
     <>
+      {/* ── STUDENT LOGIN ACCESS CONTROL BANNER ── */}
+      <div
+        className="card"
+        style={{
+          marginBottom: 20,
+          background: studentLoginEnabled
+            ? 'linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%)'
+            : 'linear-gradient(135deg, #fef2f2 0%, #ffffff 100%)',
+          border: studentLoginEnabled ? '1.5px solid #86efac' : '1.5px solid #fca5a5',
+          padding: '18px 24px',
+          borderRadius: 'var(--radius-md)',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 16,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            <div
+              style={{
+                width: 46,
+                height: 46,
+                borderRadius: 12,
+                background: studentLoginEnabled ? '#dcfce7' : '#fee2e2',
+                color: studentLoginEnabled ? '#15803d' : '#b91c1c',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: 24,
+                flexShrink: 0,
+              }}
+            >
+              {studentLoginEnabled ? '🔓' : '🔒'}
+            </div>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                <h3 style={{ margin: 0, fontSize: '1.08rem', fontWeight: 800, color: '#0f172a' }}>
+                  Student Portal Access Control
+                </h3>
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '3px 12px',
+                    borderRadius: 9999,
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    background: studentLoginEnabled ? '#dcfce7' : '#fee2e2',
+                    color: studentLoginEnabled ? '#15803d' : '#b91c1c',
+                    border: studentLoginEnabled ? '1px solid #bbf7d0' : '1px solid #fecaca',
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: '50%',
+                      background: studentLoginEnabled ? '#16a34a' : '#dc2626',
+                      display: 'inline-block',
+                      animation: studentLoginEnabled ? 'pulse 2s infinite' : 'none',
+                    }}
+                  />
+                  {studentLoginEnabled ? 'Student Login: ENABLED (Allowed)' : 'Student Login: DISABLED (Blocked)'}
+                </span>
+              </div>
+              <p style={{ margin: '5px 0 0 0', fontSize: '0.84rem', color: '#475569' }}>
+                {studentLoginEnabled
+                  ? 'Students can sign in to their portal and attempt CBT exams. Disabling will immediately log out all currently active students.'
+                  : 'Student logins are strictly blocked and all students have been logged out. Re-enable when ready for exams or portal access.'}
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            {studentLoginEnabled ? (
+              <button
+                type="button"
+                className="btn"
+                disabled={isTogglingLogin}
+                onClick={() => handleToggleStudentLogin(false)}
+                style={{
+                  background: '#ef4444',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '10px 22px',
+                  fontWeight: 700,
+                  fontSize: '0.88rem',
+                  borderRadius: 8,
+                  cursor: isTogglingLogin ? 'not-allowed' : 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  boxShadow: '0 2px 6px rgba(239, 68, 68, 0.25)',
+                }}
+              >
+                <span>🚫</span>
+                <span>{isTogglingLogin ? 'Disabling...' : 'Disable Student Login'}</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="btn"
+                disabled={isTogglingLogin}
+                onClick={() => handleToggleStudentLogin(true)}
+                style={{
+                  background: '#16a34a',
+                  color: '#ffffff',
+                  border: 'none',
+                  padding: '10px 22px',
+                  fontWeight: 700,
+                  fontSize: '0.88rem',
+                  borderRadius: 8,
+                  cursor: isTogglingLogin ? 'not-allowed' : 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  boxShadow: '0 2px 6px rgba(22, 163, 74, 0.25)',
+                }}
+              >
+                <span>✅</span>
+                <span>{isTogglingLogin ? 'Enabling...' : 'Enable Student Login'}</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {loginStatusMessage && (
+          <div
+            style={{
+              marginTop: 12,
+              padding: '9px 14px',
+              borderRadius: 6,
+              fontSize: '0.82rem',
+              fontWeight: 600,
+              background: studentLoginEnabled ? '#f0fdf4' : '#fef2f2',
+              color: studentLoginEnabled ? '#166534' : '#991b1b',
+              border: studentLoginEnabled ? '1px solid #bbf7d0' : '1px solid #fecaca',
+            }}
+          >
+            {loginStatusMessage}
+          </div>
+        )}
+      </div>
+
       {/* ── KPI GRID (DYNAMIC METRICS) ── */}
       <div className="kpi-grid">
         <div className="kpi-card">

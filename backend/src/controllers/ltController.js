@@ -64,7 +64,36 @@ class LtController {
     try {
       const { marks, assistantFacultyId, assistantName } = req.body;
       const data = await ltService.saveLtMarks(req.params.id, marks, assistantFacultyId, assistantName);
-      res.json({ success: true, message: 'LT grades saved successfully', data });
+
+      // Generate Excel file and save to Desktop/Exam Marks folder, returning base64 for browser download
+      let excelExport = null;
+      try {
+        const { exportMarksToDesktopExcel } = require('../utils/examMarksExcelExporter');
+        excelExport = exportMarksToDesktopExcel({
+          examTitle: `LT #${data?.lt?.ltNo || ''} - ${data?.lt?.subject || 'Lecture Test'}`,
+          subject: data?.lt?.subject,
+          standard: data?.lt?.standard,
+          division: data?.lt?.division,
+          examType: 'LT',
+          examDate: data?.lt?.examDate,
+          assistantName,
+          rows: marks || [],
+          isMulti: false,
+          marksPerSubject: 'Grade',
+        });
+      } catch (exErr) {
+        console.warn('Excel export error in saveLtMarks:', exErr.message);
+      }
+
+      res.json({
+        success: true,
+        message: 'LT grades saved successfully',
+        data: {
+          ...data,
+          excelDownload: excelExport,
+        },
+        excelDownload: excelExport,
+      });
     } catch (err) {
       console.error('Error saving LT marks:', err);
       res.status(400).json({ success: false, message: err.message || 'Failed to save LT marks' });

@@ -305,14 +305,6 @@ export default function Sidebar({ isOpen, onClose }) {
           {/* ==================================================== STUDENT ROLE */}
           {role === 'student' && (
             <>
-              <NavLink to="/student" end className={({ isActive }) => `navlink ${isActive ? 'is-active' : ''}`} onClick={onClose}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                  <polyline points="9 22 9 12 15 12 15 22" />
-                </svg>
-                Home
-              </NavLink>
-
               <div className="sidebar__group-label">Examination</div>
 
               <NavLink to="/student/cbt-exam" className={({ isActive }) => `navlink ${isActive ? 'is-active' : ''}`} onClick={onClose}>
@@ -325,66 +317,7 @@ export default function Sidebar({ isOpen, onClose }) {
                 CBT Exam
               </NavLink>
 
-              <div className="sidebar__group-label">Performance</div>
-
-              <NavLink to="/student/lt-analysis" className={({ isActive }) => `navlink ${isActive ? 'is-active' : ''}`} onClick={onClose}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="8.5" />
-                  <path d="M12 7.5V12l3 2" />
-                </svg>
-                LT Analysis
-              </NavLink>
-              4
-              <NavLink to="/student/progress-report" className={({ isActive }) => `navlink ${isActive ? 'is-active' : ''}`} onClick={onClose}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M4 19V5M4 19h16" />
-                  <path d="m6.5 15 3.5-4 3 2.4L18 8.5" />
-                </svg>
-                Progress Report
-              </NavLink>
-
-              <NavLink to="/student/exam-result" className={({ isActive }) => `navlink ${isActive ? 'is-active' : ''}`} onClick={onClose}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3.5" y="3.5" width="17" height="17" rx="2.4" />
-                  <path d="M8 14v3M12 10.5V17M16 12.5V17" />
-                </svg>
-                Exam Result
-              </NavLink>
-
-              <NavLink to="/student/result" className={({ isActive }) => `navlink ${isActive ? 'is-active' : ''}`} onClick={onClose}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M7 3.5h7l3.5 3.5V20a.6.6 0 0 1-.6.6H7a.6.6 0 0 1-.6-.6V4.1A.6.6 0 0 1 7 3.5Z" />
-                  <path d="M14 3.5V7h3.5" />
-                  <path d="M9 12h6M9 15.3h6M9 8.7h3" />
-                </svg>
-                Result
-              </NavLink>
-
-              <NavLink to="/student/hall-ticket" className={({ isActive }) => `navlink ${isActive ? 'is-active' : ''}`} onClick={onClose}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3.5" y="6" width="17" height="12" rx="2" />
-                  <path d="M3.5 10.5h17M8 14h3" />
-                </svg>
-                Hall Ticket
-              </NavLink>
-
-              <div className="sidebar__group-label">Communication</div>
-
-              <NavLink to="/student/notice-message" className={({ isActive }) => `navlink ${isActive ? 'is-active' : ''}`} onClick={onClose}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
-                  <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
-                </svg>
-                Notice Message
-              </NavLink>
-
-              <NavLink to="/student/discipline-remark" className={({ isActive }) => `navlink ${isActive ? 'is-active' : ''}`} onClick={onClose}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 3.8 4 7.4v5.1c0 4.2 3.3 7.9 8 8.7 4.7-.8 8-4.5 8-8.7V7.4Z" />
-                  <path d="M12 8.4v4M12 15.4h.01" />
-                </svg>
-                Discipline Remark
-              </NavLink>
+              <div className="sidebar__group-label">Account</div>
 
               <NavLink to="/student/profile" className={({ isActive }) => `navlink ${isActive ? 'is-active' : ''}`} onClick={onClose}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

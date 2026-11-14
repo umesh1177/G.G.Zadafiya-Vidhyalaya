@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { API_ROOT } from '../services/apiConfig';
 
 const AuthContext = createContext(null);
@@ -18,6 +18,7 @@ function normalizeStoredUser(raw) {
     ...raw,
     school: normalizedSchool,
     email: normalizedEmail || raw.email,
+    redirect: raw.role === 'student' ? '/student/cbt-exam' : (raw.redirect || `/${raw.role}`),
   };
 }
 
@@ -162,7 +163,7 @@ export const CREDENTIALS = {
     contactNo: '+91 99000 12345',
     school: SCHOOL_NAME,
     initials: 'UP',
-    redirect: '/student',
+    redirect: '/student/cbt-exam',
   },
 };
 
@@ -212,6 +213,14 @@ export function AuthProvider({ children }) {
         return { success: true, redirect: u.redirect || `/${u.role}` };
       }
 
+      if (res.status === 403 || data.studentLoginDisabled) {
+        return {
+          success: false,
+          studentLoginDisabled: true,
+          error: data.message || 'Student login is currently disabled by Assistant Faculty. Please contact your faculty to enable access.',
+        };
+      }
+
       if (res.status === 401 || res.status === 400) {
         return { success: false, error: data.message || 'Invalid credentials' };
       }
@@ -231,6 +240,23 @@ export function AuthProvider({ children }) {
           );
     if (matchedEntry && matchedEntry[1].password === trimmedPass) {
       const [credKey, cred] = matchedEntry;
+
+      // If user is a student, verify if student login is enabled
+      if (cred.role === 'student') {
+        try {
+          const statusRes = await fetch(`${API_ROOT}/api/auth/student-login-status`, { cache: 'no-store' });
+          const statusData = await statusRes.json().catch(() => ({}));
+          if (statusData && statusData.enabled === false) {
+            return {
+              success: false,
+              studentLoginDisabled: true,
+              error: 'Student login is currently disabled by Assistant Faculty. Please contact your faculty to enable access.',
+            };
+          }
+        } catch (stErr) {
+          // continue
+        }
+      }
       const userData = {
         id: cred.id,
         empCode: cred.empCode,
@@ -276,6 +302,38 @@ export function AuthProvider({ children }) {
     setUser(null);
     localStorage.removeItem('sms_auth_user');
   };
+
+  // Real-time listener: if user is student and assistant faculty disables student login, auto-logout
+  useEffect(() => {
+    if (user?.role !== 'student') return;
+
+    let isMounted = true;
+    const checkLoginStatus = async () => {
+      try {
+        const res = await fetch(`${API_ROOT}/api/auth/student-login-status`, { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (isMounted && data && data.enabled === false) {
+          sessionStorage.setItem(
+            'sms_logout_reason',
+            'Student login has been disabled by the Assistant Faculty. You have been automatically logged out and cannot re-login.'
+          );
+          setUser(null);
+          localStorage.removeItem('sms_auth_user');
+          window.location.href = '/login';
+        }
+      } catch (err) {
+        // silent retry on transient connection
+      }
+    };
+
+    checkLoginStatus();
+    const interval = setInterval(checkLoginStatus, 5000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [user?.role]);
 
   return (
     <AuthContext.Provider value={{ user, login, logout, updateUser, credentialsList: CREDENTIALS }}>
