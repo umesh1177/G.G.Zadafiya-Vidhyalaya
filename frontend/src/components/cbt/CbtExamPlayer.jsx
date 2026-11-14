@@ -37,6 +37,7 @@ export default function CbtExamPlayer({
   const [submitting, setSubmitting] = useState(false);
   const [submittedDone, setSubmittedDone] = useState(false);
   const [selectedSubject, setSelectedSubject] = useState('ALL');
+  const [showMobilePalette, setShowMobilePalette] = useState(false);
 
   const playerRef = useRef(null);
   const violationCooldownRef = useRef(false);
@@ -337,6 +338,7 @@ export default function CbtExamPlayer({
 
   // Safe navigation between questions, marking visited questions as NOT_ANSWERED if unanswered
   const handleNavigateToQuestion = (targetIndex) => {
+    setShowMobilePalette(false);
     if (targetIndex === currentIndex || targetIndex < 0 || targetIndex >= questions.length) return;
 
     setAnswers((prev) => {
@@ -492,10 +494,20 @@ export default function CbtExamPlayer({
                 </span>
                 <span className="cbt-marks-tag">{currentQ?.marks || 4} marks</span>
               </div>
-              <span className="cbt-mcq-badge">
-                <HelpCircle size={13} />
-                MCQ
-              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className="cbt-mobile-grid-toggle-btn"
+                  onClick={() => setShowMobilePalette(v => !v)}
+                  aria-label="Toggle Question Navigator"
+                >
+                  {showMobilePalette ? '✕ Close Grid' : `☰ Question Grid (${currentIndex + 1}/${questions.length})`}
+                </button>
+                <span className="cbt-mcq-badge">
+                  <HelpCircle size={13} />
+                  MCQ
+                </span>
+              </div>
             </div>
 
             {/* Question Text Box (No huge empty gap below) */}
@@ -597,8 +609,17 @@ export default function CbtExamPlayer({
         </div>
 
         {/* RIGHT PANEL: Question Navigator & Summary matching Photo 2 */}
-        <aside className="cbt-player-right-panel">
-          <h3 className="cbt-navigator-title">Question Navigator</h3>
+        <aside className={`cbt-player-right-panel ${showMobilePalette ? 'is-mobile-open' : ''}`}>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="cbt-navigator-title" style={{ margin: 0 }}>Question Navigator</h3>
+            <button
+              type="button"
+              className="cbt-palette-mobile-close-btn"
+              onClick={() => setShowMobilePalette(false)}
+            >
+              ✕ Close
+            </button>
+          </div>
 
           {/* Group questions by Subject/Section with 5-column grid matching Photo 2 */}
           <div className="cbt-navigator-scroll-area">
