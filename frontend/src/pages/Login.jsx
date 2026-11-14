@@ -147,7 +147,7 @@ export default function Login() {
 
           <form onSubmit={handleSubmit} id="loginForm">
             <div className="form-group">
-              <label htmlFor="username">Email Address / Employee Code / Username</label>
+              <label htmlFor="username">Email Address / Employee Code / Roll No / Username</label>
               <input
                 type="text"
                 id="username"
@@ -155,7 +155,7 @@ export default function Login() {
                 name="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                placeholder="e.g. faculty@ggzv.edu.in or FAC101 or admin"
+                placeholder="e.g. Roll No (1), faculty@ggzv.edu.in or FAC101"
                 autoComplete="username"
                 required
               />
@@ -169,7 +169,7 @@ export default function Login() {
                 name="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your account password"
+                placeholder="Password (Roll No for students)"
                 autoComplete="current-password"
                 required
               />
@@ -210,9 +210,9 @@ export default function Login() {
                 <div className="role-card__name">🔬 Asst. Faculty</div>
                 <div className="role-card__cred"><span>assistant</span> / asst123</div>
               </button>
-              <button type="button" className="role-card" onClick={() => handleQuickLogin('student', 'student123')}>
+              <button type="button" className="role-card" onClick={() => handleQuickLogin('1', '1')}>
                 <div className="role-card__name">🎒 Student</div>
-                <div className="role-card__cred"><span>student</span> / student123</div>
+                <div className="role-card__cred"><span>Roll: 1</span> / pass: 1</div>
               </button>
             </div>
           </div>

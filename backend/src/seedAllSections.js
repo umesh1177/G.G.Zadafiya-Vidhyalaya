@@ -101,6 +101,7 @@ async function seedAll() {
     const studentsWithFullNames = studentsSeedData.map((s) => ({
       ...s,
       fullName: `${s.firstName} ${s.middleName} ${s.lastName}`,
+      password: String(s.rollNo),
       status: 'ACTIVE',
       schoolName: SCHOOL_NAME,
       admissionDate: new Date('2025-06-15'),

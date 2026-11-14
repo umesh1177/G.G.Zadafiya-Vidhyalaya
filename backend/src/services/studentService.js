@@ -103,12 +103,15 @@ class StudentService {
     const lastName = data.lastName || '';
     const fullName = data.fullName || [firstName, middleName, lastName].filter(Boolean).join(' ');
 
+    const password = data.password ? String(data.password).trim() : String(rollNo);
+
     const newStudent = await Student.create({
       rollNo,
       firstName,
       middleName,
       lastName,
       fullName,
+      password,
       standard,
       division,
       streamGroup: data.streamGroup || 'GROUP_A',
@@ -169,6 +172,7 @@ class StudentService {
     if (data.email !== undefined) student.email = data.email;
     if (data.admissionDate) student.admissionDate = new Date(data.admissionDate);
     if (data.status) student.status = data.status;
+    if (data.password !== undefined) student.password = String(data.password).trim();
     if (data.graduationYear !== undefined) student.graduationYear = data.graduationYear ? Number(data.graduationYear) : null;
     if (data.currentPursuit !== undefined) student.currentPursuit = data.currentPursuit;
     if (data.endingDate) student.endingDate = new Date(data.endingDate);

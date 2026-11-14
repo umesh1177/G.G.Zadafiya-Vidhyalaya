@@ -283,7 +283,11 @@ async function seed() {
     await Faculty.deleteMany({});
     console.log('Cleared existing student & faculty collections.');
 
-    const students = await Student.insertMany(initialStudents);
+    const studentsWithPasswords = initialStudents.map((s) => ({
+      ...s,
+      password: String(s.rollNo),
+    }));
+    const students = await Student.insertMany(studentsWithPasswords);
     console.log(`✅ Seeded ${students.length} students into MongoDB.`);
 
     const faculty = await Faculty.insertMany(initialFaculty);

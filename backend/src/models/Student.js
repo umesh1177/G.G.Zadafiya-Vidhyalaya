@@ -85,6 +85,11 @@ const studentSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    password: {
+      type: String,
+      trim: true,
+      default: null,
+    },
   },
   {
     timestamps: true,
@@ -99,10 +104,13 @@ const studentSchema = new mongoose.Schema(
   }
 );
 
-// Auto-compute fullName before saving if not provided
+// Auto-compute fullName and set default password to rollNo before saving
 studentSchema.pre('save', function () {
   if (!this.fullName) {
     this.fullName = [this.firstName, this.middleName, this.lastName].filter(Boolean).join(' ');
+  }
+  if (!this.password && this.rollNo != null) {
+    this.password = String(this.rollNo);
   }
 });
 
