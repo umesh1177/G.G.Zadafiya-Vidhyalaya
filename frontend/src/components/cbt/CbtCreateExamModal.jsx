@@ -207,6 +207,7 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
       const res = await extractCbtPaper({
         pdfBase64,
         rawText: fileRawText,
+        fileName: file.name,
         subject,
         marks: Number(formData.marksPerQuestion),
         negativeMarks: Number(formData.negativeMarks),
@@ -895,11 +896,11 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
                             Upload {paper.subject} PDF
                           </span>
                           <span className="text-[11px] text-slate-400 mt-0.5">
-                            Click to browse (.pdf, .txt)
+                            Click to browse (.pdf, .docx, .txt)
                           </span>
                           <input
                             type="file"
-                            accept=".pdf,.txt,.docx"
+                            accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
                             className="hidden"
                             onChange={(e) => handleFileSelect(idx, paper.subject, e)}
                           />

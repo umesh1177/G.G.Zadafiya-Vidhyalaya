@@ -57,9 +57,15 @@ export default function StudentCbtExam() {
         rollNo,
       });
 
-      // Per Requirement 1: Once student submits successfully, that exam card should NOT be visible.
+      // Per Requirement 1:
+      // After exam window ended, do NOT show exam card to students!
+      // Once student submits successfully, that exam card should NOT be visible.
       // Only show exam card after submission if the student got disqualified.
+      const now = new Date();
       const visible = (data || []).filter((e) => {
+        if (e.windowEndTime && new Date(e.windowEndTime) <= now) {
+          return false; // hide card after window has ended
+        }
         const isDisq = e.attemptStatus === 'DISQUALIFIED' || e.myAttempt?.status === 'DISQUALIFIED';
         const isSub =
           e.attemptStatus === 'SUBMITTED' ||
@@ -214,23 +220,29 @@ export default function StudentCbtExam() {
 
       {/* Filter Tabs Bar: All, Live, Upcoming, Completed */}
       {(() => {
-        const liveExams = exams.filter((e) => {
-          const isSub = e.attemptStatus === 'SUBMITTED';
-          const isDisq = e.attemptStatus === 'DISQUALIFIED' && !e.myAttempt?.retryAllowed;
-          const isEnded = nowTime > new Date(e.windowEndTime);
-          const hasStarted = nowTime >= new Date(e.startTime);
-          return hasStarted && !isEnded && !isSub && !isDisq;
+        // Requirement 1: After exam window ended, do NOT show exam card to students across any tab!
+        const activeExams = exams.filter((e) => {
+          if (e.windowEndTime && nowTime >= new Date(e.windowEndTime)) {
+            return false;
+          }
+          return true;
         });
 
-        const upcomingExams = exams.filter((e) => {
-          const isEnded = nowTime > new Date(e.windowEndTime);
+        const liveExams = activeExams.filter((e) => {
+          const isSub = e.attemptStatus === 'SUBMITTED';
+          const isDisq = e.attemptStatus === 'DISQUALIFIED' && !e.myAttempt?.retryAllowed;
+          const hasStarted = nowTime >= new Date(e.startTime);
+          return hasStarted && !isSub && !isDisq;
+        });
+
+        const upcomingExams = activeExams.filter((e) => {
           const isSub = e.attemptStatus === 'SUBMITTED';
           const isDisq = e.attemptStatus === 'DISQUALIFIED';
           const isBeforeStart = nowTime < new Date(e.startTime);
-          return isBeforeStart && !isEnded && !isSub && !isDisq;
+          return isBeforeStart && !isSub && !isDisq;
         });
 
-        const completedExams = exams.filter((e) => {
+        const completedExams = activeExams.filter((e) => {
           const isDisq = e.attemptStatus === 'DISQUALIFIED';
           return isDisq;
         });
@@ -242,7 +254,7 @@ export default function StudentCbtExam() {
             ? upcomingExams
             : filter === 'COMPLETED'
             ? completedExams
-            : exams;
+            : activeExams;
 
         return (
           <>
@@ -252,7 +264,7 @@ export default function StudentCbtExam() {
                 onClick={() => setFilter('ALL')}
               >
                 <span>All Exams</span>
-                <span className="cbt-filter-count">{exams.length}</span>
+                <span className="cbt-filter-count">{activeExams.length}</span>
               </button>
 
               <button

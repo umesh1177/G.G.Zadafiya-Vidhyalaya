@@ -10,6 +10,8 @@ const gujOptionMap = {
   'અ': 'A', 'બ': 'B', 'ક': 'C', 'ડ': 'D',
   'A': 'A', 'B': 'B', 'C': 'C', 'D': 'D',
   'a': 'A', 'b': 'B', 'c': 'C', 'd': 'D',
+  '1': 'A', '2': 'B', '3': 'C', '4': 'D',
+  '૧': 'A', '૨': 'B', '૩': 'C', '૪': 'D',
 };
 
 // Convert Gujarati digits (૦-૯) to ASCII digits (0-9)
@@ -82,9 +84,20 @@ function parseMcqText(rawText, defaultSubject = 'Physics', marks = 4, negativeMa
       const cleanOption = (txt, fallbackLabel) => {
         if (!txt || !txt.trim()) return fallbackLabel;
         let s = txt.trim();
-        // Remove leading option marker like (A), (અ), [A], [અ], or "A. ", "અ. ", "A) ", "અ) "
+
+        // Check if line contains inline answer at end of option (e.g. "0 Ans: (1)")
+        const ansEndMatch = s.match(/(?:Ans(?:wer)?|Correct(?:\s*Option)?|ઉત્તર|જવાબ|Key)\s*[\:\-\=]?\s*[\(\[]?([A-Da-dઅબકડ1-4૧-૪])[\)\]]?/i);
+        if (ansEndMatch) {
+          if (!currentQ.correctAnswer) {
+            const k = ansEndMatch[1].toUpperCase();
+            currentQ.correctAnswer = gujOptionMap[k] || k;
+          }
+          s = s.replace(/(?:Ans(?:wer)?|Correct(?:\s*Option)?|ઉત્તર|જવાબ|Key)\s*[\:\-\=]?\s*[\(\[]?([A-Da-dઅબકડ1-4૧-૪])[\)\]]?.*/i, '').trim();
+        }
+
+        // Remove leading option marker like (A), (1), (અ), (૧), [A], [1], or "A. ", "1. ", "A) ", "1) "
         // MUST require parentheses OR delimiter + whitespace so Gujarati words starting with ક/અ/બ/ડ (e.g. કાર્બન, અવરોધ, બળ) never lose their first letter!
-        s = s.replace(/^(?:\([A-Da-dઅબકડ]\)|\[[A-Da-dઅબકડ]\]|[A-Da-dઅબકડ][\.\)\:\-]\s+)\s*/, '').trim();
+        s = s.replace(/^(?:\([A-Da-dઅબકડ1-4૧-૪]\)|\[[A-Da-dઅબકડ1-4૧-૪]\]|[A-Da-dઅબકડ][\.\)\:\-]\s+)\s*/, '').trim();
         return s || fallbackLabel;
       };
 
@@ -115,14 +128,15 @@ function parseMcqText(rawText, defaultSubject = 'Physics', marks = 4, negativeMa
   }
 
   // Question start regex:
-  // e.g. "1.", "1)", "1-", "Q1.", "Q.1", "Question 1:", "પ્રશ્ન 1.", "પ્રશ્ન ૧.", "(1)", "[1]"
-  const qStartRegex = /^(?:(?:પ્રશ્ન|Question|Q[\.\:]?|Que[\.\:]?)\s*([0-9૦-૯]+)[\.\)\:\-\s]|([0-9૦-૯]+)[\.\)\:\-]\s+|[\(\[]([0-9૦-૯]+)[\)\]]\.?\s+)/i;
+  // e.g. "1.", "1)", "1-", "Q1.", "Q.1", "Question 1:", "પ્રશ્ન 1.", "પ્રશ્ન ૧.", "MCQ 1."
+  // Note: we intentionally do NOT treat naked (1) as a question start so numbered options (1), (2), (3), (4) are not broken!
+  const qStartRegex = /^(?:(?:પ્રશ્ન|Question|Que[\.\:]?|Q[\.\:]?|MCQ)\s*([0-9૦-૯]+)[\.\)\:\-\s]|([0-9૦-૯]+)[\.\)\:\-]\s*)/i;
 
-  // Regex to detect multiple options on one line: e.g. "(A) 10 (B) 20 (C) 30 (D) 40" or "(અ) 10 (બ) 20"
-  const multiOptionRegex = /(?:\(?([A-Da-dઅબકડ])[\.\)]|([A-Da-dઅબકડ])[\.\)])\s+/g;
+  // Regex to detect multiple options on one line: e.g. "(A) 10 (B) 20 (C) 30 (D) 40" or "(1) 10 (2) 20" or "(અ) 10 (બ) 20"
+  const multiOptionRegex = /(?:[\(\[]([A-Da-dઅબકડ1-4૧-૪])[\)\]]|(?:^|[\s\t])([A-Da-dઅબકડ])[\.\)\:\-])\s+/g;
 
-  // Regex to detect a line that starts as a single option: e.g. "(A) 10 Ω" or "A. 10 Ω" or "(અ) 10 Ω" or "અ. 10 Ω"
-  const singleOptionLineRegex = /^(?:\(?([A-Da-dઅબકડ])[\.\)]|([A-Da-dઅબકડ])[\.\)])\s+(.*)$/;
+  // Regex to detect a line that starts as a single option: e.g. "(A) 10 Ω" or "A. 10 Ω" or "(1) 10 Ω" or "(અ) 10 Ω"
+  const singleOptionLineRegex = /^(?:[\(\[]([A-Da-dઅબકડ1-4૧-૪])[\)\]]|([A-Da-dઅબકડ])[\.\)\:\-]\s*)(.*)$/;
 
   for (let line of cleanLines) {
     // 1. Check Question Start
@@ -144,10 +158,10 @@ function parseMcqText(rawText, defaultSubject = 'Physics', marks = 4, negativeMa
     }
 
     // 2. Check inline answer in question
-    const ansMatch = line.match(/(?:Ans(?:wer)?|Correct(?:\s*Option)?|ઉત્તર|જવાબ|Key)\s*[\:\-\=]?\s*\(?([A-Da-dઅબકડ])\)?/i);
+    const ansMatch = line.match(/(?:Ans(?:wer)?|Correct(?:\s*Option)?|ઉત્તર|જવાબ|Key)\s*[\:\-\=]?\s*[\(\[]?([A-Da-dઅબકડ1-4૧-૪])[\)\]]?/i);
     if (ansMatch && currentQ) {
       const k = ansMatch[1].toUpperCase();
-      currentQ.correctAnswer = gujOptionMap[k] || k;
+      currentQ.correctAnswer = gujOptionMap[k] || gujOptionMap[ansMatch[1]] || k;
       continue;
     }
 
@@ -252,13 +266,16 @@ function extractAnswerKeyBlock(rawText) {
       }
     }
 
-    // Match pairs like: "1.(B)", "1. B", "1-B", "Q1: B", "1: (B)", "1 - અ", "૧ - અ"
-    const pairRegex = /(?:Q\s*)?([0-9૦-૯]+)[\.\:\-\s\=\)]+\(?([A-Da-dઅબકડ])\)?/gi;
+    // Match pairs like: "1.(B)", "1. B", "1-B", "Q1: B", "1: (B)", "1 - અ", "૧ - અ", "1 - (1)"
+    const pairRegex = /(?:Q\s*)?([0-9૦-૯]+)[\.\:\-\s\=\)]+[\(\[]?([A-Da-dઅબકડ1-4૧-૪])[\)\]]?/gi;
     let m;
     while ((m = pairRegex.exec(line)) !== null) {
       const qNum = parseInt(toAsciiDigits(m[1]), 10);
-      let ans = m[2].toUpperCase();
-      map[qNum] = gujOptionMap[ans] || ans;
+      const rawAns = m[2];
+      const mapped = gujOptionMap[rawAns] || gujOptionMap[rawAns.toUpperCase()] || rawAns.toUpperCase();
+      if (qNum && ['A', 'B', 'C', 'D'].includes(mapped)) {
+        map[qNum] = mapped;
+      }
     }
   }
 

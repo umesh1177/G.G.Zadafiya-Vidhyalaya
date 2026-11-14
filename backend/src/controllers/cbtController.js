@@ -45,8 +45,10 @@ exports.listExams = async (req, res) => {
       if (streamGroup && streamGroup !== 'ALL') {
         query.streamGroup = { $in: [streamGroup, 'ALL'] };
       }
-      // Visible only after scheduleTime
+      // Visible only between scheduleTime and windowEndTime
+      // Requirement 1: After exam window ended, do not show exam card to students!
       query.scheduleTime = { $lte: now };
+      query.windowEndTime = { $gte: now };
     }
 
     const exams = await CbtExam.find(query).sort({ startTime: -1 }).lean();
@@ -1287,33 +1289,85 @@ exports.getLiveMonitor = async (req, res) => {
   }
 };
 
-// 14. Extract MCQs from PDF or Raw Text
+function extractDocxText(buf) {
+  try {
+    const XLSX = require('xlsx');
+    const zip = XLSX.CFB.read(buf, { type: 'buffer' });
+    const entry =
+      XLSX.CFB.find(zip, 'Root Entry/word/document.xml') ||
+      XLSX.CFB.find(zip, 'word/document.xml');
+    if (!entry || !entry.content) return '';
+    const xml = Buffer.from(entry.content).toString('utf-8');
+    return xml
+      .replace(/<\/w:p>/gi, '\n')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/[ \t]+/g, ' ')
+      .replace(/\n\s+/g, '\n')
+      .trim();
+  } catch (err) {
+    console.warn('Docx extraction error:', err.message);
+    return '';
+  }
+}
+
+// 14. Extract MCQs from PDF, Word Document (DOCX), or Raw Text
 exports.extractPaper = async (req, res) => {
   try {
-    const { pdfBase64, rawText, subject = 'Physics', marks = 4, negativeMarks = 1 } = req.body;
+    const { pdfBase64, rawText, fileName = '', subject = 'Physics', marks = 4, negativeMarks = 1 } = req.body;
 
     let textContent = rawText || '';
 
-    // If pdfBase64 is provided, extract text using pdf-parse
+    // If file payload is provided (PDF or DOCX or TXT)
     if (pdfBase64 && typeof pdfBase64 === 'string') {
       try {
-        const cleanBase64 = pdfBase64.replace(/^data:[^;]+;base64,/, '').trim();
+        const cleanBase64 = pdfBase64.includes(';base64,')
+          ? pdfBase64.split(';base64,')[1].replace(/\s+/g, '')
+          : pdfBase64.replace(/^data:[^,]+,/, '').replace(/\s+/g, '');
+
         if (cleanBase64.length > 0) {
-          const pdfBuffer = Buffer.from(cleanBase64, 'base64');
-          const { PDFParse } = require('pdf-parse');
-          const parser = new PDFParse({ data: pdfBuffer });
-          const pdfResult = await parser.getText();
-          if (pdfResult && pdfResult.text) {
-            textContent = pdfResult.text;
-          } else if (pdfResult && Array.isArray(pdfResult.pages)) {
-            textContent = pdfResult.pages.map(p => p.text).join('\n');
-          } else if (typeof pdfResult === 'string') {
-            textContent = pdfResult;
+          const fileBuffer = Buffer.from(cleanBase64, 'base64');
+
+          // Check if file is a Word DOCX file (ZIP header 0x50 0x4B 0x03 0x04)
+          const isDocx =
+            (fileBuffer.length >= 4 &&
+              fileBuffer[0] === 0x50 &&
+              fileBuffer[1] === 0x4b &&
+              fileBuffer[2] === 0x03 &&
+              fileBuffer[3] === 0x04) ||
+            (fileName && /\.docx$/i.test(fileName));
+
+          if (isDocx) {
+            const docxText = extractDocxText(fileBuffer);
+            if (docxText && docxText.trim()) {
+              textContent = docxText;
+            }
+          } else {
+            // PDF file extraction
+            const pdfIdx = fileBuffer.indexOf('%PDF');
+            const cleanPdfBuf = pdfIdx > 0 ? fileBuffer.subarray(pdfIdx) : fileBuffer;
+            const { PDFParse } = require('pdf-parse');
+            const parser = new PDFParse({ data: cleanPdfBuf });
+            const pdfResult = await parser.getText();
+            if (pdfResult && pdfResult.text && pdfResult.text.trim()) {
+              textContent = pdfResult.text;
+            } else if (pdfResult && Array.isArray(pdfResult.pages) && pdfResult.pages.length > 0) {
+              textContent = pdfResult.pages.map(p => p.text || '').join('\n');
+            } else if (typeof pdfResult === 'string' && pdfResult.trim()) {
+              textContent = pdfResult;
+            }
+            await parser.destroy().catch(() => {});
           }
-          await parser.destroy().catch(() => {});
+
+          // If textContent is still empty, check if it's UTF-8 plain text
+          if (!textContent && fileBuffer.length > 0) {
+            const rawUtf8 = fileBuffer.toString('utf-8');
+            if (/^(?:[0-9]|Q|પ્રશ્ન)/m.test(rawUtf8)) {
+              textContent = rawUtf8;
+            }
+          }
         }
-      } catch (pdfErr) {
-        console.warn('PDF parsing error, checking rawText fallback:', pdfErr.message);
+      } catch (fileErr) {
+        console.warn('File parsing error, checking rawText fallback:', fileErr.message);
       }
     }
 
@@ -1338,15 +1392,19 @@ exports.extractPaper = async (req, res) => {
       isFallback = true;
     }
 
+    const message = isFallback
+      ? textContent && textContent.trim()
+        ? `Extracted text from ${subject} document, but could not detect standard question numbering (e.g. Q1., 1., (A), (B)). Loaded standard question template for ${subject}. You can also edit or paste questions in Tab 3.`
+        : `No selectable text found in the PDF. It may be a scanned image without a text layer. Loaded standard syllabus question template for ${subject}. You can paste or type questions in Tab 3.`
+      : `Successfully extracted ${questions.length} MCQs for ${subject}!`;
+
     res.json({
       success: true,
       questions,
       rawText: textContent,
       count: questions.length,
       isFallback,
-      message: isFallback
-        ? `No selectable text found in the PDF. Loaded standard syllabus question template for ${subject}. You can also edit or paste text directly.`
-        : `Successfully extracted ${questions.length} MCQs for ${subject}!`,
+      message,
     });
   } catch (err) {
     console.error('Error in extractPaper:', err);
