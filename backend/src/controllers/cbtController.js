@@ -807,6 +807,106 @@ exports.evaluateExam = async (req, res) => {
     exam.isResultPublished = true;
     await exam.save();
 
+    // Auto-enter marks into mapped ExamUnit (Requirement 3)
+    try {
+      const ExamUnit = mongoose.model('ExamUnit');
+      const ExamMarks = mongoose.model('ExamMarks');
+      const Student = mongoose.model('Student');
+
+      // Find any created exam mapped to this CBT exam by ID, Code, or Standard + Type match
+      const mappedExams = await ExamUnit.find({
+        $or: [
+          { cbtExamId: exam._id },
+          ...(exam.examCode ? [{ cbtExamCode: exam.examCode }] : []),
+          { examType: exam.examType, standard: exam.standard, status: { $ne: 'MARKS_ENTERED' } },
+        ],
+      });
+
+      for (const mappedExam of mappedExams) {
+        const examSubjects =
+          exam.subjects && exam.subjects.length > 0
+            ? exam.subjects
+            : ['Physics', 'Chemistry', exam.examType === 'JEE' ? 'Maths' : exam.examType === 'NEET' ? 'Biology' : 'Mathematics'];
+
+        for (const att of scoredAttempts) {
+          let studentDoc = await Student.findOne({
+            standard: mappedExam.standard,
+            ...(mappedExam.division && mappedExam.division !== 'ALL' ? { division: mappedExam.division } : {}),
+            rollNo: att.studentRollNo,
+          });
+
+          if (!studentDoc && att.studentEmail) {
+            studentDoc = await Student.findOne({ email: att.studentEmail });
+          }
+
+          if (!studentDoc) continue;
+
+          const subjectMarks = [];
+          const posPerQ = exam.marksPerQuestion || (exam.examType === 'GUJCET' ? 1 : 4);
+          const negPerQ =
+            exam.negativeMarks !== undefined ? exam.negativeMarks : exam.examType === 'GUJCET' ? 0.25 : 1;
+
+          examSubjects.forEach((sub) => {
+            const subQuestions = exam.questions.filter((q) => q.subject === sub);
+            let subScore = 0;
+            const subMax =
+              subQuestions.length > 0
+                ? subQuestions.length * posPerQ
+                : Math.round(mappedExam.marksPerSubject || 100);
+
+            subQuestions.forEach((q) => {
+              const ansObj = (att.answers || []).find((a) => a.questionId === q.id);
+              if (ansObj && ansObj.selectedOption) {
+                if (ansObj.selectedOption.toUpperCase() === (q.correctAnswer || '').toUpperCase()) {
+                  subScore += posPerQ;
+                } else {
+                  subScore -= negPerQ;
+                }
+              }
+            });
+            if (subScore < 0) subScore = 0;
+
+            subjectMarks.push({
+              subject: sub,
+              marksObtained: Math.round(subScore * 10) / 10,
+              totalMarks: subMax,
+            });
+          });
+
+          const groupKey = mappedExam.streamGroup === 'GROUP_B' ? 'B' : 'A';
+
+          await ExamMarks.findOneAndUpdate(
+            { examId: mappedExam._id, studentId: studentDoc._id, examGroup: groupKey },
+            {
+              examId: mappedExam._id,
+              studentId: studentDoc._id,
+              rollNo: studentDoc.rollNo,
+              studentName: studentDoc.fullName || att.studentName || `Student ${studentDoc.rollNo}`,
+              streamGroup: studentDoc.streamGroup || (groupKey === 'B' ? 'GROUP_B' : 'GROUP_A'),
+              examGroup: groupKey,
+              ab: att.status === 'DISQUALIFIED' ? true : false,
+              subjectMarks,
+              totalObtained: att.score,
+              totalMaxMarks: mappedExam.totalMarks || exam.totalMarks || 300,
+              percentage: att.percentage,
+              enteredByName: 'CBT Auto-Evaluation',
+              enteredAt: new Date(),
+            },
+            { upsert: true, returnDocument: 'after' }
+          );
+        }
+
+        mappedExam.status = 'MARKS_ENTERED';
+        mappedExam.marksEnteredAt = new Date();
+        mappedExam.marksEnteredByName = 'CBT Auto-Evaluation';
+        mappedExam.cbtExamId = exam._id;
+        mappedExam.cbtExamCode = exam.examCode;
+        await mappedExam.save();
+      }
+    } catch (autoErr) {
+      console.warn('Auto-entering CBT marks to ExamUnit warning:', autoErr.message);
+    }
+
     res.json({
       success: true,
       message: 'Exam evaluated successfully! Results and analytics published.',

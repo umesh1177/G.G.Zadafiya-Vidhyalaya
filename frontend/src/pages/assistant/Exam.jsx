@@ -2,7 +2,9 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { examApi, readPdfFileAsPayload, getQuestionPaperUrl } from '../../services/examApi';
+import { fetchCbtExamById, fetchCbtExams } from '../../services/cbtService';
 import PaginationBar from '../../components/common/PaginationBar';
+import CbtQuestionPaperModal from '../../components/cbt/CbtQuestionPaperModal';
 
 const SUBJECT_OPTIONS = [
   'Physics',
@@ -94,6 +96,10 @@ export default function AssistantExam() {
   const [completedPage, setCompletedPage] = useState(1);
   const PAGE_SIZE = 7;
 
+  // Question Paper Modal State
+  const [selectedExamForPaper, setSelectedExamForPaper] = useState(null);
+  const [isLoadingPaper, setIsLoadingPaper] = useState(false);
+
   // Create Exam Modal State
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -108,7 +114,7 @@ export default function AssistantExam() {
     examTime: '10:00',
     durationMinutes: 60,
     marksPerSubject: 100,
-    unitSummary: '',
+    cbtExamId: '',
   });
 
   const loadExams = useCallback(async (silent = false) => {
@@ -370,7 +376,7 @@ export default function AssistantExam() {
         totalMarks: isMulti
           ? (Number(createForm.marksPerSubject) || 100) * 3
           : Number(createForm.marksPerSubject) || 100,
-        unitSummary: createForm.unitSummary.trim() || 'Full Assigned Syllabus',
+        cbtExamId: createForm.cbtExamId.trim() || undefined,
         createdByFacultyId: user?._id || user?.id,
         facultyCode: user?.empCode || user?.id || 'ASST',
         facultyName: user?.name || user?.fullName || 'Assistant Faculty',
@@ -383,9 +389,9 @@ export default function AssistantExam() {
       setShowCreateModal(false);
       setCreatePdfPayload(null);
       if (createPdfRef.current) createPdfRef.current.value = '';
-      setCreateForm((prev) => ({ ...prev, unitSummary: '' }));
+      setCreateForm((prev) => ({ ...prev, cbtExamId: '' }));
       setBannerMsg(
-        `Exam #${created.examNo} (${formatExamTypeLabel(created.examType)} — ${created.subject}) created in Pending Exam status. Click "Enter Marks" below!`
+        `Exam #${created.examNo} (${formatExamTypeLabel(created.examType)} — ${created.subject}) created successfully!`
       );
       setActiveTab('pending');
       setPendingPage(1);
@@ -393,6 +399,51 @@ export default function AssistantExam() {
       setErrorMsg(err.message || 'Failed to create exam');
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const handleShowQuestionPaper = async (ex) => {
+    setIsLoadingPaper(true);
+    try {
+      let cbtExam = null;
+      if (ex.cbtExamId) {
+        cbtExam = await fetchCbtExamById(ex.cbtExamId);
+      }
+      if (!cbtExam && ex.cbtExamCode) {
+        const allCbt = await fetchCbtExams();
+        cbtExam = allCbt.find((c) => c.examCode === ex.cbtExamCode);
+      }
+      if (!cbtExam && ['JEE', 'NEET', 'GUJCET'].includes(ex.examType)) {
+        const allCbt = await fetchCbtExams();
+        cbtExam = allCbt.find((c) => c.examType === ex.examType && c.standard === ex.standard);
+      }
+
+      if (cbtExam && Array.isArray(cbtExam.questions) && cbtExam.questions.length > 0) {
+        setSelectedExamForPaper({
+          ...cbtExam,
+          title: ex.title || cbtExam.title,
+          examCode: cbtExam.examCode || `EXAM-${ex.examNo}`,
+          examType: ex.examType,
+          standard: ex.standard,
+          division: ex.division,
+          streamGroup: ex.streamGroup,
+          durationMinutes: ex.durationMinutes || cbtExam.durationMinutes,
+          totalMarks: ex.totalMarks || cbtExam.totalMarks,
+        });
+        return;
+      }
+
+      if (ex.questionPaperStatus === 'UPLOADED') {
+        window.open(getQuestionPaperUrl(ex.id || ex._id), '_blank');
+        return;
+      }
+
+      alert('No question paper PDF or extracted CBT questions found for this exam.');
+    } catch (paperErr) {
+      console.warn('Error displaying question paper:', paperErr);
+      alert('Could not load question paper: ' + paperErr.message);
+    } finally {
+      setIsLoadingPaper(false);
     }
   };
 
@@ -746,12 +797,33 @@ export default function AssistantExam() {
                           <span className="chip chip-warning">Awaiting Marks</span>
                         </td>
                         <td>
-                          <Link
-                            to={`/assistant/exam/enter-marks/${exId}`}
-                            className="btn btn-primary btn-sm"
-                          >
-                            Enter Marks
-                          </Link>
+                          {ex.examType === 'BOARD' ? (
+                            <Link
+                              to={`/assistant/exam/enter-marks/${exId}`}
+                              className="btn btn-primary btn-sm"
+                            >
+                              Enter Marks
+                            </Link>
+                          ) : (
+                            <span
+                              className="chip chip-neutral"
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 5,
+                                fontSize: '0.78rem',
+                                padding: '5px 10px',
+                                fontWeight: 600,
+                                background: '#eff6ff',
+                                color: '#1e40af',
+                                border: '1px solid #bfdbfe',
+                              }}
+                              title="Marks for JEE/NEET/GUJCET are automatically populated when CBT Exam is evaluated"
+                            >
+                              <span>⚡</span>
+                              <span>Auto via CBT</span>
+                            </span>
+                          )}
                         </td>
                       </tr>
                     );
@@ -831,18 +903,34 @@ export default function AssistantExam() {
                           <strong>{ex.subject}</strong>
                         </td>
                         <td>
-                          {ex.questionPaperStatus === 'UPLOADED' ? (
-                            <a
-                              href={getQuestionPaperUrl(exId)}
-                              target="_blank"
-                              rel="noreferrer"
+                          <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
+                            {ex.questionPaperStatus === 'UPLOADED' && (
+                              <a
+                                href={getQuestionPaperUrl(exId)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="btn btn-ghost btn-sm"
+                              >
+                                View PDF
+                              </a>
+                            )}
+                            <button
+                              type="button"
                               className="btn btn-ghost btn-sm"
+                              onClick={() => handleShowQuestionPaper(ex)}
+                              disabled={isLoadingPaper}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 5,
+                                fontSize: '0.78rem',
+                              }}
+                              title="Show complete question paper with options and correct answers"
                             >
-                              View PDF
-                            </a>
-                          ) : (
-                            <span className="chip chip-neutral">No PDF</span>
-                          )}
+                              <span>📄</span>
+                              <span>Show Question Paper</span>
+                            </button>
+                          </div>
                         </td>
                         <td>
                           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -1038,18 +1126,24 @@ export default function AssistantExam() {
                 </div>
               </div>
 
-              <div className="form-group">
-                <label className="field-label">Syllabus Units / Description</label>
-                <input
-                  type="text"
-                  className="field-input w-full"
-                  placeholder="e.g. Ch 7 Equilibrium, Ch 8 Redox Reactions; ઉદા. 7.1, 7.2"
-                  value={createForm.unitSummary}
-                  onChange={(e) =>
-                    setCreateForm((prev) => ({ ...prev, unitSummary: e.target.value }))
-                  }
-                />
-              </div>
+              {['JEE', 'NEET', 'GUJCET'].includes(createForm.examType) && (
+                <div className="form-group">
+                  <label className="field-label">Enter CBT Exam ID / Code *</label>
+                  <input
+                    type="text"
+                    className="field-input w-full"
+                    placeholder="e.g. CBT-2026-JEE-01 or paste CBT Exam ID"
+                    value={createForm.cbtExamId}
+                    onChange={(e) =>
+                      setCreateForm((prev) => ({ ...prev, cbtExamId: e.target.value }))
+                    }
+                    required={['JEE', 'NEET', 'GUJCET'].includes(createForm.examType)}
+                  />
+                  <span style={{ fontSize: '0.74rem', color: '#64748b', marginTop: 4, display: 'block' }}>
+                    Maps this exam with the CBT module. Student marks from CBT evaluation will automatically enter into this exam and move it to Completed Exam!
+                  </span>
+                </div>
+              )}
 
               <div
                 style={{
@@ -1092,6 +1186,14 @@ export default function AssistantExam() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* Complete Question Paper Modal */}
+      {selectedExamForPaper && (
+        <CbtQuestionPaperModal
+          exam={selectedExamForPaper}
+          onClose={() => setSelectedExamForPaper(null)}
+        />
       )}
     </>
   );

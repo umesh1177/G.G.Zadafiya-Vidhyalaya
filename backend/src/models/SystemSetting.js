@@ -31,3 +31,4 @@ const systemSettingSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model('SystemSetting', systemSettingSchema);
+

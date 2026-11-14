@@ -201,6 +201,100 @@ export default function PrintableFacultyReport({ report, onClose }) {
         </div>
       )}
 
+      {isExam && questions.length > 0 && (
+        <div className="print-section">
+          <div className="print-section-title">
+            Question-by-Question Evaluation Analysis ({questions.length} Questions)
+          </div>
+          <table className="print-questions-table">
+            <thead>
+              <tr>
+                <th style={{ width: '50px' }}>Q. No</th>
+                <th style={{ width: '80px' }}>Subject</th>
+                <th>Question &amp; Options</th>
+                <th style={{ width: '70px', textAlign: 'center' }}>Attended</th>
+                <th style={{ width: '60px', textAlign: 'center' }}>Skip</th>
+                <th style={{ width: '65px', textAlign: 'center' }}>Right</th>
+                <th style={{ width: '65px', textAlign: 'center' }}>Wrong</th>
+                <th style={{ width: '75px', textAlign: 'center' }}>Avg Time</th>
+                <th style={{ width: '65px', textAlign: 'right' }}>Accuracy</th>
+              </tr>
+            </thead>
+            <tbody>
+              {questions.map((q, idx) => (
+                <tr key={idx}>
+                  <td style={{ fontWeight: 700 }}>Q{q.questionNo || idx + 1}</td>
+                  <td style={{ fontSize: '11px', color: '#475569', fontWeight: 600 }}>{q.subject || '—'}</td>
+                  <td>
+                    <div style={{ fontWeight: 600, color: '#0f172a', marginBottom: 4 }}>
+                      {q.questionText || '—'}
+                    </div>
+                    {q.options && q.options.length > 0 && (
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(2, 1fr)',
+                          gap: 4,
+                          fontSize: '10.5px',
+                          marginTop: 4,
+                        }}
+                      >
+                        {q.options.map((opt, oi) => {
+                          const letter = ['A', 'B', 'C', 'D'][oi];
+                          const isRight =
+                            String(q.correctAnswer || '').toUpperCase() === letter ||
+                            String(opt || '').toUpperCase().startsWith(letter);
+                          return (
+                            <div
+                              key={oi}
+                              style={{
+                                padding: '2px 5px',
+                                borderRadius: 3,
+                                background: isRight ? '#ecfdf5' : '#f8fafc',
+                                border: isRight ? '1px solid #10b981' : '1px solid #e2e8f0',
+                                color: isRight ? '#065f46' : '#334155',
+                                fontWeight: isRight ? 700 : 400,
+                              }}
+                            >
+                              <strong>{letter}.</strong> {String(opt || '')} {isRight ? ' ✓' : ''}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </td>
+                  <td style={{ textAlign: 'center', fontWeight: 600 }}>{q.attemptCount || 0}</td>
+                  <td style={{ textAlign: 'center', color: '#64748b' }}>{q.skipCount || 0}</td>
+                  <td style={{ textAlign: 'center', fontWeight: 700, color: '#059669' }}>
+                    {q.correctCount || 0}
+                  </td>
+                  <td style={{ textAlign: 'center', fontWeight: 700, color: '#dc2626' }}>
+                    {q.wrongCount || 0}
+                  </td>
+                  <td style={{ textAlign: 'center', fontSize: '11px' }}>
+                    {q.avgResponseTimeSeconds || 0}s
+                  </td>
+                  <td
+                    style={{
+                      textAlign: 'right',
+                      fontWeight: 700,
+                      color:
+                        (q.accuracy || 0) >= 70
+                          ? '#059669'
+                          : (q.accuracy || 0) >= 40
+                            ? '#d97706'
+                            : '#dc2626',
+                    }}
+                  >
+                    {q.accuracy || 0}%
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
       {!isExam && (
         <div className="print-section">
           <div className="print-section-title">

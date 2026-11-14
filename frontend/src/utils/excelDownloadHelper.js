@@ -36,3 +36,4 @@ export function triggerBrowserExcelDownload(excelDownload) {
     return false;
   }
 }
+

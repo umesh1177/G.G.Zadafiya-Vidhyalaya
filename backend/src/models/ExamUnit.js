@@ -59,6 +59,10 @@ const examUnitSchema = new mongoose.Schema(
       default: 'faculty',
     },
 
+    // CBT Exam Linkage for JEE / NEET / GUJCET
+    cbtExamId: { type: mongoose.Schema.Types.ObjectId, ref: 'CbtExam', default: null },
+    cbtExamCode: { type: String, trim: true, default: '' },
+
     // Syllabus coverage units (structured + editable summary string)
     unitSummary: { type: String, trim: true, default: '' },
     selectedUnits: [selectedUnitItemSchema],

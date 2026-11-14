@@ -70,9 +70,13 @@ export default function AssistantCbtExam() {
     try {
       const res = await evaluateCbtExam(exam._id);
       if (res.success) {
-        alert(res.message);
+        alert(
+          '✓ Exam evaluated successfully!\n\n' +
+          '• Leaderboard and analytics computed.\n' +
+          '• Student marks have been automatically entered into the mapped Exam Unit and moved to the Completed Exam tab.\n' +
+          '• Full analysis is now accessible from Principal Dashboard > Exam Analysis.'
+        );
         loadExams();
-        navigate(`/assistant/cbt-exam/analysis/${exam._id}`);
       } else {
         alert(res.message || 'Evaluation failed.');
       }
@@ -346,32 +350,6 @@ export default function AssistantCbtExam() {
                           <Award size={14} />
                           <span>Evaluate</span>
                         </button>
-
-                        {/* View Analysis (Disabled until results are published) */}
-                        {(() => {
-                          const isPublished = exam.isResultPublished || exam.status === 'EVALUATED';
-                          return (
-                            <button
-                              className={`cbt-action-btn cbt-action-btn--analysis ${!isPublished ? 'opacity-50 cursor-not-allowed pointer-events-auto' : ''}`}
-                              title={
-                                isPublished
-                                  ? 'View Analysis & Leaderboard'
-                                  : 'Analysis disabled until assistant faculty publishes result of exam'
-                              }
-                              disabled={!isPublished}
-                              onClick={() => {
-                                if (isPublished) {
-                                  navigate(`/assistant/cbt-exam/analysis/${exam._id}`);
-                                } else {
-                                  alert('Please evaluate the exam first to publish results and unlock the Analysis page.');
-                                }
-                              }}
-                            >
-                              <BarChart3 size={14} />
-                              <span>Analysis</span>
-                            </button>
-                          );
-                        })()}
 
                         {/* Edit */}
                         <button

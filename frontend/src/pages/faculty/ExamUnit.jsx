@@ -167,6 +167,7 @@ export default function ExamUnit() {
   const [durationMinutes, setDurationMinutes] = useState(60);
   const [examType, setExamType] = useState('BOARD');
   const [marksPerSubject, setMarksPerSubject] = useState(100);
+  const [cbtExamId, setCbtExamId] = useState('');
 
   // Syllabus Tree State (isolated to logged-in faculty)
   const [chapters, setChapters] = useState([]);
@@ -446,11 +447,18 @@ export default function ExamUnit() {
     setErrorMsg(null);
     setFeedbackMsg(null);
 
+    const isMulti = ['JEE', 'NEET', 'GUJCET'].includes(examType);
+
+    if (isMulti && !cbtExamId.trim()) {
+      setErrorMsg('Please enter the CBT Exam ID / Code to map this exam.');
+      return;
+    }
+
     const cleanUnits = selectedUnits
       .map((u) => ({ ...u, label: String(u.label || '').trim() }))
       .filter((u) => u.label.length > 0);
 
-    if (cleanUnits.length === 0) {
+    if (!isMulti && cleanUnits.length === 0) {
       setErrorMsg('Please select at least one chapter, topic, koyda, or exercise from the left panel (or add a custom unit).');
       return;
     }
@@ -461,7 +469,9 @@ export default function ExamUnit() {
 
     setIsSubmitting(true);
     try {
-      const unitSummary = cleanUnits.map((u) => u.label).join('; ');
+      const unitSummary = isMulti
+        ? `CBT Mapped: ${cbtExamId.trim()}`
+        : cleanUnits.map((u) => u.label).join('; ');
       const created = await examApi.createExam({
         examType,
         subject,
@@ -474,8 +484,9 @@ export default function ExamUnit() {
         totalMarks: isMultiType
           ? (Number(marksPerSubject) || 100) * 3
           : Number(marksPerSubject) || 100,
+        cbtExamId: isMulti ? cbtExamId.trim() : undefined,
         unitSummary,
-        selectedUnits: cleanUnits.map(({ key: _k, ...rest }) => rest),
+        selectedUnits: isMulti ? [] : cleanUnits.map(({ key: _k, ...rest }) => rest),
         createdByFacultyId: user?._id || user?.id,
         facultyCode,
         facultyName,
@@ -1226,81 +1237,109 @@ export default function ExamUnit() {
             </div>
 
             <form onSubmit={handleSubmitExam} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              {/* Selected Units / Chapters / Koyda / Exercises Editable Box */}
-              <div
-                style={{
-                  background: '#F4F7FA',
-                  border: '1px solid #DCE6F1',
-                  borderRadius: 12,
-                  padding: 14,
-                }}
-              >
-                <div style={{ fontWeight: 700, fontSize: 12.5, color: '#475569', marginBottom: 10 }}>
-                  Selected Units / Chapters / Koyda / Exercises (Editable)
-                </div>
-
-                {selectedUnits.length === 0 ? (
-                  <div style={{ fontSize: 13, color: '#94A3B8', padding: '10px 2px' }}>
-                    None selected yet — click <strong>Till ...</strong>, <strong>Select</strong>, or <strong>All topics</strong> on the left panel.
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {selectedUnits.map((item) => (
-                      <div
-                        key={item.key}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 8,
-                          background: '#FFFFFF',
-                          padding: 6,
-                          borderRadius: 8,
-                          border: '1px solid #D1DDE8',
-                        }}
-                      >
-                        <input
-                          type="text"
-                          className="field-input"
-                          style={{ flex: 1, minWidth: 0, padding: '6px 10px', fontSize: 13 }}
-                          value={item.label}
-                          onChange={(e) => handleEditUnitLabel(item.key, e.target.value)}
-                          aria-label="Edit selected syllabus unit"
-                        />
-                        <button
-                          type="button"
-                          className="btn btn-danger-ghost btn-sm"
-                          style={{ padding: '5px 10px' }}
-                          onClick={() => handleRemoveSelectedUnit(item.key)}
-                          title="Remove unit"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Quick custom unit addition inside right box */}
-                <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+              {/* If JEE / NEET / GUJCET: show CBT Exam ID mapping instead of syllabus units */}
+              {['JEE', 'NEET', 'GUJCET'].includes(examType) ? (
+                <div
+                  style={{
+                    background: '#F0F9FF',
+                    border: '1.5px solid #BAE6FD',
+                    borderRadius: 12,
+                    padding: 16,
+                  }}
+                >
+                  <label className="field-label" style={{ fontWeight: 800, color: '#0369A1', marginBottom: 6, display: 'block' }}>
+                    Enter CBT Exam ID / Code *
+                  </label>
                   <input
                     type="text"
-                    className="field-input"
-                    style={{ flex: 1, minWidth: 0, background: '#FFFFFF' }}
-                    placeholder="+ Add custom note or chapter range..."
-                    value={customUnitInput}
-                    onChange={(e) => setCustomUnitInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault();
-                        handleAddCustomUnit();
-                      }
-                    }}
+                    className="field-input w-full"
+                    placeholder="e.g. CBT-2026-JEE-01 or paste CBT Exam ID"
+                    value={cbtExamId}
+                    onChange={(e) => setCbtExamId(e.target.value)}
+                    required
+                    style={{ background: '#FFFFFF', fontSize: 13.5 }}
                   />
-                  <button type="button" className="btn btn-ghost btn-sm" onClick={handleAddCustomUnit}>
-                    Add
-                  </button>
+                  <span style={{ fontSize: '0.75rem', color: '#0284C7', marginTop: 6, display: 'block' }}>
+                    🔗 Maps this exam with the live CBT examination module. When Assistant Faculty evaluates CBT results, student marks will automatically enter into this exam.
+                  </span>
                 </div>
-              </div>
+              ) : (
+                /* Selected Units / Chapters / Koyda / Exercises Editable Box */
+                <div
+                  style={{
+                    background: '#F4F7FA',
+                    border: '1px solid #DCE6F1',
+                    borderRadius: 12,
+                    padding: 14,
+                  }}
+                >
+                  <div style={{ fontWeight: 700, fontSize: 12.5, color: '#475569', marginBottom: 10 }}>
+                    Selected Units / Chapters / Koyda / Exercises (Editable)
+                  </div>
+
+                  {selectedUnits.length === 0 ? (
+                    <div style={{ fontSize: 13, color: '#94A3B8', padding: '10px 2px' }}>
+                      None selected yet — click <strong>Till ...</strong>, <strong>Select</strong>, or <strong>All topics</strong> on the left panel.
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {selectedUnits.map((item) => (
+                        <div
+                          key={item.key}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            background: '#FFFFFF',
+                            padding: 6,
+                            borderRadius: 8,
+                            border: '1px solid #D1DDE8',
+                          }}
+                        >
+                          <input
+                            type="text"
+                            className="field-input"
+                            style={{ flex: 1, minWidth: 0, padding: '6px 10px', fontSize: 13 }}
+                            value={item.label}
+                            onChange={(e) => handleEditUnitLabel(item.key, e.target.value)}
+                            aria-label="Edit selected syllabus unit"
+                          />
+                          <button
+                            type="button"
+                            className="btn btn-danger-ghost btn-sm"
+                            style={{ padding: '5px 10px' }}
+                            onClick={() => handleRemoveSelectedUnit(item.key)}
+                            title="Remove unit"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Quick custom unit addition inside right box */}
+                  <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                    <input
+                      type="text"
+                      className="field-input"
+                      style={{ flex: 1, minWidth: 0, background: '#FFFFFF' }}
+                      placeholder="+ Add custom note or chapter range..."
+                      value={customUnitInput}
+                      onChange={(e) => setCustomUnitInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddCustomUnit();
+                        }
+                      }}
+                    />
+                    <button type="button" className="btn btn-ghost btn-sm" onClick={handleAddCustomUnit}>
+                      Add
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Date & Exam Time */}
               <div className="form-grid-2">

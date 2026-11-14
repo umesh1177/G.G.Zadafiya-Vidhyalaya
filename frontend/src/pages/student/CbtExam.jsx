@@ -56,7 +56,22 @@ export default function StudentCbtExam() {
         streamGroup,
         rollNo,
       });
-      setExams(data || []);
+
+      // Per Requirement 1: Once student submits successfully, that exam card should NOT be visible.
+      // Only show exam card after submission if the student got disqualified.
+      const visible = (data || []).filter((e) => {
+        const isDisq = e.attemptStatus === 'DISQUALIFIED' || e.myAttempt?.status === 'DISQUALIFIED';
+        const isSub =
+          e.attemptStatus === 'SUBMITTED' ||
+          e.myAttempt?.status === 'SUBMITTED' ||
+          e.myAttempt?.status === 'EVALUATED';
+        if (isSub && !isDisq) {
+          return false; // hide card after successful submission
+        }
+        return true;
+      });
+
+      setExams(visible);
     } catch (err) {
       console.error('Error fetching student CBT exams:', err);
     } finally {
@@ -216,10 +231,8 @@ export default function StudentCbtExam() {
         });
 
         const completedExams = exams.filter((e) => {
-          const isSub = e.attemptStatus === 'SUBMITTED';
-          const isDisq = e.attemptStatus === 'DISQUALIFIED' && !e.myAttempt?.retryAllowed;
-          const isEnded = nowTime > new Date(e.windowEndTime);
-          return isSub || isDisq || isEnded;
+          const isDisq = e.attemptStatus === 'DISQUALIFIED';
+          return isDisq;
         });
 
         const displayedExams =
