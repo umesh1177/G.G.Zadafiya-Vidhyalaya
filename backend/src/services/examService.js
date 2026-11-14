@@ -467,8 +467,28 @@ class ExamService {
   }
 
   async deleteExam(idOrNo) {
-    const exam = await this.getExamById(idOrNo);
-    if (exam.questionPaperPath) {
+    let exam = null;
+    try {
+      exam = await this.getExamById(idOrNo);
+    } catch {
+      // Fallback: if not found via getExamById, check if direct ObjectId or examNo
+      if (mongoose.Types.ObjectId.isValid(idOrNo)) {
+        await ExamMarks.deleteMany({ examId: idOrNo });
+        await FacultyReport.deleteMany({ examId: idOrNo });
+        return await ExamUnit.findByIdAndDelete(idOrNo);
+      }
+      if (!isNaN(Number(idOrNo))) {
+        const found = await ExamUnit.findOne({ examNo: Number(idOrNo) });
+        if (found) {
+          await ExamMarks.deleteMany({ examId: found._id });
+          await FacultyReport.deleteMany({ examId: found._id });
+          return await ExamUnit.findByIdAndDelete(found._id);
+        }
+      }
+      return true;
+    }
+
+    if (exam && exam.questionPaperPath) {
       const fullPath = path.join(UPLOAD_DIR, path.basename(exam.questionPaperPath));
       if (fs.existsSync(fullPath)) {
         try {
@@ -478,9 +498,12 @@ class ExamService {
         }
       }
     }
-    await ExamMarks.deleteMany({ examId: exam._id });
-    await FacultyReport.deleteMany({ examId: exam._id });
-    return await ExamUnit.findByIdAndDelete(exam._id);
+    if (exam) {
+      await ExamMarks.deleteMany({ examId: exam._id });
+      await FacultyReport.deleteMany({ examId: exam._id });
+      return await ExamUnit.findByIdAndDelete(exam._id);
+    }
+    return true;
   }
 
   async getExamMarks(idOrNo, { group = 'A', includeAllStd = false } = {}) {

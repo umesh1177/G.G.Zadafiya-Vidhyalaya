@@ -69,7 +69,11 @@ export async function deleteCbtExam(id) {
   const res = await fetch(`${API_ROOT}/api/cbt/exams/${id}`, {
     method: 'DELETE',
   });
-  return await res.json();
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.message || `Server returned status ${res.status}`);
+  }
+  return data;
 }
 
 export async function startCbtExam(id, studentInfo) {
@@ -146,6 +150,10 @@ export async function extractCbtPaper(payload) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
-  return await res.json();
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error(data.message || `Server returned status ${res.status}`);
+  }
+  return data;
 }
 

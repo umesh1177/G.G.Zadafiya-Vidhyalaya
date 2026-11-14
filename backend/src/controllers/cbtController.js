@@ -281,9 +281,19 @@ exports.updateExam = async (req, res) => {
 exports.deleteExam = async (req, res) => {
   try {
     const { id } = req.params;
-    await CbtExam.findByIdAndDelete(id);
-    await CbtAttempt.deleteMany({ examId: id });
-    res.json({ success: true, message: 'Exam and all associated attempts deleted' });
+    let exam = null;
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      exam = await CbtExam.findByIdAndDelete(id);
+    }
+    if (!exam) {
+      exam = await CbtExam.findOneAndDelete({ examCode: String(id).trim().toUpperCase() });
+    }
+    if (exam) {
+      await CbtAttempt.deleteMany({ examId: exam._id });
+    } else if (mongoose.Types.ObjectId.isValid(id)) {
+      await CbtAttempt.deleteMany({ examId: id });
+    }
+    res.json({ success: true, message: 'Exam and all associated attempts deleted successfully' });
   } catch (err) {
     console.error('Error deleting CBT exam:', err);
     res.status(500).json({ success: false, message: err.message });
@@ -1285,19 +1295,22 @@ exports.extractPaper = async (req, res) => {
     let textContent = rawText || '';
 
     // If pdfBase64 is provided, extract text using pdf-parse
-    if (pdfBase64) {
+    if (pdfBase64 && typeof pdfBase64 === 'string') {
       try {
-        const cleanBase64 = pdfBase64.replace(/^data:application\/pdf;base64,/, '');
-        const pdfBuffer = Buffer.from(cleanBase64, 'base64');
-        const { PDFParse } = require('pdf-parse');
-        const parser = new PDFParse({ data: pdfBuffer });
-        const pdfResult = await parser.getText();
-        if (pdfResult && pdfResult.text) {
-          textContent = pdfResult.text;
-        } else if (pdfResult && Array.isArray(pdfResult.pages)) {
-          textContent = pdfResult.pages.map(p => p.text).join('\n');
-        } else if (typeof pdfResult === 'string') {
-          textContent = pdfResult;
+        const cleanBase64 = pdfBase64.replace(/^data:[^;]+;base64,/, '').trim();
+        if (cleanBase64.length > 0) {
+          const pdfBuffer = Buffer.from(cleanBase64, 'base64');
+          const { PDFParse } = require('pdf-parse');
+          const parser = new PDFParse({ data: pdfBuffer });
+          const pdfResult = await parser.getText();
+          if (pdfResult && pdfResult.text) {
+            textContent = pdfResult.text;
+          } else if (pdfResult && Array.isArray(pdfResult.pages)) {
+            textContent = pdfResult.pages.map(p => p.text).join('\n');
+          } else if (typeof pdfResult === 'string') {
+            textContent = pdfResult;
+          }
+          await parser.destroy().catch(() => {});
         }
       } catch (pdfErr) {
         console.warn('PDF parsing error, checking rawText fallback:', pdfErr.message);

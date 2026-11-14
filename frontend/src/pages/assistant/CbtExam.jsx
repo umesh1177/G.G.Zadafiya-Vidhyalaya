@@ -94,12 +94,13 @@ export default function AssistantCbtExam() {
     try {
       const res = await deleteCbtExam(exam._id);
       if (res.success) {
+        setExams((prev) => prev.filter((e) => e._id !== exam._id));
         loadExams();
       } else {
         alert(res.message || 'Delete failed.');
       }
     } catch (err) {
-      alert(err.message);
+      alert(`Delete error: ${err.message}`);
     }
   };
 
