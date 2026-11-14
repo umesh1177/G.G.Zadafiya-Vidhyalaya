@@ -351,6 +351,18 @@ export default function AssistantCbtExam() {
                           <span>Evaluate</span>
                         </button>
 
+                        {/* View Analysis */}
+                        {(exam.status === 'EVALUATED' || exam.isResultPublished) && (
+                          <button
+                            className="cbt-action-btn cbt-action-btn--analysis"
+                            title="View Analysis & Leaderboard"
+                            onClick={() => navigate(`/assistant/cbt-exam/analysis/${exam._id}`)}
+                          >
+                            <BarChart3 size={14} />
+                            <span>Analysis</span>
+                          </button>
+                        )}
+
                         {/* Edit */}
                         <button
                           className="cbt-action-icon-btn"

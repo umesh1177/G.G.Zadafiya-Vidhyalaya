@@ -940,6 +940,12 @@ export default function AssistantExam() {
                             >
                               View Marks
                             </Link>
+                            <Link
+                              to={`/assistant/exam-analysis/${exId}`}
+                              className="btn btn-primary btn-sm"
+                            >
+                              View Analysis
+                            </Link>
                             <button
                               type="button"
                               className="btn btn-sm"

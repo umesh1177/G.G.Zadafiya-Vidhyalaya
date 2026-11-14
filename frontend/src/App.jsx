@@ -82,6 +82,7 @@ export default function App() {
               <Route path="faculty-management/new" element={<FacultyManagement defaultTab="add-faculty" />} />
               <Route path="exam-analysis" element={<ExamAnalysis />} />
               <Route path="exam-analysis/:id" element={<ExamAnalysisDetail />} />
+              <Route path="cbt-exam/analysis/:id" element={<CbtAnalysisPage userRole="principal" />} />
               <Route path="lt-analysis" element={<LtAnalysis />} />
               <Route path="lt-analysis/:id" element={<LtAnalysisDetail />} />
               <Route path="syllabus-tracking" element={<SyllabusTracking />} />
@@ -124,6 +125,7 @@ export default function App() {
               <Route path="lt/enter-marks/:id" element={<LtEnterMarks />} />
               <Route path="cbt-exam" element={<AssistantCbtExam />} />
               <Route path="cbt-exam/analysis/:id" element={<CbtAnalysisPage userRole="assistant" />} />
+              <Route path="exam-analysis/:id" element={<ExamAnalysisDetail />} />
               <Route path="exam" element={<AssistantExam />} />
               <Route path="exam/enter-marks/:id" element={<ExamEnterMarks />} />
               <Route path="exam/view-marks/:id" element={<ExamViewMarks />} />

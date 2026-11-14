@@ -235,6 +235,24 @@ export default function ExamAnalysisDetail() {
 
   // Active subject metrics for Subject-Wise tab
   const activeSubjectData = useMemo(() => {
+    if (!analysis || !exam) {
+      return {
+        subject: selectedSubjectTab,
+        totalQuestions: 0,
+        maxMarks: 100,
+        averageScore: 0,
+        averagePercentage: 0,
+        highestScore: 0,
+        lowestScore: 0,
+        overallAccuracy: 0,
+        avgResponseTimeSeconds: 0,
+        growthRate: 0,
+        isGrowth: true,
+        previousExamAverage: 0,
+        studentList: [],
+      };
+    }
+
     if (subjectWiseMetrics && subjectWiseMetrics[selectedSubjectTab]) {
       return subjectWiseMetrics[selectedSubjectTab];
     }
@@ -244,16 +262,16 @@ export default function ExamAnalysisDetail() {
     if (matchedKey && subjectWiseMetrics[matchedKey]) return subjectWiseMetrics[matchedKey];
 
     // Fallback computed from students
-    const subStudents = cbtStudents.map((st) => {
+    const subStudents = (cbtStudents || []).map((st) => {
       const sm = (st.subjectMarks || []).find(
-        (s) => s.subject.toLowerCase() === selectedSubjectTab.toLowerCase()
+        (s) => s.subject && s.subject.toLowerCase() === selectedSubjectTab.toLowerCase()
       );
       const marks = sm
         ? sm.marksObtained
         : Math.round(((st.score || st.marksObtained || 0) / (availableSubjectKeys.length || 1)) * 10) / 10;
       const maxM = sm
         ? sm.totalMarks
-        : Math.round((cbtExam.totalMarks || 100) / (availableSubjectKeys.length || 1));
+        : Math.round(((cbtExam?.totalMarks || exam?.totalMarks || 100) / (availableSubjectKeys.length || 1)));
       const pct = maxM > 0 ? Math.round((marks / maxM) * 100 * 10) / 10 : 0;
       return {
         rollNo: st.rollNo,
@@ -270,12 +288,12 @@ export default function ExamAnalysisDetail() {
     const marksList = subStudents.map((s) => s.marks);
     const avgScore =
       marksList.length > 0 ? Math.round((marksList.reduce((a, b) => a + b, 0) / marksList.length) * 10) / 10 : 0;
-    const maxMarks = Math.round((cbtExam.totalMarks || 100) / (availableSubjectKeys.length || 1));
+    const maxMarks = Math.round(((cbtExam?.totalMarks || exam?.totalMarks || 100) / (availableSubjectKeys.length || 1)));
     const avgPct = maxMarks > 0 ? Math.round((avgScore / maxMarks) * 100 * 10) / 10 : 0;
 
     return {
       subject: selectedSubjectTab,
-      totalQuestions: Math.round((cbtExam.totalMarks || 100) / ((availableSubjectKeys.length || 1) * 4)),
+      totalQuestions: Math.round(((cbtExam?.totalMarks || exam?.totalMarks || 100) / ((availableSubjectKeys.length || 1) * 4))),
       maxMarks,
       averageScore: avgScore,
       averagePercentage: avgPct,
@@ -283,12 +301,12 @@ export default function ExamAnalysisDetail() {
       lowestScore: marksList.length > 0 ? Math.min(...marksList) : 0,
       overallAccuracy: avgPct,
       avgResponseTimeSeconds: 65,
-      growthRate: comparison.growthRate || 0,
-      isGrowth: (comparison.growthRate || 0) >= 0,
-      previousExamAverage: comparison.previousAveragePercent || avgPct,
+      growthRate: comparison?.growthRate || 0,
+      isGrowth: (comparison?.growthRate || 0) >= 0,
+      previousExamAverage: comparison?.previousAveragePercent || avgPct,
       studentList: subStudents,
     };
-  }, [subjectWiseMetrics, selectedSubjectTab, cbtStudents, availableSubjectKeys, cbtExam, comparison]);
+  }, [analysis, exam, subjectWiseMetrics, selectedSubjectTab, cbtStudents, availableSubjectKeys, cbtExam, comparison]);
 
   // Open Generate Report modal helper
   const openGenerateReportModal = () => {
@@ -387,6 +405,8 @@ export default function ExamAnalysisDetail() {
     }
   };
 
+  const backUrl = user?.role === 'assistant' ? '/assistant/exam' : '/principal/exam-analysis';
+
   if (isLoading) {
     return (
       <div className="card" style={{ padding: 36, textAlign: 'center', color: 'var(--slate)' }}>
@@ -401,8 +421,8 @@ export default function ExamAnalysisDetail() {
         <div style={{ color: 'var(--danger)', fontWeight: 700, marginBottom: 12 }}>
           {errorMsg || 'Unable to load Exam Analysis Detail'}
         </div>
-        <Link to="/principal/exam-analysis" className="btn btn-primary btn-sm">
-          ← Back to Exam Analysis
+        <Link to={backUrl} className="btn btn-primary btn-sm">
+          ← Back to Exams
         </Link>
       </div>
     );
@@ -567,8 +587,8 @@ export default function ExamAnalysisDetail() {
       standardLabel: exam.standardLabel,
       division: exam.division,
       examDate: exam.examDate,
-      durationMinutes: cbtExam.durationMinutes || 60,
-      totalMarks: cbtExam.totalMarks || exam.totalMarks || 100,
+      durationMinutes: cbtExam?.durationMinutes || exam?.durationMinutes || 60,
+      totalMarks: cbtExam?.totalMarks || exam?.totalMarks || 100,
       classAveragePercent:
         cbtStats.averageScore !== undefined ? cbtStats.averageScore : overview.classAveragePercent || 0,
       averageMarks:
@@ -735,8 +755,8 @@ export default function ExamAnalysisDetail() {
     <div style={{ paddingBottom: 40 }}>
       {/* Top Action Bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 10 }}>
-        <Link to="/principal/exam-analysis" className="btn btn-ghost btn-sm">
-          ← Back to Exam Analysis
+        <Link to={backUrl} className="btn btn-ghost btn-sm">
+          ← Back to Exams
         </Link>
 
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -799,7 +819,7 @@ export default function ExamAnalysisDetail() {
           {exam.examType === 'GUJCET' && exam.availableGroups?.length > 0 && (
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
               <span style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--slate)' }}>GROUP SCOPE:</span>
-              {['ALL', ...exam.availableGroups].map((grp) => (
+              {['ALL', ...(exam.availableGroups || [])].map((grp) => (
                 <button
                   key={grp}
                   type="button"
@@ -827,15 +847,15 @@ export default function ExamAnalysisDetail() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginTop: 8 }}>
               <span className="cbt-meta-chip">
                 <Clock size={14} className="text-slate-500" />
-                <span>{cbtExam.durationMinutes || exam.durationMinutes || 60} Minutes</span>
+                <span>{cbtExam?.durationMinutes || exam?.durationMinutes || 60} Minutes</span>
               </span>
               <span className="cbt-meta-chip">
                 <HelpCircle size={14} className="text-slate-500" />
-                <span>{questionWiseReport.length || cbtExam.questionsCount || 45} Questions</span>
+                <span>{questionWiseReport.length || cbtExam?.questionsCount || 45} Questions</span>
               </span>
               <span className="cbt-meta-chip">
                 <Award size={14} className="text-slate-500" />
-                <span>{cbtExam.totalMarks || exam.totalMarks || 100} Marks</span>
+                <span>{cbtExam?.totalMarks || exam?.totalMarks || 100} Marks</span>
               </span>
               <span className="cbt-meta-chip">
                 <span className="font-semibold text-slate-700">Type:</span>
@@ -1089,8 +1109,8 @@ export default function ExamAnalysisDetail() {
                 </div>
               </div>
               <div className="cbt-kpi-value text-indigo-700">
-                {cbtStats.avgQuestionsAttempted || Math.round((exam.totalMarks || 100) / 4)} /{' '}
-                {questionWiseReport.length || cbtExam.questionsCount || Math.round((exam.totalMarks || 100) / 4)}
+                {cbtStats.avgQuestionsAttempted || Math.round((exam?.totalMarks || 100) / 4)} /{' '}
+                {questionWiseReport.length || cbtExam?.questionsCount || Math.round((exam?.totalMarks || 100) / 4)}
               </div>
               <div className="cbt-kpi-subtext">Average number of questions attempted</div>
             </div>
@@ -1523,7 +1543,7 @@ export default function ExamAnalysisDetail() {
               </div>
               <div>
                 <span className="text-slate-400 block font-medium">Exam Code:</span>
-                <strong className="text-slate-800 text-sm">{cbtExam.examCode || `EXAM-${exam.examNo}`}</strong>
+                <strong className="text-slate-800 text-sm">{cbtExam?.examCode || (exam ? `EXAM-${exam.examNo}` : 'EXAM')}</strong>
               </div>
               <div>
                 <span className="text-slate-400 block font-medium">Standard &amp; Division:</span>
@@ -1539,15 +1559,15 @@ export default function ExamAnalysisDetail() {
               </div>
               <div>
                 <span className="text-slate-400 block font-medium">Duration:</span>
-                <strong className="text-slate-800 text-sm">{cbtExam.durationMinutes || exam.durationMinutes || 60} Minutes</strong>
+                <strong className="text-slate-800 text-sm">{cbtExam?.durationMinutes || exam?.durationMinutes || 60} Minutes</strong>
               </div>
               <div>
                 <span className="text-slate-400 block font-medium">Total Questions:</span>
-                <strong className="text-slate-800 text-sm">{questionWiseReport.length || cbtExam.questionsCount || 45} Questions</strong>
+                <strong className="text-slate-800 text-sm">{questionWiseReport.length || cbtExam?.questionsCount || 45} Questions</strong>
               </div>
               <div>
                 <span className="text-slate-400 block font-medium">Total Max Marks:</span>
-                <strong className="text-slate-800 text-sm">{cbtExam.totalMarks || exam.totalMarks || 100} Marks</strong>
+                <strong className="text-slate-800 text-sm">{cbtExam?.totalMarks || exam?.totalMarks || 100} Marks</strong>
               </div>
             </div>
 
