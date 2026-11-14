@@ -64,6 +64,10 @@ class FacultyService {
    * Create new faculty member directly in MongoDB
    */
   async createFaculty(data) {
+    if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(data.email).trim())) {
+      throw new Error('Invalid email format. Please provide a valid email address.');
+    }
+
     const firstName = data.firstName || '';
     const middleName = data.middleName || '';
     const lastName = data.lastName || '';
@@ -108,6 +112,10 @@ class FacultyService {
 
     if (!faculty) {
       throw new Error(`Faculty with ID ${id} not found in database.`);
+    }
+
+    if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(data.email).trim())) {
+      throw new Error('Invalid email format. Please provide a valid email address.');
     }
 
     const firstName = data.firstName !== undefined ? data.firstName : faculty.firstName;

@@ -91,4 +91,19 @@ const examUnitSchema = new mongoose.Schema(
   }
 );
 
+examUnitSchema.pre('validate', function () {
+  if (this.standard) {
+    const s = String(this.standard).toUpperCase().trim();
+    this.standard = s.includes('12') ? 'STD_12' : 'STD_11';
+  }
+  if (this.division) {
+    const d = String(this.division).toUpperCase().trim();
+    if (d === 'A' || d === 'DIVISION A') this.division = 'A';
+    else if (d === 'B' || d === 'DIVISION B') this.division = 'B';
+    else if (d === 'C' || d === 'DIVISION C') this.division = 'C';
+    else if (d === 'D' || d === 'DIVISION D') this.division = 'D';
+    else this.division = 'ALL';
+  }
+});
+
 module.exports = mongoose.model('ExamUnit', examUnitSchema);

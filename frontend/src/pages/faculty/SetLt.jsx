@@ -210,6 +210,18 @@ export default function SetLt() {
   const handleSubmitLt = async (e) => {
     e.preventDefault();
     setErrorMsg(null);
+
+    if (examDate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const chosen = new Date(examDate);
+      chosen.setHours(0, 0, 0, 0);
+      if (chosen < today) {
+        setErrorMsg('LT date cannot be scheduled in the past. Please select today or a future date. / LT ની તારીખ ભૂતકાળની હોઈ શકે નહીં.');
+        return;
+      }
+    }
+
     const validQuestions = questionsList.filter((q) => q.questionText && q.questionText.trim());
     if (validQuestions.length === 0) {
       setErrorMsg('કૃપા કરીને ઓછામાં ઓછો એક ટોપિક પસંદ કરો અથવા મેન્યુઅલ પ્રશ્ન ઉમેરો.');
@@ -493,6 +505,7 @@ export default function SetLt() {
                     type="date"
                     className="field-input w-full"
                     value={examDate}
+                    min={new Date().toISOString().split('T')[0]}
                     onChange={(e) => setExamDate(e.target.value)}
                     required
                     style={{ fontSize: 13 }}

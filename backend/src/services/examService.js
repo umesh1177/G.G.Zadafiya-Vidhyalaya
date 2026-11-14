@@ -342,6 +342,16 @@ class ExamService {
         ? 'CONDUCTED'
         : 'SCHEDULED';
 
+    if (data.examDate) {
+      const selectedDate = new Date(data.examDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      selectedDate.setHours(0, 0, 0, 0);
+      if (selectedDate < today) {
+        throw new Error('Exam date cannot be scheduled in the past. Please select today or a future date.');
+      }
+    }
+
     const examDoc = await ExamUnit.create({
       examNo: nextExamNo,
       title:

@@ -3,6 +3,7 @@ import { Link, useOutletContext } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { ltApi } from '../../services/ltApi';
 import { studentApi } from '../../services/studentApi';
+import { isSubjectAuthorized } from '../../utils/subjectAuth';
 import PaginationBar from '../../components/common/PaginationBar';
 import ViewFullLtModal from '../../components/common/ViewFullLtModal';
 import {
@@ -223,8 +224,9 @@ export default function AssistantLt() {
       const updated = await ltApi.updateLt(ltId, { status: 'CONDUCTED' });
       setAllLts(prev => prev.map(x => ((x.id || x._id) === ltId ? updated : x)));
       await loadData(true);
-      setBannerMsg(`LT #${lt.ltNo} (${lt.subject}) marked Finish and moved to Pending LT for marks entry.`);
-      setTimeout(() => setBannerMsg(null), 4000);
+      setActiveTab('pending'); // Auto switch to Pending LT so assistant can proceed
+      setBannerMsg(`✓ LT #${lt.ltNo} (${lt.subject}) marked Finished and moved to Pending LT for marks entry.`);
+      setTimeout(() => setBannerMsg(null), 4500);
     } catch (err) {
       setErrorMsg(err.message || 'Failed to finish LT');
     }
@@ -258,6 +260,16 @@ export default function AssistantLt() {
   // Toggle Enter Marks Dropdown inside Pending LT (Syllabus-chapter accordion style)
   const togglePendingMarksDropdown = async (lt) => {
     const ltId = lt.id || lt._id;
+
+    // Check assistant subject authority
+    if (!isSubjectAuthorized(user?.role, user?.subject, lt.subject)) {
+      setErrorMsg(
+        `Access restricted: As an Assistant Faculty for "${user?.subject || 'your subject'}", you can only enter marks for your assigned subjects (not for "${lt.subject}").`
+      );
+      setTimeout(() => setErrorMsg(null), 5000);
+      return;
+    }
+
     const isOpening = !expandedPendingLts[ltId];
     setExpandedPendingLts(prev => ({ ...prev, [ltId]: isOpening }));
 
@@ -1202,14 +1214,29 @@ export default function AssistantLt() {
                         >
                           View Full LT
                         </button>
-                        <button
-                          type="button"
-                          className={isOpen ? 'btn btn-ghost btn-sm' : 'btn btn-primary btn-sm'}
-                          onClick={() => togglePendingMarksDropdown(lt)}
-                        >
-                          <span>Enter Marks</span>
-                          <span style={{ marginLeft: 4 }}>{isOpen ? '▲' : '▼'}</span>
-                        </button>
+                        {(() => {
+                          const isAuthorized = isSubjectAuthorized(user?.role, user?.subject, lt.subject);
+                          return (
+                            <button
+                              type="button"
+                              className={!isAuthorized ? 'btn btn-ghost btn-sm' : isOpen ? 'btn btn-ghost btn-sm' : 'btn btn-primary btn-sm'}
+                              style={!isAuthorized ? { opacity: 0.6, cursor: 'not-allowed', color: '#64748b' } : {}}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (!isAuthorized) {
+                                  setErrorMsg(`Access restricted: As an Assistant Faculty for "${user?.subject || 'your subject'}", you can only enter marks for your assigned subjects (not for "${lt.subject}").`);
+                                  setTimeout(() => setErrorMsg(null), 5000);
+                                  return;
+                                }
+                                togglePendingMarksDropdown(lt);
+                              }}
+                              title={!isAuthorized ? `Assigned to ${lt.subject} Assistant` : 'Enter student grades'}
+                            >
+                              <span>{isAuthorized ? 'Enter Marks' : `${lt.subject} Only`}</span>
+                              <span style={{ marginLeft: 4 }}>{isAuthorized ? (isOpen ? '▲' : '▼') : '🔒'}</span>
+                            </button>
+                          );
+                        })()}
                       </div>
                     </div>
 

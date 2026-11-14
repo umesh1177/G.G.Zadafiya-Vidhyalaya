@@ -459,6 +459,14 @@ export default function ExamUnit() {
       setErrorMsg('Please choose an exam date.');
       return;
     }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const chosen = new Date(examDate);
+    chosen.setHours(0, 0, 0, 0);
+    if (chosen < today) {
+      setErrorMsg('Exam date cannot be scheduled in the past. Please select today or a future date.');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -1358,6 +1366,7 @@ export default function ExamUnit() {
                     type="date"
                     className="field-input w-full"
                     value={examDate}
+                    min={new Date().toISOString().split('T')[0]}
                     onChange={(e) => setExamDate(e.target.value)}
                     required
                   />

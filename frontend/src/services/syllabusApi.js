@@ -1,4 +1,4 @@
-import { API_ROOT } from './apiConfig';
+import { API_ROOT, authFetch } from './apiConfig';
 
 const API_BASE_URL = `${API_ROOT}/api/syllabus`;
 
@@ -20,7 +20,7 @@ export const syllabusApi = {
     if (params.role) searchParams.append('role', params.role);
 
     const url = `${API_BASE_URL}?${searchParams.toString()}`;
-    const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+    const res = await authFetch(url, { method: 'GET', cache: 'no-store' });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.message || 'Failed to fetch syllabus from server');
@@ -43,7 +43,7 @@ export const syllabusApi = {
     searchParams.append('tzOffset', String(new Date().getTimezoneOffset()));
 
     const url = `${API_BASE_URL}/principal-overview?${searchParams.toString()}`;
-    const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+    const res = await authFetch(url, { method: 'GET', cache: 'no-store' });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.message || 'Failed to fetch principal syllabus overview');
@@ -64,7 +64,7 @@ export const syllabusApi = {
     searchParams.append('tzOffset', String(new Date().getTimezoneOffset()));
 
     const url = `${API_BASE_URL}/finished-today?${searchParams.toString()}`;
-    const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+    const res = await authFetch(url, { method: 'GET', cache: 'no-store' });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.message || 'Failed to fetch today finished topics');
@@ -77,7 +77,7 @@ export const syllabusApi = {
    * Add a new chapter
    */
   async addChapter(chapterData) {
-    const res = await fetch(`${API_BASE_URL}/chapter`, {
+    const res = await authFetch(`${API_BASE_URL}/chapter`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(chapterData),
@@ -93,7 +93,7 @@ export const syllabusApi = {
    * Add a new topic or subtopic
    */
   async addTopic(topicData) {
-    const res = await fetch(`${API_BASE_URL}/topic`, {
+    const res = await authFetch(`${API_BASE_URL}/topic`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(topicData),
@@ -109,7 +109,7 @@ export const syllabusApi = {
    * Toggle status of an item (isolated to requesting facultyId in SyllabusProgress)
    */
   async toggleStatus(chapterId, itemNo, itemType, itemId = null, parentTopicNo = null, facultyMeta = {}) {
-    const res = await fetch(`${API_BASE_URL}/toggle-status`, {
+    const res = await authFetch(`${API_BASE_URL}/toggle-status`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -132,7 +132,7 @@ export const syllabusApi = {
    * Delete chapter
    */
   async deleteChapter(chapterId) {
-    const res = await fetch(`${API_BASE_URL}/chapter/${chapterId}`, {
+    const res = await authFetch(`${API_BASE_URL}/chapter/${chapterId}`, {
       method: 'DELETE',
     });
     const json = await res.json();

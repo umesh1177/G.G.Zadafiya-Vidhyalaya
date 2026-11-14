@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { hashPassword } = require('../utils/security');
 
 const facultySchema = new mongoose.Schema(
   {
@@ -56,7 +57,8 @@ const facultySchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      default: 'faculty123',
+      required: true,
+      select: true, // Need to read for auth comparison, stripped in toJSON
     },
     joiningDate: {
       type: Date,
@@ -83,6 +85,16 @@ const facultySchema = new mongoose.Schema(
       transform: (doc, ret) => {
         ret.id = ret._id.toString();
         delete ret.__v;
+        delete ret.password; // Never leak password in API JSON responses
+        return ret;
+      },
+    },
+    toObject: {
+      virtuals: true,
+      transform: (doc, ret) => {
+        ret.id = ret._id.toString();
+        delete ret.__v;
+        delete ret.password;
         return ret;
       },
     },
@@ -92,6 +104,12 @@ const facultySchema = new mongoose.Schema(
 facultySchema.pre('save', function () {
   if (!this.fullName) {
     this.fullName = [this.firstName, this.middleName, this.lastName].filter(Boolean).join(' ');
+  }
+  // Automatically hash password on save if modified and not already hashed
+  if (this.isModified('password') && this.password && typeof this.password === 'string') {
+    if (!this.password.startsWith('scrypt$')) {
+      this.password = hashPassword(this.password);
+    }
   }
 });
 

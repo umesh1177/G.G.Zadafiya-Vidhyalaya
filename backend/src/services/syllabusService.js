@@ -906,7 +906,7 @@ class SyllabusService {
    * Pure tree projection: projects Syllabus chapters using an arbitrary list of SyllabusProgress docs.
    * Does NOT read mutable node.status on shared Syllabus docs so multi-faculty isolation is strict.
    */
-  projectChapter(chapterInput, progressDocs = []) {
+  projectChapter(chapterInput, progressDocs = [], role = 'faculty') {
     const ch = toPlainObject(chapterInput);
     if (!ch) return null;
 
@@ -941,6 +941,8 @@ class SyllabusService {
       }
     }
 
+    const isPrincipal = String(role || '').toLowerCase() === 'principal';
+
     const resolveLeaf = (item, itemType, code, parentTopicNo = '') => {
       const idKey = item && item._id ? `${itemType}::${String(item._id)}` : `${itemType}::${itemType}:${code}`;
       let contributors = byKey.get(idKey);
@@ -949,10 +951,12 @@ class SyllabusService {
         contributors = byCode.get(scopedCodeKey) || byCode.get(`${itemType}::*::${code}`) || [];
       }
       const sorted = [...contributors].sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
+      const isDone = sorted.length > 0;
       return {
-        status: sorted.length > 0 ? 'done' : 'pending',
-        completedAt: sorted.length > 0 ? sorted[0].completedAt : null,
-        completedBy: sorted,
+        status: isDone ? 'done' : 'pending',
+        completedAt: isDone ? sorted[0].completedAt : null,
+        // Only Principal can see which faculty completed the topic; other faculty only see Finished status
+        completedBy: isPrincipal ? sorted : [],
       };
     };
 
@@ -1282,21 +1286,14 @@ class SyllabusService {
     if (chapterIds.length === 0) return [];
 
     let progressDocs = [];
-    if (role === 'principal') {
-      const pQuery = { chapterId: { $in: chapterIds } };
-      if (facultyId && facultyId !== 'ALL') {
-        pQuery.facultyId = facultyId;
-      }
-      progressDocs = await SyllabusProgress.find(pQuery);
-    } else if (facultyId) {
-      // Strict isolation: this faculty ONLY sees their own SyllabusProgress records
-      progressDocs = await SyllabusProgress.find({
-        chapterId: { $in: chapterIds },
-        facultyId,
-      });
+    const pQuery = { chapterId: { $in: chapterIds } };
+    if (role === 'principal' && facultyId && facultyId !== 'ALL') {
+      pQuery.facultyId = facultyId;
     }
+    // Consistent across all faculty: retrieves all completed topics so all faculty see consistent progress
+    progressDocs = await SyllabusProgress.find(pQuery);
 
-    return chapters.map((ch) => this.projectChapter(ch, progressDocs));
+    return chapters.map((ch) => this.projectChapter(ch, progressDocs, role));
   }
 
   /**
@@ -1513,7 +1510,6 @@ class SyllabusService {
     }
 
     const existingProgress = await SyllabusProgress.find({
-      facultyId: resolvedFacultyId,
       chapterId: chapter._id,
     });
 
@@ -1524,25 +1520,18 @@ class SyllabusService {
       existingSet.has(`${leaf.itemType}::${leaf.itemKey}`) ||
       existingCodeSet.has(`${leaf.itemType}::${leaf.itemCode}`);
 
-    const allDoneForThisFaculty = leaves.every(isLeafDone);
-    const now = new Date();
+    const allDone = leaves.every(isLeafDone);
+    if (allDone) {
+      throw new Error('This topic has already been marked as finished and cannot be unmarked.');
+    }
 
-    if (allDoneForThisFaculty) {
-      // Unmark only for this faculty
-      const keys = leaves.map((l) => l.itemKey);
-      const codes = leaves.map((l) => l.itemCode);
-      await SyllabusProgress.deleteMany({
-        facultyId: resolvedFacultyId,
-        chapterId: chapter._id,
-        $or: [{ itemKey: { $in: keys } }, { itemCode: { $in: codes } }],
-      });
-    } else {
-      // Mark missing target leaves as done for this faculty
-      const canonicalSubj = normalizeBaseSubject(chapter.subject);
-      const ops = leaves
-        .filter((leaf) => !isLeafDone(leaf))
-        .map((leaf) => ({
-          updateOne: {
+    const now = new Date();
+    // Mark missing target leaves as done
+    const canonicalSubj = normalizeBaseSubject(chapter.subject);
+    const ops = leaves
+      .filter((leaf) => !isLeafDone(leaf))
+      .map((leaf) => ({
+        updateOne: {
             filter: {
               facultyId: resolvedFacultyId,
               chapterId: chapter._id,
@@ -1576,13 +1565,11 @@ class SyllabusService {
           },
         }));
 
-      if (ops.length > 0) {
-        await SyllabusProgress.bulkWrite(ops);
-      }
+    if (ops.length > 0) {
+      await SyllabusProgress.bulkWrite(ops);
     }
 
     const updatedProgress = await SyllabusProgress.find({
-      facultyId: resolvedFacultyId,
       chapterId: chapter._id,
     });
     return this.projectChapter(chapter, updatedProgress);

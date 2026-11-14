@@ -99,7 +99,21 @@ const studentSchema = new mongoose.Schema(
   }
 );
 
-// Auto-compute fullName before saving if not provided
+// Auto-compute fullName before saving if not provided & normalize standard/division
+studentSchema.pre('validate', function () {
+  if (this.standard) {
+    const s = String(this.standard).toUpperCase().trim();
+    this.standard = s.includes('12') ? 'STD_12' : 'STD_11';
+  }
+  if (this.division) {
+    const d = String(this.division).toUpperCase().trim();
+    if (d === 'B' || d === 'DIVISION B') this.division = 'B';
+    else if (d === 'C' || d === 'DIVISION C') this.division = 'C';
+    else if (d === 'D' || d === 'DIVISION D') this.division = 'D';
+    else this.division = 'A';
+  }
+});
+
 studentSchema.pre('save', function () {
   if (!this.fullName) {
     this.fullName = [this.firstName, this.middleName, this.lastName].filter(Boolean).join(' ');

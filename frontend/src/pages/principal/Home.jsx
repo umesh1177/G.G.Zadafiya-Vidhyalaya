@@ -70,10 +70,33 @@ export default function PrincipalHome() {
         : null;
       const livePendingExams = examSummary?.stats?.pending ?? null;
       const liveCompletedExams = Array.isArray(examSummary?.completedExams)
-        ? examSummary.completedExams.slice(0, 5).map((e) => ({
-            subject: `${e.subject} (#${e.examNo})`,
-            classAverage: e.classAveragePercent ?? 0,
-          }))
+        ? examSummary.completedExams.slice(0, 5).map((e) => {
+            let short = e.subject;
+            const subjLower = String(e.subject || '').toLowerCase();
+            if (e.examType === 'JEE' || (subjLower.includes('phys') && subjLower.includes('chem') && subjLower.includes('math'))) {
+              short = `JEE #${e.examNo}`;
+            } else if (e.examType === 'NEET' || (subjLower.includes('phys') && subjLower.includes('chem') && subjLower.includes('bio'))) {
+              short = `NEET #${e.examNo}`;
+            } else if (e.examType === 'GUJCET') {
+              short = `GUJCET #${e.examNo}`;
+            } else if (subjLower.includes('phys')) {
+              short = `Phy #${e.examNo}`;
+            } else if (subjLower.includes('chem')) {
+              short = `Chem #${e.examNo}`;
+            } else if (subjLower.includes('math')) {
+              short = `Math #${e.examNo}`;
+            } else if (subjLower.includes('bio')) {
+              short = `Bio #${e.examNo}`;
+            } else {
+              short = `#${e.examNo}`;
+            }
+            return {
+              shortLabel: short,
+              fullName: `${e.subject} (#${e.examNo})`,
+              subject: `${e.subject} (#${e.examNo})`,
+              classAverage: e.classAveragePercent ?? 0,
+            };
+          })
         : null;
 
       setDynamicStats({
@@ -121,7 +144,7 @@ export default function PrincipalHome() {
       : [];
 
   const chartData = {
-    labels: completedExams.map(e => e.subject),
+    labels: completedExams.map(e => e.shortLabel || e.subject),
     datasets: [{
       label: 'Class Average (%)',
       data: completedExams.map(e => e.classAverage),
@@ -134,7 +157,18 @@ export default function PrincipalHome() {
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          title: (items) => {
+            const idx = items[0]?.dataIndex;
+            return completedExams[idx]?.fullName || items[0]?.label || '';
+          },
+          label: (item) => `Class Average: ${item.raw}%`
+        }
+      }
+    },
     scales: {
       y: {
         beginAtZero: true,
@@ -144,7 +178,12 @@ export default function PrincipalHome() {
       },
       x: {
         grid: { display: false },
-        ticks: { font: { family: 'Manrope', size: 11, weight: 600 } }
+        ticks: {
+          font: { family: 'Manrope', size: 11, weight: 600 },
+          maxRotation: 0,
+          minRotation: 0,
+          autoSkip: false
+        }
       }
     }
   };
@@ -212,8 +251,8 @@ export default function PrincipalHome() {
               <div className="legend-list" style={{ marginTop: 10 }}>
                 {completedExams.map((e, idx) => (
                   <div key={idx} className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, marginBottom: 4 }}>
-                    <span className="legend-dot" style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#123B5D' }}></span>
-                    {e.subject} — <strong className="num">{e.classAverage}%</strong>
+                    <span className="legend-dot" style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#123B5D', flexShrink: 0 }}></span>
+                    <span style={{ color: '#1E293B' }}>{e.fullName || e.subject}</span> — <strong className="num" style={{ color: '#123B5D' }}>{e.classAverage}%</strong>
                   </div>
                 ))}
               </div>

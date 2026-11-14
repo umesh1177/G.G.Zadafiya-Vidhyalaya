@@ -3,8 +3,9 @@ import { useParams, Link, useOutletContext, useNavigate } from 'react-router-dom
 import { useAuth } from '../../context/AuthContext';
 import { ltApi } from '../../services/ltApi';
 import { studentApi } from '../../services/studentApi';
+import { isSubjectAuthorized } from '../../utils/subjectAuth';
 import PaginationBar from '../../components/common/PaginationBar';
-import { AlertTriangle, X } from 'lucide-react';
+import { AlertTriangle, X, CheckCircle2 } from 'lucide-react';
 
 export default function LtEnterMarks() {
   const { id } = useParams();
@@ -17,6 +18,7 @@ export default function LtEnterMarks() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
+  const [successMsg, setSuccessMsg] = useState(null);
 
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 10;
@@ -118,7 +120,10 @@ export default function LtEnterMarks() {
         user?.id || user?._id,
         user?.name || user?.fullName || 'Assistant Faculty'
       );
-      navigate(`/assistant/lt/history/${id}`);
+      setSuccessMsg(`✓ LT #${ltDetail?.ltNo || ''} (${ltDetail?.subject || ''}) marks saved successfully! Redirecting...`);
+      setTimeout(() => {
+        navigate(`/assistant/lt/history/${id}`);
+      }, 1200);
     } catch (err) {
       setErrorMsg(err.message || 'Failed to save LT marks');
     } finally {
@@ -197,6 +202,13 @@ export default function LtEnterMarks() {
           ← Back to LT Overview
         </Link>
       </div>
+
+      {successMsg && (
+        <div className="banner banner-success" style={{ marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8, background: '#ecfdf5', color: '#065f46', border: '1px solid #a7f3d0', padding: '10px 14px', borderRadius: 8 }}>
+          <CheckCircle2 size={16} />
+          <span>{successMsg}</span>
+        </div>
+      )}
 
       {errorMsg && (
         <div className="banner banner-danger" style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>

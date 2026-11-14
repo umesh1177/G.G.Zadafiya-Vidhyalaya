@@ -123,6 +123,16 @@ class LtService {
         ? data.topicsCovered
         : parsedQuestions.map(q => q.sourceTopicTitle || q.questionText);
 
+    if (data.examDate) {
+      const selectedDate = new Date(data.examDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      selectedDate.setHours(0, 0, 0, 0);
+      if (selectedDate < today) {
+        throw new Error('LT date cannot be scheduled in the past. Please select today or a future date.');
+      }
+    }
+
     const examDt = data.examDate ? new Date(data.examDate) : new Date();
 
     const newLt = await LT.create({

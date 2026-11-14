@@ -93,6 +93,10 @@ class StudentService {
     const standard = data.standard || 'STD_11';
     const division = data.division || 'A';
 
+    if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(data.email).trim())) {
+      throw new Error('Invalid email format. Please provide a valid email address.');
+    }
+
     const isUnique = await this.checkRollNoUnique(rollNo, standard, division);
     if (!isUnique) {
       throw new Error(`Roll No ${rollNo} already exists in Standard ${standard.replace('STD_', '')}-${division}.`);
@@ -139,6 +143,10 @@ class StudentService {
 
     if (!student) {
       throw new Error(`Student with ID ${id} not found in database.`);
+    }
+
+    if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(data.email).trim())) {
+      throw new Error('Invalid email format. Please provide a valid email address.');
     }
 
     const rollNo = data.rollNo !== undefined ? Number(data.rollNo) : student.rollNo;

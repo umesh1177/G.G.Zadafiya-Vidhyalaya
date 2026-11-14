@@ -314,6 +314,11 @@ export default function StudentManagement() {
       return;
     }
 
+    if (studentForm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(studentForm.email.trim())) {
+      setFormError('Please enter a valid email address.');
+      return;
+    }
+
     const payload = {
       ...studentForm,
       rollNo: roll,
@@ -353,6 +358,11 @@ export default function StudentManagement() {
     const roll = Number(alumniForm.rollNo);
     if (!alumniForm.firstName || !alumniForm.lastName || !roll) {
       setFormError('First Name, Last Name, and Roll Number are required.');
+      return;
+    }
+
+    if (alumniForm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(alumniForm.email.trim())) {
+      setFormError('Please enter a valid email address.');
       return;
     }
 
@@ -406,6 +416,10 @@ export default function StudentManagement() {
     };
 
     setEditError(null);
+    if (editingStudent.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editingStudent.email.trim())) {
+      setEditError('Please enter a valid email address.');
+      return;
+    }
     try {
       const updated = await studentApi.updateStudent(targetId, payload);
       const normalizedUpdated = {

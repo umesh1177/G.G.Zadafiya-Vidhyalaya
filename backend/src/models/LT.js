@@ -1,5 +1,22 @@
 const mongoose = require('mongoose');
 
+function normalizeStandard(val) {
+  if (!val) return 'STD_11';
+  const s = String(val).toUpperCase().trim();
+  if (s.includes('12')) return 'STD_12';
+  return 'STD_11';
+}
+
+function normalizeDivision(val) {
+  if (!val) return 'ALL';
+  const s = String(val).toUpperCase().trim();
+  if (s === 'A' || s === 'DIVISION A') return 'A';
+  if (s === 'B' || s === 'DIVISION B') return 'B';
+  if (s === 'C' || s === 'DIVISION C') return 'C';
+  if (s === 'D' || s === 'DIVISION D') return 'D';
+  return 'ALL';
+}
+
 const ltQuestionSchema = new mongoose.Schema({
   questionNo: { type: Number, required: true },
   questionText: { type: String, required: true, trim: true },
@@ -16,12 +33,12 @@ const ltSchema = new mongoose.Schema(
     standard: {
       type: String,
       required: true,
-      enum: ['STD_11', 'STD_12', 'Standard 11', 'Standard 12'],
-      default: 'STD_12',
+      enum: ['STD_11', 'STD_12'],
+      default: 'STD_11',
     },
     division: {
       type: String,
-      enum: ['A', 'B', 'ALL', 'Division A', 'Division B'],
+      enum: ['A', 'B', 'C', 'D', 'ALL'],
       default: 'ALL',
     },
     streamGroup: { type: String, enum: ['GROUP_A', 'GROUP_B', 'GROUP_AB', 'ALL'], default: 'ALL' },
@@ -56,5 +73,10 @@ const ltSchema = new mongoose.Schema(
     },
   }
 );
+
+ltSchema.pre('validate', function () {
+  if (this.standard) this.standard = normalizeStandard(this.standard);
+  if (this.division) this.division = normalizeDivision(this.division);
+});
 
 module.exports = mongoose.model('LT', ltSchema);

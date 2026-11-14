@@ -4,7 +4,7 @@
  * Provides automatic fallback to local persistence if backend is offline.
  */
 
-import { API_ROOT } from './apiConfig';
+import { API_ROOT, authFetch } from './apiConfig';
 
 const API_BASE_URL = `${API_ROOT}/api/faculty`;
 
@@ -22,7 +22,7 @@ export const facultyApi = {
     if (filters.sortOrder) params.append('sortOrder', filters.sortOrder);
 
     const url = `${API_BASE_URL}?${params.toString()}`;
-    const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+    const res = await authFetch(url, { method: 'GET', cache: 'no-store' });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.message || 'Failed to fetch faculty from server');
@@ -38,7 +38,7 @@ export const facultyApi = {
    * Fetch single faculty details by ID
    */
   async getFacultyById(id) {
-    const res = await fetch(`${API_BASE_URL}/${id}`, { method: 'GET', cache: 'no-store' });
+    const res = await authFetch(`${API_BASE_URL}/${id}`, { method: 'GET', cache: 'no-store' });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.message || 'Failed to fetch faculty details');
@@ -51,7 +51,7 @@ export const facultyApi = {
    * Create new faculty member
    */
   async createFaculty(facultyData) {
-    const res = await fetch(API_BASE_URL, {
+    const res = await authFetch(API_BASE_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(facultyData),
@@ -67,7 +67,7 @@ export const facultyApi = {
    * Update faculty member
    */
   async updateFaculty(id, facultyData) {
-    const res = await fetch(`${API_BASE_URL}/${id}`, {
+    const res = await authFetch(`${API_BASE_URL}/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(facultyData),
@@ -83,7 +83,7 @@ export const facultyApi = {
    * Delete faculty member
    */
   async deleteFaculty(id) {
-    const res = await fetch(`${API_BASE_URL}/${id}`, { method: 'DELETE' });
+    const res = await authFetch(`${API_BASE_URL}/${id}`, { method: 'DELETE' });
     const json = await res.json();
     if (!res.ok) {
       throw new Error(json.message || 'Failed to delete faculty member');
@@ -95,7 +95,7 @@ export const facultyApi = {
    * Get faculty stats
    */
   async getStatistics() {
-    const res = await fetch(`${API_BASE_URL}/statistics`, { method: 'GET', cache: 'no-store' });
+    const res = await authFetch(`${API_BASE_URL}/statistics`, { method: 'GET', cache: 'no-store' });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.message || 'Failed to fetch statistics');

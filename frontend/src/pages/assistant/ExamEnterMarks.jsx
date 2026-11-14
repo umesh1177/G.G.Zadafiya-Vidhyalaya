@@ -195,9 +195,12 @@ export default function ExamEnterMarks() {
       }));
       setSubmittedMsg(
         isGUJCET
-          ? `Group ${currentGroupKey} (${currentGroupKey === 'A' ? 'PCM' : 'PCB'}) marks saved & published!`
-          : `Exam #${savedRes.exam?.examNo} marks saved & published to Completed Exam!`
+          ? `✓ Group ${currentGroupKey} (${currentGroupKey === 'A' ? 'PCM' : 'PCB'}) marks saved successfully! Redirecting...`
+          : `✓ Exam #${savedRes.exam?.examNo} marks saved & published successfully! Redirecting...`
       );
+      setTimeout(() => {
+        navigate('/assistant/exam');
+      }, 1500);
     } catch (err) {
       setErrorMsg(err.message || 'Failed to save exam marks');
     } finally {

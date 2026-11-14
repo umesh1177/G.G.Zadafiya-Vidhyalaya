@@ -1,10 +1,10 @@
-import { API_ROOT } from './apiConfig';
+import { API_ROOT, authFetch } from './apiConfig';
 
 const API_BASE_URL = `${API_ROOT}/api/reports`;
 
 export const reportApi = {
   async createFacultyReport(payload) {
-    const res = await fetch(`${API_BASE_URL}/faculty`, {
+    const res = await authFetch(`${API_BASE_URL}/faculty`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -27,7 +27,7 @@ export const reportApi = {
 
     const qs = sp.toString();
     const url = qs ? `${API_BASE_URL}/faculty?${qs}` : `${API_BASE_URL}/faculty`;
-    const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+    const res = await authFetch(url, { method: 'GET', cache: 'no-store' });
     const json = await res.json();
     if (!res.ok) {
       throw new Error(json.message || 'Failed to fetch faculty reports');
@@ -36,7 +36,7 @@ export const reportApi = {
   },
 
   async acknowledgeFacultyReport(id) {
-    const res = await fetch(`${API_BASE_URL}/faculty/${id}/acknowledge`, {
+    const res = await authFetch(`${API_BASE_URL}/faculty/${id}/acknowledge`, {
       method: 'PUT',
     });
     const json = await res.json();

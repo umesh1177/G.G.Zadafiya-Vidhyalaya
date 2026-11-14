@@ -1,4 +1,4 @@
-import { API_ROOT } from './apiConfig';
+import { API_ROOT, authFetch } from './apiConfig';
 
 const API_BASE_URL = `${API_ROOT}/api/notices`;
 const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024; // 10 MB
@@ -47,7 +47,7 @@ export function getNoticeAttachmentUrl(noticeId, attachmentId, download = false)
 
 export const noticeApi = {
   async getRecipients() {
-    const res = await fetch(`${API_BASE_URL}/recipients`, { method: 'GET', cache: 'no-store' });
+    const res = await authFetch(`${API_BASE_URL}/recipients`, { method: 'GET', cache: 'no-store' });
     const json = await res.json();
     if (!res.ok) throw new Error(json.message || 'Failed to load faculty list');
     return json.data || [];
@@ -65,7 +65,7 @@ export const noticeApi = {
     if (params.search) sp.append('search', params.search);
 
     const qs = sp.toString();
-    const res = await fetch(qs ? `${API_BASE_URL}?${qs}` : API_BASE_URL, {
+    const res = await authFetch(qs ? `${API_BASE_URL}?${qs}` : API_BASE_URL, {
       method: 'GET',
       cache: 'no-store',
     });
@@ -75,7 +75,7 @@ export const noticeApi = {
   },
 
   async createNotice(payload) {
-    const res = await fetch(API_BASE_URL, {
+    const res = await authFetch(API_BASE_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -86,7 +86,7 @@ export const noticeApi = {
   },
 
   async deleteNotice(id) {
-    const res = await fetch(`${API_BASE_URL}/${id}`, { method: 'DELETE' });
+    const res = await authFetch(`${API_BASE_URL}/${id}`, { method: 'DELETE' });
     const json = await res.json();
     if (!res.ok) throw new Error(json.message || 'Failed to delete notice');
     return true;

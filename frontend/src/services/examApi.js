@@ -1,4 +1,4 @@
-import { API_ROOT } from './apiConfig';
+import { API_ROOT, authFetch } from './apiConfig';
 
 const API_BASE_URL = `${API_ROOT}/api/exams`;
 const MAX_PDF_SIZE_BYTES = 15 * 1024 * 1024;
@@ -48,7 +48,7 @@ export const examApi = {
 
     const qs = searchParams.toString();
     const url = qs ? `${API_BASE_URL}?${qs}` : API_BASE_URL;
-    const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+    const res = await authFetch(url, { method: 'GET', cache: 'no-store' });
     const json = await res.json();
     if (!res.ok) {
       throw new Error(json.message || 'Failed to fetch exam records');
@@ -57,7 +57,7 @@ export const examApi = {
   },
 
   async getExamById(idOrNo) {
-    const res = await fetch(`${API_BASE_URL}/${idOrNo}`, { method: 'GET', cache: 'no-store' });
+    const res = await authFetch(`${API_BASE_URL}/${idOrNo}`, { method: 'GET', cache: 'no-store' });
     const json = await res.json();
     if (!res.ok) {
       throw new Error(json.message || 'Exam record not found');
@@ -66,7 +66,7 @@ export const examApi = {
   },
 
   async createExam(payload) {
-    const res = await fetch(API_BASE_URL, {
+    const res = await authFetch(API_BASE_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -79,7 +79,7 @@ export const examApi = {
   },
 
   async updateExam(idOrNo, payload) {
-    const res = await fetch(`${API_BASE_URL}/${idOrNo}`, {
+    const res = await authFetch(`${API_BASE_URL}/${idOrNo}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -92,7 +92,7 @@ export const examApi = {
   },
 
   async markExamCompleted(idOrNo) {
-    const res = await fetch(`${API_BASE_URL}/${idOrNo}/complete`, {
+    const res = await authFetch(`${API_BASE_URL}/${idOrNo}/complete`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
     });
@@ -104,7 +104,7 @@ export const examApi = {
   },
 
   async uploadQuestionPaper(idOrNo, pdfPayload) {
-    const res = await fetch(`${API_BASE_URL}/${idOrNo}/question-paper`, {
+    const res = await authFetch(`${API_BASE_URL}/${idOrNo}/question-paper`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(pdfPayload),
@@ -117,7 +117,7 @@ export const examApi = {
   },
 
   async deleteExam(idOrNo) {
-    const res = await fetch(`${API_BASE_URL}/${idOrNo}`, {
+    const res = await authFetch(`${API_BASE_URL}/${idOrNo}`, {
       method: 'DELETE',
     });
     const json = await res.json();
@@ -132,7 +132,7 @@ export const examApi = {
     if (group) searchParams.append('group', group);
     if (includeAllStd) searchParams.append('includeAllStd', 'true');
     const url = `${API_BASE_URL}/${idOrNo}/marks?${searchParams.toString()}`;
-    const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+    const res = await authFetch(url, { method: 'GET', cache: 'no-store' });
     const json = await res.json();
     if (!res.ok) {
       throw new Error(json.message || 'Failed to fetch exam marks');
@@ -141,7 +141,7 @@ export const examApi = {
   },
 
   async saveExamMarks(idOrNo, { group = 'A', marks = [], assistantFacultyId = null, assistantName = '' }) {
-    const res = await fetch(`${API_BASE_URL}/${idOrNo}/marks`, {
+    const res = await authFetch(`${API_BASE_URL}/${idOrNo}/marks`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ group, marks, assistantFacultyId, assistantName }),
@@ -154,7 +154,7 @@ export const examApi = {
   },
 
   async updateStudentMark(idOrNo, studentKey, payload) {
-    const res = await fetch(`${API_BASE_URL}/${idOrNo}/marks/${studentKey}`, {
+    const res = await authFetch(`${API_BASE_URL}/${idOrNo}/marks/${studentKey}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -173,7 +173,7 @@ export const examApi = {
     if (params.subject && params.subject !== 'ALL') sp.append('subject', params.subject);
     const qs = sp.toString();
     const url = qs ? `${API_BASE_URL}/analytics/summary?${qs}` : `${API_BASE_URL}/analytics/summary`;
-    const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+    const res = await authFetch(url, { method: 'GET', cache: 'no-store' });
     const json = await res.json();
     if (!res.ok) {
       throw new Error(json.message || 'Failed to fetch exam analysis summary');
@@ -186,7 +186,7 @@ export const examApi = {
     if (group && group !== 'ALL') sp.append('group', group);
     const qs = sp.toString();
     const url = qs ? `${API_BASE_URL}/${idOrNo}/analytics?${qs}` : `${API_BASE_URL}/${idOrNo}/analytics`;
-    const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+    const res = await authFetch(url, { method: 'GET', cache: 'no-store' });
     const json = await res.json();
     if (!res.ok) {
       throw new Error(json.message || 'Failed to load detailed exam analytics');
@@ -195,7 +195,7 @@ export const examApi = {
   },
 
   async retrainExamModel() {
-    const res = await fetch(`${API_BASE_URL}/ml/retrain`, {
+    const res = await authFetch(`${API_BASE_URL}/ml/retrain`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
     });

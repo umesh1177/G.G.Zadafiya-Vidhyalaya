@@ -1,18 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { X, LogOut, GraduationCap } from 'lucide-react';
+import { X, LogOut, GraduationCap, AlertCircle } from 'lucide-react';
 
 export default function Sidebar({ isOpen, onClose }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  const handleLogout = (e) => {
+  const handleLogoutClick = (e) => {
     e.preventDefault();
-    if (window.confirm('Sign out from G.G. Zadafiya Vidhyalaya Portal?')) {
-      logout();
-      navigate('/login');
-    }
+    setShowLogoutModal(true);
+  };
+
+  const handleConfirmLogout = () => {
+    setShowLogoutModal(false);
+    logout();
+    navigate('/login');
   };
 
   const role = user?.role || 'faculty';
@@ -376,16 +380,88 @@ export default function Sidebar({ isOpen, onClose }) {
 
         {/* Bottom Sign Out Area */}
         <div className="sidebar__bottom">
-          <button onClick={handleLogout} className="sidebar__signout-btn" type="button">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-              <polyline points="16 17 21 12 16 7" />
-              <line x1="21" y1="12" x2="9" y2="12" />
-            </svg>
+          <button onClick={handleLogoutClick} className="sidebar__signout-btn" type="button">
+            <LogOut size={16} />
             <span>Sign Out</span>
           </button>
         </div>
       </aside>
+
+      {/* Modern Confirmation Modal for Sign Out (replaces window.confirm) */}
+      {showLogoutModal && (
+        <div
+          className="modal-overlay is-open"
+          style={{ zIndex: 10000 }}
+          onClick={(e) => {
+            if (e.target.classList.contains('modal-overlay')) setShowLogoutModal(false);
+          }}
+        >
+          <div className="modal-box" style={{ maxWidth: 420, width: '90%', background: '#FFFFFF', borderRadius: 14, boxShadow: '0 20px 40px rgba(0,0,0,0.18)', border: '1px solid #E2E8F0', animation: 'modalSlideUp 0.2s ease-out' }}>
+            <div className="modal-box__head" style={{ borderBottom: '1px solid #E2E8F0', paddingBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{ width: 38, height: 38, borderRadius: '50%', background: '#FEE2E2', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#DC2626' }}>
+                  <LogOut size={18} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#0F172A' }}>Confirm Sign Out</h3>
+                  <div style={{ fontSize: '0.8rem', color: '#64748B' }}>G.G. Zadafiya Vidhyalaya Portal</div>
+                </div>
+              </div>
+              <button
+                className="modal-close"
+                type="button"
+                onClick={() => setShowLogoutModal(false)}
+                aria-label="Close"
+                style={{ color: '#64748B' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ padding: '18px 0 20px', color: '#334155', fontSize: '0.94rem', lineHeight: 1.5 }}>
+              <p style={{ margin: '0 0 12px', fontWeight: 500, color: '#1E293B' }}>
+                Are you sure you want to sign out from your academic session?
+              </p>
+              {user?.name && (
+                <div style={{ background: '#F8FAFC', borderRadius: 8, padding: '10px 14px', fontSize: '0.86rem', color: '#475569', border: '1px solid #E2E8F0' }}>
+                  Signed in as: <strong style={{ color: '#0F172A' }}>{user.name}</strong> • <span style={{ textTransform: 'capitalize', fontWeight: 600, color: '#123B5D' }}>{user.role}</span>
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, paddingTop: 14, borderTop: '1px solid #E2E8F0' }}>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                onClick={() => setShowLogoutModal(false)}
+                style={{ padding: '8px 16px', color: '#475569', border: '1px solid #CBD5E1' }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={handleConfirmLogout}
+                style={{
+                  padding: '8px 18px',
+                  background: '#dc2626',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: 6,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                }}
+              >
+                <LogOut size={15} />
+                <span>Sign Out</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

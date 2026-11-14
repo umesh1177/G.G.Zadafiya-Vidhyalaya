@@ -4,7 +4,7 @@
  * Provides automatic fallback to DataContext mock data if backend is offline.
  */
 
-import { API_ROOT } from './apiConfig';
+import { API_ROOT, authFetch } from './apiConfig';
 
 const API_BASE_URL = `${API_ROOT}/api/students`;
 
@@ -23,7 +23,7 @@ export const studentApi = {
     if (filters.sortOrder) params.append('sortOrder', filters.sortOrder);
 
     const url = `${API_BASE_URL}?${params.toString()}`;
-    const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+    const res = await authFetch(url, { method: 'GET', cache: 'no-store' });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.message || 'Failed to fetch students from database');
@@ -42,7 +42,7 @@ export const studentApi = {
    * Fetch single student details by ID
    */
   async getStudentById(id) {
-    const res = await fetch(`${API_BASE_URL}/${id}`, { method: 'GET', cache: 'no-store' });
+    const res = await authFetch(`${API_BASE_URL}/${id}`, { method: 'GET', cache: 'no-store' });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.message || 'Failed to fetch student details');
@@ -55,7 +55,7 @@ export const studentApi = {
    * Create new student record (with unique Roll No check)
    */
   async createStudent(studentData) {
-    const res = await fetch(API_BASE_URL, {
+    const res = await authFetch(API_BASE_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(studentData),
@@ -71,7 +71,7 @@ export const studentApi = {
    * Update student record
    */
   async updateStudent(id, studentData) {
-    const res = await fetch(`${API_BASE_URL}/${id}`, {
+    const res = await authFetch(`${API_BASE_URL}/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(studentData),
@@ -87,7 +87,7 @@ export const studentApi = {
    * Delete student record
    */
   async deleteStudent(id) {
-    const res = await fetch(`${API_BASE_URL}/${id}`, { method: 'DELETE' });
+    const res = await authFetch(`${API_BASE_URL}/${id}`, { method: 'DELETE' });
     const json = await res.json();
     if (!res.ok) {
       throw new Error(json.message || 'Failed to delete student from database');
@@ -99,7 +99,7 @@ export const studentApi = {
    * Fetch student statistics (Active total, Group A, Group B, Group AB, Alumni)
    */
   async getStatistics() {
-    const res = await fetch(`${API_BASE_URL}/statistics`, { method: 'GET', cache: 'no-store' });
+    const res = await authFetch(`${API_BASE_URL}/statistics`, { method: 'GET', cache: 'no-store' });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new Error(err.message || 'Failed to fetch statistics');

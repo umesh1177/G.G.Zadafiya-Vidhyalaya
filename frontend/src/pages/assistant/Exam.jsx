@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { examApi, readPdfFileAsPayload, getQuestionPaperUrl } from '../../services/examApi';
+import { isSubjectAuthorized } from '../../utils/subjectAuth';
 import PaginationBar from '../../components/common/PaginationBar';
 import { X } from 'lucide-react';
 
@@ -356,6 +357,18 @@ export default function AssistantExam() {
     e.preventDefault();
     setErrorMsg(null);
     setBannerMsg(null);
+
+    if (createForm.examDate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const chosen = new Date(createForm.examDate);
+      chosen.setHours(0, 0, 0, 0);
+      if (chosen < today) {
+        setErrorMsg('Exam date cannot be scheduled in the past. Please select today or a future date.');
+        return;
+      }
+    }
+
     setIsCreating(true);
     try {
       const isMulti = ['JEE', 'NEET', 'GUJCET'].includes(createForm.examType);
@@ -747,12 +760,28 @@ export default function AssistantExam() {
                           <span className="chip chip-warning">Awaiting Marks</span>
                         </td>
                         <td>
-                          <Link
-                            to={`/assistant/exam/enter-marks/${exId}`}
-                            className="btn btn-primary btn-sm"
-                          >
-                            Enter Marks
-                          </Link>
+                          {(() => {
+                            const isAuth = isSubjectAuthorized(user?.role, user?.subject, ex.subject);
+                            if (!isAuth) {
+                              return (
+                                <span
+                                  className="chip chip-neutral"
+                                  style={{ fontSize: 11, cursor: 'not-allowed', color: '#64748b' }}
+                                  title={`Only ${ex.subject} faculty can enter marks`}
+                                >
+                                  🔒 {ex.subject} Only
+                                </span>
+                              );
+                            }
+                            return (
+                              <Link
+                                to={`/assistant/exam/enter-marks/${exId}`}
+                                className="btn btn-primary btn-sm"
+                              >
+                                Enter Marks
+                              </Link>
+                            );
+                          })()}
                         </td>
                       </tr>
                     );
@@ -986,6 +1015,7 @@ export default function AssistantExam() {
                     type="date"
                     className="field-input w-full"
                     value={createForm.examDate}
+                    min={new Date().toISOString().split('T')[0]}
                     onChange={(e) =>
                       setCreateForm((prev) => ({ ...prev, examDate: e.target.value }))
                     }

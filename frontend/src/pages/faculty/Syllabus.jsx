@@ -55,6 +55,7 @@ export default function FacultySyllabus() {
   // Add Modals
   const [showAddChapterModal, setShowAddChapterModal] = useState(false);
   const [showAddTopicModal, setShowAddTopicModal] = useState(false);
+  const [confirmFinishTarget, setConfirmFinishTarget] = useState(null);
 
   // Form: Add Chapter
   const [newChapterForm, setNewChapterForm] = useState({
@@ -495,26 +496,28 @@ export default function FacultySyllabus() {
   const FinishButton = ({ isDone, onClick, compact = false }) => (
     <button
       type="button"
+      disabled={isDone}
       onClick={(e) => {
         e.stopPropagation();
-        onClick();
+        if (!isDone) onClick();
       }}
       style={{
         padding: compact ? '3px 9px' : '5px 12px',
         borderRadius: 7,
         fontSize: compact ? 11.5 : 12,
         fontWeight: 700,
-        cursor: 'pointer',
+        cursor: isDone ? 'default' : 'pointer',
         display: 'inline-flex',
         alignItems: 'center',
         gap: 5,
         background: isDone ? '#DCFCE7' : '#E8F1F8',
         color: isDone ? '#15803D' : '#123B5D',
         border: isDone ? '1.5px solid #86EFAC' : '1.5px solid #C8DBED',
+        opacity: isDone ? 0.95 : 1,
         transition: 'all 0.15s ease',
         whiteSpace: 'nowrap',
       }}
-      title={isDone ? 'Completed — click to mark pending' : 'Click to mark completed by faculty'}
+      title={isDone ? 'Finished (Cannot be undone)' : 'Click to mark finished'}
     >
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
         {isDone ? (
@@ -1155,7 +1158,7 @@ export default function FacultySyllabus() {
                                 <FinishButton
                                   compact
                                   isDone={topicDone}
-                                  onClick={() => handleToggleFinish(chKey, topic.topicNo, 'TOPIC', topic._id)}
+                                  onClick={() => setConfirmFinishTarget({ chapterId: chKey, itemNo: topic.topicNo, itemType: 'TOPIC', itemId: topic._id, parentTopicNo: null, title: topic.title || topic.topicNo })}
                                 />
                               </div>
                             </div>
@@ -1281,7 +1284,7 @@ export default function FacultySyllabus() {
                                             <FinishButton
                                               compact
                                               isDone={stDone}
-                                              onClick={() => handleToggleFinish(chKey, st.subtopicNo, 'SUBTOPIC', st._id, topic.topicNo)}
+                                              onClick={() => setConfirmFinishTarget({ chapterId: chKey, itemNo: st.subtopicNo, itemType: 'SUBTOPIC', itemId: st._id, parentTopicNo: topic.topicNo, title: st.title || st.subtopicNo })}
                                             />
                                           </div>
                                         </div>
@@ -1363,7 +1366,7 @@ export default function FacultySyllabus() {
                                                     <FinishButton
                                                       compact
                                                       isDone={sstDone}
-                                                      onClick={() => handleToggleFinish(chKey, sst.subSubtopicNo, 'SUBSUBTOPIC', sst._id, topic.topicNo)}
+                                                      onClick={() => setConfirmFinishTarget({ chapterId: chKey, itemNo: sst.subSubtopicNo, itemType: 'SUBSUBTOPIC', itemId: sst._id, parentTopicNo: topic.topicNo, title: sst.title || sst.subSubtopicNo })}
                                                     />
                                                   </div>
                                                 </div>
@@ -1601,7 +1604,7 @@ export default function FacultySyllabus() {
                                     <FinishButton
                                       compact
                                       isDone={exDone}
-                                      onClick={() => handleToggleFinish(chKey, ex.exampleNo, 'EXAMPLE', ex._id, ex.parentTopicNo)}
+                                      onClick={() => setConfirmFinishTarget({ chapterId: chKey, itemNo: ex.exampleNo, itemType: 'EXAMPLE', itemId: ex._id, parentTopicNo: ex.parentTopicNo, title: ex.title || ex.exampleNo })}
                                     />
                                   </div>
                                 </div>
@@ -1834,7 +1837,7 @@ export default function FacultySyllabus() {
                                     <FinishButton
                                       compact
                                       isDone={swDone}
-                                      onClick={() => handleToggleFinish(chKey, sw.exerciseNo, 'SWADHYAY', sw._id, sw.parentTopicNo)}
+                                      onClick={() => setConfirmFinishTarget({ chapterId: chKey, itemNo: sw.exerciseNo, itemType: 'SWADHYAY', itemId: sw._id, parentTopicNo: sw.parentTopicNo, title: sw.title || sw.exerciseNo })}
                                     />
                                   </div>
                                 </div>
@@ -2071,13 +2074,7 @@ export default function FacultySyllabus() {
                 </div>
                 <FinishButton
                   isDone={viewingItem.status === 'done'}
-                  onClick={() => handleToggleFinish(
-                    viewingItem.chapterId,
-                    viewingItem.rawNo || viewingItem.code,
-                    viewingItem.itemType,
-                    viewingItem.itemId,
-                    viewingItem.parentTopicNo
-                  )}
+                  onClick={() => setConfirmFinishTarget({ chapterId: viewingItem.chapterId, itemNo: viewingItem.rawNo || viewingItem.code, itemType: viewingItem.itemType, itemId: viewingItem.itemId, parentTopicNo: viewingItem.parentTopicNo, title: viewingItem.title || viewingItem.code })}
                 />
               </div>
             </div>
@@ -2402,6 +2399,48 @@ export default function FacultySyllabus() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Finish Modal */}
+      {confirmFinishTarget && (
+        <div className="modal-overlay is-open" onClick={(e) => { if (e.target.classList.contains('modal-overlay')) setConfirmFinishTarget(null); }}>
+          <div className="modal-box" style={{ maxWidth: 460, background: '#FFFFFF', borderRadius: 14, border: '1px solid #E2E8F0', padding: 0, overflow: 'hidden', boxShadow: '0 20px 40px rgba(0,0,0,0.18)' }}>
+            <div style={{ background: '#123B5D', color: '#FFFFFF', padding: '16px 20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#FFFFFF' }}>Confirm Topic Completion</h3>
+              <button type="button" style={{ color: '#FFFFFF', background: 'none', border: 'none', cursor: 'pointer', fontSize: 18, lineHeight: 1 }} onClick={() => setConfirmFinishTarget(null)}>x</button>
+            </div>
+            <div style={{ padding: '22px 24px' }}>
+              <p style={{ margin: '0 0 12px', fontSize: 14.5, color: '#0F172A', fontWeight: 600 }}>
+                Are you sure you want to mark this item as Finished?
+              </p>
+              <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 8, padding: '12px 14px', marginBottom: 16, fontSize: 13, color: '#334155' }}>
+                <div><strong>Item:</strong> {confirmFinishTarget.itemNo}{confirmFinishTarget.title && confirmFinishTarget.title !== confirmFinishTarget.itemNo ? ' — ' + confirmFinishTarget.title : ''}</div>
+                <div style={{ marginTop: 4, color: '#64748B', fontSize: 12 }}>Type: {confirmFinishTarget.itemType}</div>
+              </div>
+              <div style={{ background: '#FEF3C7', border: '1px solid #FCD34D', borderRadius: 8, padding: '10px 14px', fontSize: 12.5, color: '#92400E', display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 20 }}>
+                <AlertTriangle size={18} style={{ flexShrink: 0, color: '#D97706', marginTop: 1 }} />
+                <span><strong>Important:</strong> Once marked as finished, this action cannot be undone or unmarked.</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+                <button type="button" className="btn btn-ghost" onClick={() => setConfirmFinishTarget(null)} style={{ border: '1px solid #CBD5E1', color: '#475569' }}>
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  style={{ background: '#16A34A', borderColor: '#16A34A', color: '#FFFFFF', fontWeight: 700 }}
+                  onClick={async () => {
+                    const target = confirmFinishTarget;
+                    setConfirmFinishTarget(null);
+                    await handleToggleFinish(target.chapterId, target.itemNo, target.itemType, target.itemId, target.parentTopicNo);
+                  }}
+                >
+                  Yes, Mark Finished
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

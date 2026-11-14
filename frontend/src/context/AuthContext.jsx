@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState } from 'react';
-import { API_ROOT } from '../services/apiConfig';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { API_ROOT, authFetch } from '../services/apiConfig';
 
 const AuthContext = createContext(null);
 
@@ -21,247 +21,107 @@ function normalizeStoredUser(raw) {
   };
 }
 
-export const CREDENTIALS = {
-  admin: {
-    password: 'admin123',
-    role: 'principal',
-    name: 'Principal',
-    email: 'principal@ggzv.edu.in',
-    school: SCHOOL_NAME,
-    initials: 'PR',
-    redirect: '/principal',
-  },
-  faculty: {
-    id: 'FAC101',
-    empCode: 'FAC101',
-    password: 'faculty123',
-    role: 'faculty',
-    name: 'Pal Umesh',
-    email: 'umesh.pal@ggzv.edu.in',
-    subject: 'Physics',
-    qualification: 'M.Sc. Physics (Gold Medalist), B.Ed.',
-    experience: '8 Years',
-    contactNo: '+91 98765 43210',
-    school: SCHOOL_NAME,
-    initials: 'PU',
-    redirect: '/faculty',
-  },
-  chemboard: {
-    id: 'FAC102',
-    empCode: 'FAC102',
-    password: 'faculty123',
-    role: 'faculty',
-    name: 'Dr. Nisha R. Rao',
-    email: 'nisha.rao@ggzv.edu.in',
-    subject: 'Chemistry (Board)',
-    qualification: 'Ph.D. Organic Chemistry',
-    experience: '7 Years',
-    contactNo: '+91 99887 11002',
-    school: SCHOOL_NAME,
-    initials: 'NR',
-    redirect: '/faculty',
-  },
-  chemjee: {
-    id: 'FAC108',
-    empCode: 'FAC108',
-    password: 'faculty123',
-    role: 'faculty',
-    name: 'Prof. Harsh D. Patel',
-    email: 'harsh.patel@ggzv.edu.in',
-    subject: 'Chemistry (JEE)',
-    qualification: 'M.Tech. Chemical, B.Ed.',
-    experience: '6 Years',
-    contactNo: '+91 99887 11008',
-    school: SCHOOL_NAME,
-    initials: 'HP',
-    redirect: '/faculty',
-  },
-  maths: {
-    id: 'FAC103',
-    empCode: 'FAC103',
-    password: 'faculty123',
-    role: 'faculty',
-    name: 'Prof. Ketan M. Joshi',
-    email: 'ketan.j@ggzv.edu.in',
-    subject: 'Mathematics',
-    qualification: 'M.Sc. Mathematics, B.Ed.',
-    experience: '9 Years',
-    contactNo: '+91 99887 11003',
-    school: SCHOOL_NAME,
-    initials: 'KJ',
-    redirect: '/faculty',
-  },
-  fac103: {
-    id: 'FAC103',
-    empCode: 'FAC103',
-    password: 'faculty123',
-    role: 'faculty',
-    name: 'Prof. Ketan M. Joshi',
-    email: 'ketan.j@ggzv.edu.in',
-    subject: 'Mathematics',
-    qualification: 'M.Sc. Mathematics, B.Ed.',
-    experience: '9 Years',
-    contactNo: '+91 99887 11003',
-    school: SCHOOL_NAME,
-    initials: 'KJ',
-    redirect: '/faculty',
-  },
-  biology: {
-    id: 'FAC104',
-    empCode: 'FAC104',
-    password: 'faculty123',
-    role: 'faculty',
-    name: 'Dr. Heena S. Patel',
-    email: 'heena.p@ggzv.edu.in',
-    subject: 'Biology',
-    qualification: 'Ph.D. Life Sciences, B.Ed.',
-    experience: '10 Years',
-    contactNo: '+91 99887 11004',
-    school: SCHOOL_NAME,
-    initials: 'HP',
-    redirect: '/faculty',
-  },
-  fac104: {
-    id: 'FAC104',
-    empCode: 'FAC104',
-    password: 'faculty123',
-    role: 'faculty',
-    name: 'Dr. Heena S. Patel',
-    email: 'heena.p@ggzv.edu.in',
-    subject: 'Biology',
-    qualification: 'Ph.D. Life Sciences, B.Ed.',
-    experience: '10 Years',
-    contactNo: '+91 99887 11004',
-    school: SCHOOL_NAME,
-    initials: 'HP',
-    redirect: '/faculty',
-  },
-  assistant: {
-    id: 'FAC105',
-    empCode: 'FAC105',
-    password: 'asst123',
-    role: 'assistant',
-    name: 'Rajiv Mehta',
-    email: 'rajiv.mehta@ggzv.edu.in',
-    subject: 'Lab — Physics/Chemistry',
-    qualification: 'B.Sc. Chemistry, DMLT',
-    experience: '5 Years',
-    contactNo: '+91 98222 33445',
-    school: SCHOOL_NAME,
-    initials: 'RM',
-    redirect: '/assistant',
-  },
-  student: {
-    password: 'student123',
-    role: 'student',
-    name: 'Umesh Pal',
-    email: 'umesh.student@ggzv.edu.in',
-    standard: 'STD_11',
-    division: 'A',
-    streamGroup: 'GROUP_A',
-    contactNo: '+91 99000 12345',
-    school: SCHOOL_NAME,
-    initials: 'UP',
-    redirect: '/student',
-  },
-};
-
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     try {
       const saved = localStorage.getItem('sms_auth_user');
       if (!saved) return null;
-      const parsed = JSON.parse(saved);
-      const normalized = normalizeStoredUser(parsed);
-      if (normalized && normalized.school !== parsed?.school) {
-        localStorage.setItem('sms_auth_user', JSON.stringify(normalized));
-      }
-      return normalized;
+      return normalizeStoredUser(JSON.parse(saved));
     } catch {
       return null;
     }
   });
+
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Validate session token with backend on application startup
+  useEffect(() => {
+    let isMounted = true;
+    const verifySession = async () => {
+      const token = localStorage.getItem('sms_auth_token');
+      if (!token) {
+        if (isMounted) setIsLoading(false);
+        return;
+      }
+
+      try {
+        const res = await authFetch(`${API_ROOT}/api/auth/me`, {
+          method: 'GET',
+          cache: 'no-store',
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.user && isMounted) {
+            const normalized = normalizeStoredUser(data.user);
+            setUser(normalized);
+            localStorage.setItem('sms_auth_user', JSON.stringify(normalized));
+          }
+        } else if (res.status === 401 || res.status === 403) {
+          // Token expired or invalidated
+          if (isMounted) {
+            setUser(null);
+            localStorage.removeItem('sms_auth_user');
+            localStorage.removeItem('sms_auth_token');
+          }
+        }
+      } catch (err) {
+        // If server is temporarily unreachable, retain local session but do not fabricate data
+        console.warn('Session verification ping error:', err.message);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+
+    verifySession();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const login = async (identifier, password) => {
     const trimmedId = (identifier || '').trim();
     const trimmedPass = (password || '').trim();
 
     if (!trimmedId || !trimmedPass) {
-      return { success: false, error: 'Please enter both username/email and password.' };
+      return { success: false, error: 'Please enter both username/email/employee code and password.' };
     }
 
-    // 1. Try Live MongoDB Backend Authentication
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3500);
-
       const res = await fetch(`${API_ROOT}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identifier: trimmedId, password: trimmedPass }),
-        signal: controller.signal,
       });
 
-      clearTimeout(timeoutId);
-
       const data = await res.json().catch(() => ({}));
+
       if (res.ok && data.success && data.user) {
-        const u = normalizeStoredUser(data.user);
-        setUser(u);
-        localStorage.setItem('sms_auth_user', JSON.stringify(u));
-        return { success: true, redirect: u.redirect || `/${u.role}` };
+        const normalized = normalizeStoredUser(data.user);
+        setUser(normalized);
+        if (data.token) {
+          localStorage.setItem('sms_auth_token', data.token);
+        }
+        localStorage.setItem('sms_auth_user', JSON.stringify(normalized));
+        return { success: true, redirect: normalized.redirect || `/${normalized.role}` };
       }
 
-      if (res.status === 401 || res.status === 400) {
-        return { success: false, error: data.message || 'Invalid credentials' };
-      }
-    } catch (err) {
-      console.warn('Backend auth request unreachable, falling back to local verification:', err.message);
-    }
-
-    // 2. Fallback to Local Demo Credentials (key, email, or empCode)
-    const key = trimmedId.toLowerCase();
-    const matchedEntry =
-      CREDENTIALS[key]
-        ? [key, CREDENTIALS[key]]
-        : Object.entries(CREDENTIALS).find(
-            ([, c]) =>
-              c.email?.toLowerCase() === key ||
-              c.empCode?.toLowerCase() === key
-          );
-    if (matchedEntry && matchedEntry[1].password === trimmedPass) {
-      const [credKey, cred] = matchedEntry;
-      const userData = {
-        id: cred.id,
-        empCode: cred.empCode,
-        username: credKey,
-        role: cred.role,
-        name: cred.name,
-        email: cred.email || `${credKey}@ggzv.edu.in`,
-        school: cred.school || SCHOOL_NAME,
-        initials: cred.initials,
-        subject: cred.subject,
-        qualification: cred.qualification,
-        experience: cred.experience,
-        contactNo: cred.contactNo,
-        standard: cred.standard,
-        division: cred.division,
-        streamGroup: cred.streamGroup,
-        redirect: cred.redirect,
+      return {
+        success: false,
+        error: data.message || 'Invalid credentials. Please verify your email / employee code and password.',
       };
-      setUser(userData);
-      localStorage.setItem('sms_auth_user', JSON.stringify(userData));
-      return { success: true, redirect: cred.redirect };
+    } catch (err) {
+      console.error('Login error:', err);
+      return {
+        success: false,
+        error: 'Unable to connect to school server. Please verify backend service is running.',
+      };
     }
-
-    return {
-      success: false,
-      error: 'Invalid email, employee code, or password. Please verify and try again.'
-    };
   };
 
-  const updateUser = (updatedFields) => {
-    setUser(prev => {
+  const updateUser = useCallback((updatedFields) => {
+    setUser((prev) => {
+      if (!prev) return null;
       const next = { ...prev, ...updatedFields };
       try {
         localStorage.setItem('sms_auth_user', JSON.stringify(next));
@@ -270,15 +130,20 @@ export function AuthProvider({ children }) {
       }
       return next;
     });
-  };
+  }, []);
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('sms_auth_user');
+  const logout = async () => {
+    try {
+      await authFetch(`${API_ROOT}/api/auth/logout`, { method: 'POST' }).catch(() => {});
+    } finally {
+      setUser(null);
+      localStorage.removeItem('sms_auth_user');
+      localStorage.removeItem('sms_auth_token');
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, updateUser, credentialsList: CREDENTIALS }}>
+    <AuthContext.Provider value={{ user, isLoading, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

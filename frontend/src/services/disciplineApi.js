@@ -1,17 +1,17 @@
-import { API_ROOT } from './apiConfig';
+import { API_ROOT, authFetch } from './apiConfig';
 
 const API_BASE_URL = `${API_ROOT}/api/discipline`;
 
 export const disciplineApi = {
   async getTypes() {
-    const res = await fetch(`${API_BASE_URL}/types`, { method: 'GET', cache: 'no-store' });
+    const res = await authFetch(`${API_BASE_URL}/types`, { method: 'GET', cache: 'no-store' });
     const json = await res.json();
     if (!res.ok) throw new Error(json.message || 'Failed to fetch remark types');
     return json.data || [];
   },
 
   async deleteCustomType(id) {
-    const res = await fetch(`${API_BASE_URL}/types/${id}`, { method: 'DELETE' });
+    const res = await authFetch(`${API_BASE_URL}/types/${id}`, { method: 'DELETE' });
     const json = await res.json();
     if (!res.ok) throw new Error(json.message || 'Failed to delete custom remark type');
     return json.data || [];
@@ -24,7 +24,7 @@ export const disciplineApi = {
     if (rollNo !== undefined && rollNo !== null && String(rollNo).trim() !== '') {
       params.append('rollNo', String(rollNo).trim());
     }
-    const res = await fetch(`${API_BASE_URL}/lookup-student?${params.toString()}`, {
+    const res = await authFetch(`${API_BASE_URL}/lookup-student?${params.toString()}`, {
       method: 'GET',
       cache: 'no-store',
     });
@@ -44,7 +44,7 @@ export const disciplineApi = {
     if (filters.studentId) params.append('studentId', filters.studentId);
 
     const qs = params.toString();
-    const res = await fetch(qs ? `${API_BASE_URL}?${qs}` : API_BASE_URL, {
+    const res = await authFetch(qs ? `${API_BASE_URL}?${qs}` : API_BASE_URL, {
       method: 'GET',
       cache: 'no-store',
     });
@@ -63,7 +63,7 @@ export const disciplineApi = {
     if (filters.minFlags) params.append('minFlags', String(filters.minFlags));
 
     const qs = params.toString();
-    const res = await fetch(
+    const res = await authFetch(
       qs ? `${API_BASE_URL}/principal-overview?${qs}` : `${API_BASE_URL}/principal-overview`,
       { method: 'GET', cache: 'no-store' }
     );
@@ -73,7 +73,7 @@ export const disciplineApi = {
   },
 
   async createRemark(payload) {
-    const res = await fetch(API_BASE_URL, {
+    const res = await authFetch(API_BASE_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -84,7 +84,7 @@ export const disciplineApi = {
   },
 
   async updateRemark(id, data) {
-    const res = await fetch(`${API_BASE_URL}/${id}`, {
+    const res = await authFetch(`${API_BASE_URL}/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -95,7 +95,7 @@ export const disciplineApi = {
   },
 
   async deleteRemark(id) {
-    const res = await fetch(`${API_BASE_URL}/${id}`, { method: 'DELETE' });
+    const res = await authFetch(`${API_BASE_URL}/${id}`, { method: 'DELETE' });
     const json = await res.json();
     if (!res.ok) throw new Error(json.message || 'Failed to delete discipline remark');
     return true;

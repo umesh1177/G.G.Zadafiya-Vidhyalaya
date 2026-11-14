@@ -329,6 +329,11 @@ export default function FacultyManagement({ defaultTab } = {}) {
       return;
     }
 
+    if (facultyForm.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(facultyForm.email.trim())) {
+      setFormError('Please enter a valid email address (e.g., name@ggzv.edu.in).');
+      return;
+    }
+
     const count = facultyList.length + 1;
     const empCode = facultyForm.empCode?.trim().toUpperCase() || `FAC${100 + count}`;
     const fullName = [facultyForm.firstName, facultyForm.middleName, facultyForm.lastName].filter(Boolean).join(' ');
@@ -381,6 +386,10 @@ export default function FacultyManagement({ defaultTab } = {}) {
     };
 
     setEditError(null);
+    if (editingFaculty.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editingFaculty.email.trim())) {
+      setEditError('Please enter a valid email address (e.g., name@ggzv.edu.in).');
+      return;
+    }
     try {
       const updated = await facultyApi.updateFaculty(targetId, payload);
       const normalizedUpdated = {
@@ -1309,6 +1318,10 @@ export default function FacultyManagement({ defaultTab } = {}) {
                 style={{ fontWeight: 700, color: '#123B5D', borderColor: '#CBD5E1' }}
                 onClick={() => {
                   setEditError(null);
+    if (editingFaculty.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(editingFaculty.email.trim())) {
+      setEditError('Please enter a valid email address (e.g., name@ggzv.edu.in).');
+      return;
+    }
                   setEditingFaculty({ ...viewingFaculty });
                   setViewingFaculty(null);
                 }}

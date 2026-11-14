@@ -1,4 +1,4 @@
-import { API_ROOT } from './apiConfig';
+import { API_ROOT, authFetch } from './apiConfig';
 
 const API_BASE_URL = `${API_ROOT}/api/lt`;
 
@@ -11,7 +11,7 @@ export const ltApi = {
 
     const qs = searchParams.toString();
     const url = qs ? `${API_BASE_URL}?${qs}` : API_BASE_URL;
-    const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+    const res = await authFetch(url, { method: 'GET', cache: 'no-store' });
     const json = await res.json();
     if (!res.ok) {
       throw new Error(json.message || 'Failed to fetch Lecture Tests');
@@ -20,7 +20,7 @@ export const ltApi = {
   },
 
   async getLtById(id) {
-    const res = await fetch(`${API_BASE_URL}/${id}`, { method: 'GET', cache: 'no-store' });
+    const res = await authFetch(`${API_BASE_URL}/${id}`, { method: 'GET', cache: 'no-store' });
     const json = await res.json();
     if (!res.ok) {
       throw new Error(json.message || 'Failed to load Lecture Test details');
@@ -29,7 +29,7 @@ export const ltApi = {
   },
 
   async createLt(payload) {
-    const res = await fetch(API_BASE_URL, {
+    const res = await authFetch(API_BASE_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -42,7 +42,7 @@ export const ltApi = {
   },
 
   async updateLt(id, payload) {
-    const res = await fetch(`${API_BASE_URL}/${id}`, {
+    const res = await authFetch(`${API_BASE_URL}/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -55,7 +55,7 @@ export const ltApi = {
   },
 
   async deleteLt(id) {
-    const res = await fetch(`${API_BASE_URL}/${id}`, {
+    const res = await authFetch(`${API_BASE_URL}/${id}`, {
       method: 'DELETE',
     });
     const json = await res.json();
@@ -66,7 +66,7 @@ export const ltApi = {
   },
 
   async getLtMarks(id) {
-    const res = await fetch(`${API_BASE_URL}/${id}/marks`, { method: 'GET', cache: 'no-store' });
+    const res = await authFetch(`${API_BASE_URL}/${id}/marks`, { method: 'GET', cache: 'no-store' });
     const json = await res.json();
     if (!res.ok) {
       throw new Error(json.message || 'Failed to fetch LT marks');
@@ -75,7 +75,7 @@ export const ltApi = {
   },
 
   async saveLtMarks(id, marks, assistantFacultyId = null, assistantName = '') {
-    const res = await fetch(`${API_BASE_URL}/${id}/marks`, {
+    const res = await authFetch(`${API_BASE_URL}/${id}/marks`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ marks, assistantFacultyId, assistantName }),
@@ -88,7 +88,7 @@ export const ltApi = {
   },
 
   async getAnalyticsOverview() {
-    const res = await fetch(`${API_BASE_URL}/analytics/overview`, { method: 'GET', cache: 'no-store' });
+    const res = await authFetch(`${API_BASE_URL}/analytics/overview`, { method: 'GET', cache: 'no-store' });
     const json = await res.json();
     if (!res.ok) {
       throw new Error(json.message || 'Failed to fetch LT analytics overview');
@@ -97,7 +97,7 @@ export const ltApi = {
   },
 
   async getLtAnalysisDetail(id) {
-    const res = await fetch(`${API_BASE_URL}/${id}/analysis`, { method: 'GET', cache: 'no-store' });
+    const res = await authFetch(`${API_BASE_URL}/${id}/analysis`, { method: 'GET', cache: 'no-store' });
     const json = await res.json();
     if (!res.ok) {
       throw new Error(json.message || 'Failed to fetch LT analysis detail');
@@ -106,7 +106,7 @@ export const ltApi = {
   },
 
   async retrainLtModel() {
-    const res = await fetch(`${API_BASE_URL}/analytics/retrain`, { method: 'POST' });
+    const res = await authFetch(`${API_BASE_URL}/analytics/retrain`, { method: 'POST' });
     const json = await res.json();
     if (!res.ok) {
       throw new Error(json.message || 'Failed to retrain LT ML models');
@@ -115,7 +115,7 @@ export const ltApi = {
   },
 
   async getAvailableWeeks() {
-    const res = await fetch(`${API_BASE_URL}/analytics/weeks`, { method: 'GET', cache: 'no-store' });
+    const res = await authFetch(`${API_BASE_URL}/analytics/weeks`, { method: 'GET', cache: 'no-store' });
     const json = await res.json();
     if (!res.ok) {
       throw new Error(json.message || 'Failed to fetch available weeks');
@@ -128,7 +128,7 @@ export const ltApi = {
       Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && v !== '')
     ).toString();
     const url = qs ? `${API_BASE_URL}/analytics/weekly-report?${qs}` : `${API_BASE_URL}/analytics/weekly-report`;
-    const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+    const res = await authFetch(url, { method: 'GET', cache: 'no-store' });
     const json = await res.json();
     if (!res.ok) {
       throw new Error(json.message || 'Failed to generate weekly report');
@@ -141,7 +141,7 @@ export const ltApi = {
       Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && v !== '')
     ).toString();
     const url = qs ? `${API_BASE_URL}/analytics/monthly-report?${qs}` : `${API_BASE_URL}/analytics/monthly-report`;
-    const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+    const res = await authFetch(url, { method: 'GET', cache: 'no-store' });
     const json = await res.json();
     if (!res.ok) {
       throw new Error(json.message || 'Failed to generate monthly report');
@@ -154,7 +154,7 @@ export const ltApi = {
       Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && v !== '')
     ).toString();
     const url = qs ? `${API_BASE_URL}/analytics/student-performance?${qs}` : `${API_BASE_URL}/analytics/student-performance`;
-    const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+    const res = await authFetch(url, { method: 'GET', cache: 'no-store' });
     const json = await res.json();
     if (!res.ok) {
       throw new Error(json.message || 'Failed to fetch student performance');
@@ -163,7 +163,7 @@ export const ltApi = {
   },
 
   async savePrintedReport(payload) {
-    const res = await fetch(`${API_BASE_URL}/analytics/saved-reports`, {
+    const res = await authFetch(`${API_BASE_URL}/analytics/saved-reports`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -180,7 +180,7 @@ export const ltApi = {
       Object.entries(params).filter(([_, v]) => v !== undefined && v !== null && v !== '')
     ).toString();
     const url = qs ? `${API_BASE_URL}/analytics/saved-reports?${qs}` : `${API_BASE_URL}/analytics/saved-reports`;
-    const res = await fetch(url, { method: 'GET', cache: 'no-store' });
+    const res = await authFetch(url, { method: 'GET', cache: 'no-store' });
     const json = await res.json();
     if (!res.ok) {
       throw new Error(json.message || 'Failed to fetch saved reports');
@@ -189,7 +189,7 @@ export const ltApi = {
   },
 
   async getSavedReportById(id) {
-    const res = await fetch(`${API_BASE_URL}/analytics/saved-reports/${id}`, { method: 'GET', cache: 'no-store' });
+    const res = await authFetch(`${API_BASE_URL}/analytics/saved-reports/${id}`, { method: 'GET', cache: 'no-store' });
     const json = await res.json();
     if (!res.ok) {
       throw new Error(json.message || 'Failed to fetch report details');
