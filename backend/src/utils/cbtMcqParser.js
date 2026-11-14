@@ -350,10 +350,161 @@ function extractAnswerKeyBlock(rawText) {
   return map;
 }
 
+/**
+ * Extracts raw embedded JPEG streams from binary buffers
+ */
+function extractEmbeddedJpegsFromBuffer(buf) {
+  const jpegs = [];
+  if (!Buffer.isBuffer(buf) || buf.length < 500) return jpegs;
+  let pos = 0;
+  while (pos < buf.length - 4 && jpegs.length < 50) {
+    const start = buf.indexOf(Buffer.from([0xff, 0xd8, 0xff]), pos);
+    if (start === -1) break;
+    let end = start + 3;
+    while (end < buf.length - 1) {
+      if (buf[end] === 0xff && buf[end + 1] === 0xd9) {
+        end += 2;
+        break;
+      }
+      end++;
+    }
+    const len = end - start;
+    if (len >= 400 && len <= 10 * 1024 * 1024) {
+      jpegs.push(buf.subarray(start, end));
+      pos = end;
+    } else {
+      pos = start + 1;
+    }
+  }
+  return jpegs;
+}
+
+/**
+ * Extracts media/images from Word .docx file buffer
+ */
+function extractImagesFromDocx(buf) {
+  const images = [];
+  try {
+    const XLSX = require('xlsx');
+    const zip = XLSX.CFB.read(buf, { type: 'buffer' });
+    if (zip && Array.isArray(zip.FileIndex)) {
+      for (const entry of zip.FileIndex) {
+        if (!entry.name || !entry.content) continue;
+        const name = String(entry.name).toLowerCase();
+        if (name.includes('word/media/')) {
+          let mime = 'image/png';
+          if (name.endsWith('.jpg') || name.endsWith('.jpeg')) mime = 'image/jpeg';
+          else if (name.endsWith('.gif')) mime = 'image/gif';
+          else if (name.endsWith('.webp')) mime = 'image/webp';
+          const contentBuf = Buffer.isBuffer(entry.content) ? entry.content : Buffer.from(entry.content);
+          if (contentBuf.length >= 200) {
+            images.push({
+              name: entry.name,
+              dataUrl: `data:${mime};base64,${contentBuf.toString('base64')}`,
+            });
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Docx image extraction error:', err.message);
+  }
+  return images;
+}
+
+/**
+ * Extracts images from PDF file buffer (using pdf-parse with fallback to raw scan)
+ */
+async function extractImagesFromPdf(cleanPdfBuf) {
+  const images = [];
+  if (!Buffer.isBuffer(cleanPdfBuf) || cleanPdfBuf.length < 100) return images;
+
+  // 1. Try pdf-parse built-in image extractor
+  try {
+    const { PDFParse } = require('pdf-parse');
+    const parser = new PDFParse({ data: cleanPdfBuf });
+    const imgResult = await parser.getImage({ imageDataUrl: true, imageBuffer: false });
+    if (imgResult && Array.isArray(imgResult.pages)) {
+      for (const p of imgResult.pages) {
+        if (Array.isArray(p.images)) {
+          for (const img of p.images) {
+            if (img.dataUrl && typeof img.dataUrl === 'string' && img.dataUrl.startsWith('data:image/')) {
+              // Ignore tiny icons or spacer dots (under 25x25)
+              if ((img.width && img.width < 25) || (img.height && img.height < 25)) continue;
+              images.push({
+                pageNumber: p.pageNumber,
+                dataUrl: img.dataUrl,
+                width: img.width || 300,
+                height: img.height || 200,
+              });
+            }
+          }
+        }
+      }
+    }
+    await parser.destroy().catch(() => {});
+  } catch (err) {
+    console.warn('pdf-parse getImage failed, trying embedded scan:', err.message);
+  }
+
+  // 2. Fallback: Scan for embedded JPEGs directly in the PDF streams
+  if (images.length === 0) {
+    try {
+      const jpegs = extractEmbeddedJpegsFromBuffer(cleanPdfBuf);
+      for (let i = 0; i < jpegs.length; i++) {
+        images.push({
+          pageNumber: i + 1,
+          dataUrl: `data:image/jpeg;base64,${jpegs[i].toString('base64')}`,
+          width: 300,
+          height: 200,
+        });
+      }
+    } catch (rawErr) {
+      console.warn('Raw JPEG scan error:', rawErr.message);
+    }
+  }
+
+  return images;
+}
+
+/**
+ * Automatically associates extracted PDF/DOCX images with questions based on diagram references
+ */
+function associateImagesWithQuestions(questions, extractedImages) {
+  if (!extractedImages || extractedImages.length === 0 || !questions || questions.length === 0) return;
+
+  let imgIdx = 0;
+  const diagramKeywords = /આકૃતિ|પરિપથ|આલેખ|ચિત્ર|દર્શાવ્યા મુજબ|નીચે દર્શાવેલ|આપેલ આકૃતિ|સમતુલ્ય|પ્રતિબિંબ|કિરણ|રેખાકૃતિ|સંયોજન|figure|diagram|graph|circuit|chart|shown below|following figure|image|refer to/i;
+
+  // Pass 1: Assign images to questions with explicit diagram keywords
+  for (const q of questions) {
+    if (imgIdx >= extractedImages.length) break;
+    if (!q.imageUrl && diagramKeywords.test(q.questionText || '')) {
+      q.imageUrl = extractedImages[imgIdx].dataUrl;
+      imgIdx++;
+    }
+  }
+
+  // Pass 2: If there are remaining unassigned images, assign to remaining questions
+  if (imgIdx < extractedImages.length) {
+    for (const q of questions) {
+      if (imgIdx >= extractedImages.length) break;
+      if (!q.imageUrl) {
+        q.imageUrl = extractedImages[imgIdx].dataUrl;
+        imgIdx++;
+      }
+    }
+  }
+}
+
 module.exports = {
   parseMcqText,
   extractAnswerKeyBlock,
   cleanText,
   repairGujaratiText,
   toAsciiDigits,
+  extractEmbeddedJpegsFromBuffer,
+  extractImagesFromDocx,
+  extractImagesFromPdf,
+  associateImagesWithQuestions,
 };

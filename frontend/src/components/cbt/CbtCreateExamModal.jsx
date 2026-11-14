@@ -1081,17 +1081,25 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
                             placeholder="Question statement..."
                           />
 
-                          {/* Image preview & attachment */}
+                          {/* Extracted Diagram / Image preview */}
                           {q.imageUrl ? (
-                            <div className="relative inline-block border rounded-lg p-1 bg-slate-50 mb-2">
+                            <div className="flex items-center gap-3 p-2 bg-indigo-50/70 border border-indigo-200 rounded-lg mb-2">
                               <img
                                 src={q.imageUrl}
                                 alt={`Q${idx + 1} Diagram`}
-                                className="max-h-36 max-w-xs object-contain rounded"
+                                className="max-h-24 max-w-[140px] object-contain rounded bg-white p-1 border border-indigo-200 shrink-0"
                               />
+                              <div className="flex-1 min-w-0">
+                                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-800 bg-indigo-100 px-2 py-0.5 rounded">
+                                  <ImageIcon size={12} /> Question Diagram (Extracted from PDF / Document)
+                                </span>
+                                <p className="text-[11px] text-slate-500 mt-1">
+                                  Automatically extracted from uploaded question paper PDF
+                                </p>
+                              </div>
                               <button
                                 type="button"
-                                className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 shadow hover:bg-red-700"
+                                className="text-xs text-rose-600 hover:text-rose-800 font-semibold px-2 py-1 bg-white border border-rose-200 rounded hover:bg-rose-50 shadow-sm shrink-0"
                                 onClick={() => {
                                   const copy = [...questions];
                                   copy[idx].imageUrl = '';
@@ -1099,14 +1107,14 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
                                 }}
                                 title="Remove Image"
                               >
-                                <X size={12} />
+                                Remove
                               </button>
                             </div>
                           ) : (
                             <div className="flex items-center gap-2 mb-2">
-                              <label className="inline-flex items-center gap-1 text-[11px] text-blue-600 hover:text-blue-800 cursor-pointer bg-blue-50 px-2 py-1 rounded border border-blue-200">
+                              <label className="inline-flex items-center gap-1.5 text-[11px] text-indigo-700 hover:text-indigo-900 cursor-pointer bg-indigo-50/60 hover:bg-indigo-100/60 px-2.5 py-1 rounded-md border border-indigo-200 transition-colors">
                                 <ImageIcon size={13} />
-                                <span>Attach Diagram / Image</span>
+                                <span>+ Attach Diagram / Figure (optional)</span>
                                 <input
                                   type="file"
                                   accept="image/*"
@@ -1125,17 +1133,6 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
                                   }}
                                 />
                               </label>
-                              <input
-                                type="text"
-                                className="text-[11px] px-2 py-1 rounded border border-slate-200 flex-1"
-                                placeholder="Or paste image URL (e.g. https://... or /images/...)"
-                                value={q.imageUrl || ''}
-                                onChange={(e) => {
-                                  const copy = [...questions];
-                                  copy[idx].imageUrl = e.target.value;
-                                  setQuestions(copy);
-                                }}
-                              />
                             </div>
                           )}
                         </div>

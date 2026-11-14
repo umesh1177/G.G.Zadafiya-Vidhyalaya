@@ -2,7 +2,12 @@ const mongoose = require('mongoose');
 const CbtExam = require('../models/CbtExam');
 const CbtAttempt = require('../models/CbtAttempt');
 const Student = require('../models/Student');
-const { parseMcqText } = require('../utils/cbtMcqParser');
+const {
+  parseMcqText,
+  extractImagesFromPdf,
+  extractImagesFromDocx,
+  associateImagesWithQuestions,
+} = require('../utils/cbtMcqParser');
 const { getSampleQuestionsForExam } = require('../data/cbtSampleQuestions');
 
 /**
@@ -1346,6 +1351,7 @@ exports.extractPaper = async (req, res) => {
     const { pdfBase64, rawText, fileName = '', subject = 'Physics', marks = 4, negativeMarks = 1 } = req.body;
 
     let textContent = rawText || '';
+    let extractedImages = [];
 
     // If file payload is provided (PDF or DOCX or TXT)
     if (pdfBase64 && typeof pdfBase64 === 'string') {
@@ -1368,6 +1374,7 @@ exports.extractPaper = async (req, res) => {
             if (docxText && docxText.trim()) {
               textContent = docxText;
             }
+            extractedImages = extractImagesFromDocx(fileBuffer);
           } else {
             // PDF file extraction
             const pdfIdx = fileBuffer.indexOf('%PDF');
@@ -1383,6 +1390,9 @@ exports.extractPaper = async (req, res) => {
               textContent = pdfResult;
             }
             await parser.destroy().catch(() => {});
+
+            // Extract diagrams/images from PDF
+            extractedImages = await extractImagesFromPdf(cleanPdfBuf);
           }
 
           // If textContent is still empty, check if it's UTF-8 plain text
@@ -1403,6 +1413,11 @@ exports.extractPaper = async (req, res) => {
       questions = parseMcqText(textContent, subject, Number(marks), Number(negativeMarks));
     }
 
+    // Auto-link extracted diagram images to questions
+    if (extractedImages.length > 0 && questions.length > 0) {
+      associateImagesWithQuestions(questions, extractedImages);
+    }
+
     // If no questions could be parsed (e.g. scanned image PDF or non-standard format),
     // provide clean syllabus sample questions for that subject as a fallback so user is never blocked
     let isFallback = false;
@@ -1416,14 +1431,18 @@ exports.extractPaper = async (req, res) => {
         marks: Number(marks),
         negativeMarks: Number(negativeMarks),
       }));
+      if (extractedImages.length > 0) {
+        associateImagesWithQuestions(questions, extractedImages);
+      }
       isFallback = true;
     }
 
+    const imageMsg = extractedImages.length > 0 ? ` (along with ${extractedImages.length} extracted question diagrams/images)` : '';
     const message = isFallback
       ? textContent && textContent.trim()
-        ? `Extracted text from ${subject} document, but could not detect standard question numbering (e.g. Q1., 1., (A), (B)). Loaded standard question template for ${subject}. You can also edit or paste questions in Tab 3.`
-        : `No selectable text found in the PDF. It may be a scanned image without a text layer. Loaded standard syllabus question template for ${subject}. You can paste or type questions in Tab 3.`
-      : `Successfully extracted ${questions.length} MCQs for ${subject}!`;
+        ? `Extracted text from ${subject} document, but could not detect standard question numbering. Loaded standard question template for ${subject}${imageMsg}. You can also edit questions in Tab 3.`
+        : `No selectable text found in the PDF. Loaded standard syllabus question template for ${subject}${imageMsg}. You can edit questions in Tab 3.`
+      : `Successfully extracted ${questions.length} MCQs${imageMsg} for ${subject}!`;
 
     res.json({
       success: true,

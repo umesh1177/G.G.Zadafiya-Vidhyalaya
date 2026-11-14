@@ -185,6 +185,7 @@ export default function ExamAnalysisDetail() {
   }, [setHeader, analysis]);
 
   const exam = analysis?.exam;
+  const isBoardExam = String(exam?.examType || '').toUpperCase() === 'BOARD';
   const overview = analysis?.overview || {};
   const comparison = analysis?.comparison || {};
   const scoreBrackets = analysis?.scoreBrackets || [];
@@ -193,6 +194,15 @@ export default function ExamAnalysisDetail() {
   const subjectReportSummaries = analysis?.subjectReportSummaries || [];
   const mlModelMeta = analysis?.mlModelMeta || {};
   const sentReports = analysis?.sentReports || [];
+
+  // When exam type is BOARD, only show Performance Tracking & Leaderboard (default to performance)
+  useEffect(() => {
+    if (isBoardExam) {
+      if (activeTab === 'overview' || activeTab === 'questions' || activeTab === 'subject-wise') {
+        setActiveTab('performance');
+      }
+    }
+  }, [isBoardExam, activeTab]);
 
   // CBT Analysis Data (Photo 1, Subject-Wise, Faculty Report)
   const cbtAnalysis = analysis?.cbtAnalysis;
@@ -919,54 +929,87 @@ export default function ExamAnalysisDetail() {
         </div>
       </div>
 
-      {/* 5 Tabs Bar */}
-      <div className="tabs" style={{ marginBottom: 18, flexWrap: 'wrap', gap: 6 }}>
-        <button
-          type="button"
-          className={`tab-btn ${activeTab === 'overview' ? 'is-active' : ''}`}
-          onClick={() => setActiveTab('overview')}
-        >
-          <BarChart3 size={15} style={{ marginRight: 6, display: 'inline' }} />
-          Overview
-        </button>
-        <button
-          type="button"
-          className={`tab-btn ${activeTab === 'leaderboard' ? 'is-active' : ''}`}
-          onClick={() => setActiveTab('leaderboard')}
-        >
-          <Users size={15} style={{ marginRight: 6, display: 'inline' }} />
-          Students ({cbtStudents.length || leaderboard.length})
-        </button>
-        <button
-          type="button"
-          className={`tab-btn ${activeTab === 'questions' ? 'is-active' : ''}`}
-          onClick={() => setActiveTab('questions')}
-        >
-          <HelpCircle size={15} style={{ marginRight: 6, display: 'inline' }} />
-          Questions Analysis ({questionWiseReport.length || cbtQuestions.length})
-        </button>
-        <button
-          type="button"
-          className={`tab-btn ${activeTab === 'subject-wise' ? 'is-active' : ''}`}
-          onClick={() => setActiveTab('subject-wise')}
-        >
-          <BookOpen size={15} style={{ marginRight: 6, display: 'inline' }} />
-          Subject Wise Analysis
-        </button>
-        <button
-          type="button"
-          className={`tab-btn ${activeTab === 'performance' ? 'is-active' : ''}`}
-          onClick={() => setActiveTab('performance')}
-        >
-          <TrendingUp size={15} style={{ marginRight: 6, display: 'inline' }} />
-          Performance &amp; Tracking
-        </button>
-      </div>
+      {/* Tabs Bar */}
+      {isBoardExam ? (
+        <div className="tabs" style={{ marginBottom: 18, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              className={`tab-btn ${activeTab === 'performance' ? 'is-active' : ''}`}
+              onClick={() => setActiveTab('performance')}
+            >
+              <TrendingUp size={15} style={{ marginRight: 6, display: 'inline' }} />
+              Performance Tracking
+            </button>
+            <button
+              type="button"
+              className={`tab-btn ${activeTab === 'leaderboard' ? 'is-active' : ''}`}
+              onClick={() => setActiveTab('leaderboard')}
+            >
+              <Users size={15} style={{ marginRight: 6, display: 'inline' }} />
+              Exam Leaderboard ({leaderboard.length || cbtStudents.length})
+            </button>
+          </div>
+
+          <button
+            type="button"
+            className="btn btn-primary btn-sm flex items-center gap-1.5"
+            style={{ background: '#123B5D', borderColor: '#123B5D', fontWeight: 700 }}
+            onClick={() => openGenerateReportModal(exam.subject)}
+          >
+            <FileSpreadsheet size={15} />
+            <span>Generate Report for Faculty</span>
+          </button>
+        </div>
+      ) : (
+        <div className="tabs" style={{ marginBottom: 18, flexWrap: 'wrap', gap: 6 }}>
+          <button
+            type="button"
+            className={`tab-btn ${activeTab === 'overview' ? 'is-active' : ''}`}
+            onClick={() => setActiveTab('overview')}
+          >
+            <BarChart3 size={15} style={{ marginRight: 6, display: 'inline' }} />
+            Overview
+          </button>
+          <button
+            type="button"
+            className={`tab-btn ${activeTab === 'leaderboard' ? 'is-active' : ''}`}
+            onClick={() => setActiveTab('leaderboard')}
+          >
+            <Users size={15} style={{ marginRight: 6, display: 'inline' }} />
+            Students ({cbtStudents.length || leaderboard.length})
+          </button>
+          <button
+            type="button"
+            className={`tab-btn ${activeTab === 'questions' ? 'is-active' : ''}`}
+            onClick={() => setActiveTab('questions')}
+          >
+            <HelpCircle size={15} style={{ marginRight: 6, display: 'inline' }} />
+            Questions Analysis ({questionWiseReport.length || cbtQuestions.length})
+          </button>
+          <button
+            type="button"
+            className={`tab-btn ${activeTab === 'subject-wise' ? 'is-active' : ''}`}
+            onClick={() => setActiveTab('subject-wise')}
+          >
+            <BookOpen size={15} style={{ marginRight: 6, display: 'inline' }} />
+            Subject Wise Analysis
+          </button>
+          <button
+            type="button"
+            className={`tab-btn ${activeTab === 'performance' ? 'is-active' : ''}`}
+            onClick={() => setActiveTab('performance')}
+          >
+            <TrendingUp size={15} style={{ marginRight: 6, display: 'inline' }} />
+            Performance &amp; Tracking
+          </button>
+        </div>
+      )}
 
       {/* ═══════════════════════════════════════════════════════════════════════ */}
       {/* TAB 1: OVERVIEW (Photo 1 exact layout)                                  */}
       {/* ═══════════════════════════════════════════════════════════════════════ */}
-      {activeTab === 'overview' && (
+      {activeTab === 'overview' && !isBoardExam && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* Top 5 Score Metric Cards matching Photo 1 + Pass/Fail */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
@@ -1202,7 +1245,7 @@ export default function ExamAnalysisDetail() {
       {/* ═══════════════════════════════════════════════════════════════════════ */}
       {/* TAB 3: QUESTIONS ANALYSIS (Photo 1 Questions Tab)                       */}
       {/* ═══════════════════════════════════════════════════════════════════════ */}
-      {activeTab === 'questions' && (
+      {activeTab === 'questions' && !isBoardExam && (
         <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
           <div style={{ padding: '18px 20px', borderBottom: '1px solid var(--line-soft)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
             <div>
@@ -1325,7 +1368,7 @@ export default function ExamAnalysisDetail() {
       {/* ═══════════════════════════════════════════════════════════════════════ */}
       {/* TAB 4: SUBJECT WISE ANALYSIS (Requirement 1)                           */}
       {/* ═══════════════════════════════════════════════════════════════════════ */}
-      {activeTab === 'subject-wise' && (
+      {activeTab === 'subject-wise' && !isBoardExam && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* Subject Selector Bar */}
           <div className="card" style={{ padding: '14px 20px' }}>
