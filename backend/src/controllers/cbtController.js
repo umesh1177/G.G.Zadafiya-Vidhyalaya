@@ -130,6 +130,7 @@ exports.createExam = async (req, res) => {
       questionsText,
       questions: providedQuestions,
       subjectPapers = [],
+      subjectMarksConfig = [],
     } = req.body;
 
     const examCode = `CBT-${examType}-${Date.now().toString().slice(-6)}`;
@@ -167,6 +168,15 @@ exports.createExam = async (req, res) => {
       }));
     }
 
+    // Ensure every question has a unique id and sequential questionNo
+    questions = questions.map((q, idx) => ({
+      ...q,
+      id: q.id || `q_${(q.subject || 'gen').toLowerCase()}_${idx + 1}_${Date.now()}`,
+      questionNo: q.questionNo || (idx + 1),
+      marks: q.marks !== undefined ? Number(q.marks) : finalMarksPerQuestion,
+      negativeMarks: q.negativeMarks !== undefined ? Number(q.negativeMarks) : finalNegativeMarks,
+    }));
+
     // Determine subjects from questions
     const subjectSet = new Set(questions.map(q => q.subject));
     const subjects = Array.from(subjectSet);
@@ -177,7 +187,14 @@ exports.createExam = async (req, res) => {
     const startDate = startTime ? new Date(startTime) : new Date(now.getTime() + 10 * 60000); // 10 mins from now
     const endDate = windowEndTime ? new Date(windowEndTime) : new Date(now.getTime() + 7 * 24 * 3600000); // 7 days
 
-    const calculatedTotalMarks = Number(totalMarks) || (questions.length * finalMarksPerQuestion);
+    // Total marks calculation with subjectMarksConfig support
+    let calculatedTotalMarks = Number(totalMarks) || 0;
+    if (!calculatedTotalMarks && Array.isArray(subjectMarksConfig) && subjectMarksConfig.length > 0) {
+      calculatedTotalMarks = subjectMarksConfig.reduce((sum, s) => sum + (Number(s.totalMarks) || 0), 0);
+    }
+    if (!calculatedTotalMarks) {
+      calculatedTotalMarks = questions.reduce((sum, q) => sum + (Number(q.marks) || finalMarksPerQuestion), 0);
+    }
 
     const newExam = new CbtExam({
       examCode,
@@ -192,6 +209,7 @@ exports.createExam = async (req, res) => {
       totalMarks: calculatedTotalMarks,
       marksPerQuestion: finalMarksPerQuestion,
       negativeMarks: finalNegativeMarks,
+      subjectMarksConfig: Array.isArray(subjectMarksConfig) ? subjectMarksConfig : [],
       scheduleTime: schedDate,
       startTime: startDate,
       windowEndTime: endDate,
@@ -233,6 +251,18 @@ exports.updateExam = async (req, res) => {
         updates.subjects = Array.from(new Set(parsed.map(q => q.subject)));
       }
       delete updates.questionsText;
+    }
+
+    if (updates.questions && Array.isArray(updates.questions)) {
+      updates.questions = updates.questions.map((q, idx) => ({
+        ...q,
+        id: q.id || `q_${(q.subject || 'gen').toLowerCase()}_${idx + 1}_${Date.now()}`,
+        questionNo: q.questionNo || (idx + 1),
+      }));
+    }
+
+    if (updates.subjectMarksConfig && Array.isArray(updates.subjectMarksConfig) && updates.subjectMarksConfig.length > 0 && !updates.totalMarks) {
+      updates.totalMarks = updates.subjectMarksConfig.reduce((sum, s) => sum + (Number(s.totalMarks) || 0), 0);
     }
 
     const exam = await CbtExam.findByIdAndUpdate(id, updates, { new: true });
@@ -657,7 +687,25 @@ exports.evaluateExam = async (req, res) => {
     const defaultNegMarks = exam.examType === 'GUJCET' ? 0.25 : 1;
     const posMarks = exam.marksPerQuestion !== undefined && exam.marksPerQuestion !== null ? Number(exam.marksPerQuestion) : defaultPosMarks;
     const negMarks = exam.negativeMarks !== undefined && exam.negativeMarks !== null ? Number(exam.negativeMarks) : defaultNegMarks;
-    const totalPossibleMarks = exam.totalMarks || (exam.questions.length * posMarks);
+
+    // Total possible marks priority:
+    // 1. sum of subjectMarksConfig if available
+    // 2. exam.totalMarks if > 0
+    // 3. sum of all questions' positive marks
+    let totalPossibleMarks = 0;
+    if (exam.subjectMarksConfig && Array.isArray(exam.subjectMarksConfig) && exam.subjectMarksConfig.length > 0) {
+      const sumConfig = exam.subjectMarksConfig.reduce((acc, s) => acc + (Number(s.totalMarks) || 0), 0);
+      if (sumConfig > 0) totalPossibleMarks = sumConfig;
+    }
+    if (!totalPossibleMarks && exam.totalMarks) {
+      totalPossibleMarks = Number(exam.totalMarks);
+    }
+    if (!totalPossibleMarks) {
+      totalPossibleMarks = exam.questions.reduce(
+        (acc, q) => acc + (q.marks !== undefined && q.marks !== null ? Number(q.marks) : posMarks),
+        0
+      );
+    }
 
     const scoredAttempts = [];
 
@@ -665,39 +713,60 @@ exports.evaluateExam = async (req, res) => {
       let correct = 0;
       let wrong = 0;
       let unanswered = 0;
+      let studentScore = 0;
       const ansMap = {};
 
       (att.answers || []).forEach(a => {
-        ansMap[a.questionId] = a.selectedOption;
+        if (a && a.questionId) {
+          ansMap[String(a.questionId)] = a.selectedOption;
+        }
       });
 
-      exam.questions.forEach(q => {
-        const selected = ansMap[q.id];
-        const correctOpt = keyMap[q.id];
+      exam.questions.forEach((q, idx) => {
+        const qId = String(q.id || `q_${idx + 1}`);
+        const selected =
+          ansMap[qId] !== undefined
+            ? ansMap[qId]
+            : ansMap[`q_${idx + 1}`] !== undefined
+            ? ansMap[`q_${idx + 1}`]
+            : ansMap[String(idx + 1)] !== undefined
+            ? ansMap[String(idx + 1)]
+            : ansMap[String(q.questionNo)];
+
+        const correctOpt = String(keyMap[q.id] || q.correctAnswer || '').trim().toUpperCase();
         const stat = qStats[q.id];
+
+        const qPos = q.marks !== undefined && q.marks !== null ? Number(q.marks) : posMarks;
+        const qNeg = q.negativeMarks !== undefined && q.negativeMarks !== null ? Number(q.negativeMarks) : negMarks;
 
         if (!selected) {
           unanswered++;
           if (stat) stat.skippedCount++;
         } else {
           if (stat) stat.attendedCount++;
-          if (selected.toUpperCase() === (correctOpt || '').toUpperCase()) {
+          const selStr = String(selected).trim().toUpperCase();
+          if (selStr === correctOpt) {
             correct++;
+            studentScore += qPos;
             if (stat) stat.rightCount++;
           } else {
             wrong++;
+            studentScore -= qNeg;
             if (stat) stat.wrongCount++;
           }
         }
       });
 
-      // Calculate score with negative marking dynamically
-      let score = (correct * posMarks) - (wrong * negMarks);
-      if (score < 0) score = 0;
+      // Avoid floating point inaccuracies (e.g. 1 - 0.25 = 0.75)
+      studentScore = Math.round(studentScore * 100) / 100;
 
-      const percentage = Math.round((score / totalPossibleMarks) * 100 * 10) / 10;
+      let percentage = 0;
+      if (totalPossibleMarks > 0) {
+        percentage = Math.round((studentScore / totalPossibleMarks) * 100 * 10) / 10;
+        if (percentage < 0) percentage = 0;
+      }
 
-      att.score = score;
+      att.score = studentScore;
       att.totalMarks = totalPossibleMarks;
       att.percentage = percentage;
       att.correctCount = correct;
@@ -813,14 +882,12 @@ exports.evaluateExam = async (req, res) => {
       const ExamMarks = mongoose.model('ExamMarks');
       const Student = mongoose.model('Student');
 
-      // Find any created exam mapped to this CBT exam by ID, Code, or Standard + Type match
-      const mappedExams = await ExamUnit.find({
-        $or: [
-          { cbtExamId: exam._id },
-          ...(exam.examCode ? [{ cbtExamCode: exam.examCode }] : []),
-          { examType: exam.examType, standard: exam.standard, status: { $ne: 'MARKS_ENTERED' } },
-        ],
-      });
+      // Find only the specific ExamUnit explicitly mapped to this CBT exam by ID or Exam Code
+      const mappedQuery = [{ cbtExamId: exam._id }];
+      if (exam.examCode) {
+        mappedQuery.push({ cbtExamCode: exam.examCode });
+      }
+      const mappedExams = await ExamUnit.find({ $or: mappedQuery });
 
       for (const mappedExam of mappedExams) {
         const examSubjects =
@@ -847,33 +914,49 @@ exports.evaluateExam = async (req, res) => {
             exam.negativeMarks !== undefined ? exam.negativeMarks : exam.examType === 'GUJCET' ? 0.25 : 1;
 
           examSubjects.forEach((sub) => {
-            const subQuestions = exam.questions.filter((q) => q.subject === sub);
+            const subQuestions = exam.questions.filter(
+              (q) => q.subject && q.subject.toLowerCase() === sub.toLowerCase()
+            );
             let subScore = 0;
-            const subMax =
-              subQuestions.length > 0
-                ? subQuestions.length * posPerQ
-                : Math.round(mappedExam.marksPerSubject || 100);
+
+            const subCfg = exam.subjectMarksConfig && exam.subjectMarksConfig.find(
+              (s) => s.subject && s.subject.toLowerCase() === sub.toLowerCase()
+            );
+            const subMax = subCfg && Number(subCfg.totalMarks) > 0
+              ? Number(subCfg.totalMarks)
+              : (subQuestions.length > 0
+                  ? subQuestions.reduce((sum, q) => sum + (Number(q.marks) || posPerQ), 0)
+                  : Math.round(mappedExam.marksPerSubject || 100));
 
             subQuestions.forEach((q) => {
-              const ansObj = (att.answers || []).find((a) => a.questionId === q.id);
+              const qId = String(q.id);
+              const ansObj = (att.answers || []).find(
+                (a) => a && (String(a.questionId) === qId || String(a.questionId) === String(q.questionNo))
+              );
+              const qPos = Number(q.marks) || posPerQ;
+              const qNeg = Number(q.negativeMarks) !== undefined ? Number(q.negativeMarks) : negPerQ;
+
               if (ansObj && ansObj.selectedOption) {
-                if (ansObj.selectedOption.toUpperCase() === (q.correctAnswer || '').toUpperCase()) {
-                  subScore += posPerQ;
+                if (String(ansObj.selectedOption).trim().toUpperCase() === String(q.correctAnswer || '').trim().toUpperCase()) {
+                  subScore += qPos;
                 } else {
-                  subScore -= negPerQ;
+                  subScore -= qNeg;
                 }
               }
             });
+
+            subScore = Math.round(subScore * 100) / 100;
             if (subScore < 0) subScore = 0;
 
             subjectMarks.push({
               subject: sub,
-              marksObtained: Math.round(subScore * 10) / 10,
+              marksObtained: subScore,
               totalMarks: subMax,
             });
           });
 
           const groupKey = mappedExam.streamGroup === 'GROUP_B' ? 'B' : 'A';
+          const calculatedSubTotal = subjectMarks.reduce((sum, s) => sum + s.totalMarks, 0);
 
           await ExamMarks.findOneAndUpdate(
             { examId: mappedExam._id, studentId: studentDoc._id, examGroup: groupKey },
@@ -887,7 +970,7 @@ exports.evaluateExam = async (req, res) => {
               ab: att.status === 'DISQUALIFIED' ? true : false,
               subjectMarks,
               totalObtained: att.score,
-              totalMaxMarks: mappedExam.totalMarks || exam.totalMarks || 300,
+              totalMaxMarks: mappedExam.totalMarks || exam.totalMarks || calculatedSubTotal || 300,
               percentage: att.percentage,
               enteredByName: 'CBT Auto-Evaluation',
               enteredAt: new Date(),
@@ -1257,4 +1340,45 @@ exports.extractPaper = async (req, res) => {
     res.status(500).json({ success: false, message: err.message });
   }
 };
+
+// 15. Get all student responses for an exam (Assistant Faculty)
+exports.getExamResponses = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const exam = await CbtExam.findById(id).lean();
+    if (!exam) {
+      return res.status(404).json({ success: false, message: 'Exam not found' });
+    }
+
+    const attempts = await CbtAttempt.find({ examId: id })
+      .sort({ studentRollNo: 1 })
+      .lean();
+
+    res.json({
+      success: true,
+      exam: {
+        _id: exam._id,
+        examCode: exam.examCode,
+        title: exam.title,
+        examType: exam.examType,
+        standard: exam.standard,
+        division: exam.division,
+        streamGroup: exam.streamGroup,
+        subjects: exam.subjects,
+        durationMinutes: exam.durationMinutes,
+        totalMarks: exam.totalMarks,
+        marksPerQuestion: exam.marksPerQuestion,
+        negativeMarks: exam.negativeMarks,
+        subjectMarksConfig: exam.subjectMarksConfig || [],
+        questions: exam.questions || [],
+      },
+      attempts,
+      totalAttempts: attempts.length,
+    });
+  } catch (err) {
+    console.error('Error fetching exam responses:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch exam responses', error: err.message });
+  }
+};
+
 

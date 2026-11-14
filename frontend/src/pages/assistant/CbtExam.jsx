@@ -23,6 +23,7 @@ import { fetchCbtExams, evaluateCbtExam, deleteCbtExam } from '../../services/cb
 import CbtLiveMonitorModal from '../../components/cbt/CbtLiveMonitorModal';
 import CbtCreateExamModal from '../../components/cbt/CbtCreateExamModal';
 import CbtQuestionPaperModal from '../../components/cbt/CbtQuestionPaperModal';
+import CbtStudentResponsesModal from '../../components/cbt/CbtStudentResponsesModal';
 
 export default function AssistantCbtExam() {
   const outlet = useOutletContext();
@@ -37,6 +38,7 @@ export default function AssistantCbtExam() {
   const [examToEdit, setExamToEdit] = useState(null);
   const [activeMonitorExamId, setActiveMonitorExamId] = useState(null);
   const [selectedExamForPaper, setSelectedExamForPaper] = useState(null);
+  const [selectedExamForResponses, setSelectedExamForResponses] = useState(null);
 
   useEffect(() => {
     if (outlet?.setHeader) {
@@ -331,6 +333,22 @@ export default function AssistantCbtExam() {
                           <span>Show Question Paper</span>
                         </button>
 
+                        {/* Show Response */}
+                        <button
+                          className="cbt-action-btn"
+                          style={{
+                            background: '#f0fdf4',
+                            color: '#166534',
+                            borderColor: '#bbf7d0',
+                            fontWeight: 700,
+                          }}
+                          title="Show Student Responses & Submitted Answers"
+                          onClick={() => setSelectedExamForResponses(exam)}
+                        >
+                          <Eye size={14} />
+                          <span>Show Response</span>
+                        </button>
+
                         {/* Live Monitor */}
                         <button
                           className="cbt-action-btn cbt-action-btn--monitor"
@@ -350,18 +368,6 @@ export default function AssistantCbtExam() {
                           <Award size={14} />
                           <span>Evaluate</span>
                         </button>
-
-                        {/* View Analysis */}
-                        {(exam.status === 'EVALUATED' || exam.isResultPublished) && (
-                          <button
-                            className="cbt-action-btn cbt-action-btn--analysis"
-                            title="View Analysis & Leaderboard"
-                            onClick={() => navigate(`/assistant/cbt-exam/analysis/${exam._id}`)}
-                          >
-                            <BarChart3 size={14} />
-                            <span>Analysis</span>
-                          </button>
-                        )}
 
                         {/* Edit */}
                         <button
@@ -399,6 +405,14 @@ export default function AssistantCbtExam() {
         <CbtQuestionPaperModal
           exam={selectedExamForPaper}
           onClose={() => setSelectedExamForPaper(null)}
+        />
+      )}
+
+      {/* Show Student Responses Modal */}
+      {selectedExamForResponses && (
+        <CbtStudentResponsesModal
+          exam={selectedExamForResponses}
+          onClose={() => setSelectedExamForResponses(null)}
         />
       )}
 

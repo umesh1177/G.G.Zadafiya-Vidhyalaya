@@ -135,6 +135,11 @@ export async function fetchCbtLiveMonitor(id) {
   return await res.json();
 }
 
+export async function fetchCbtExamResponses(id) {
+  const res = await fetch(`${API_ROOT}/api/cbt/exams/${id}/responses`);
+  return await res.json();
+}
+
 export async function extractCbtPaper(payload) {
   const res = await fetch(`${API_ROOT}/api/cbt/exams/extract-paper`, {
     method: 'POST',

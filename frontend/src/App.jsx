@@ -124,8 +124,6 @@ export default function App() {
               <Route path="lt/history/:id" element={<LtHistoryDetail />} />
               <Route path="lt/enter-marks/:id" element={<LtEnterMarks />} />
               <Route path="cbt-exam" element={<AssistantCbtExam />} />
-              <Route path="cbt-exam/analysis/:id" element={<CbtAnalysisPage userRole="assistant" />} />
-              <Route path="exam-analysis/:id" element={<ExamAnalysisDetail />} />
               <Route path="exam" element={<AssistantExam />} />
               <Route path="exam/enter-marks/:id" element={<ExamEnterMarks />} />
               <Route path="exam/view-marks/:id" element={<ExamViewMarks />} />

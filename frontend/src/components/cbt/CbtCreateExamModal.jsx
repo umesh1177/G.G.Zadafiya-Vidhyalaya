@@ -58,6 +58,33 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
 
   const initialSubjects = getSubjectNames(formData.examType, formData.streamGroup);
 
+  const [subjectMarksConfig, setSubjectMarksConfig] = useState(() => {
+    if (examToEdit?.subjectMarksConfig && examToEdit.subjectMarksConfig.length > 0) {
+      return examToEdit.subjectMarksConfig;
+    }
+    const defaultPerSub = initialType === 'GUJCET' ? 40 : 100;
+    return initialSubjects.map((sub) => ({
+      subject: sub,
+      totalMarks: defaultPerSub,
+    }));
+  });
+
+  const handleSubjectMarkChange = (index, totalMarksVal) => {
+    const val = Number(totalMarksVal) || 0;
+    const nextConfig = [...subjectMarksConfig];
+    nextConfig[index] = {
+      ...nextConfig[index],
+      totalMarks: val,
+    };
+    setSubjectMarksConfig(nextConfig);
+
+    const newTotal = nextConfig.reduce((sum, item) => sum + (Number(item.totalMarks) || 0), 0);
+    setFormData((prev) => ({
+      ...prev,
+      totalMarks: newTotal,
+    }));
+  };
+
   const [subjectPapers, setSubjectPapers] = useState(() => {
     if (examToEdit?.subjectPapers && examToEdit.subjectPapers.length > 0) {
       return examToEdit.subjectPapers;
@@ -96,6 +123,13 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
     }
 
     const nextSubs = getSubjectNames(type, stream);
+    const defaultPerSub = type === 'GUJCET' ? 40 : 100;
+    const nextConfig = nextSubs.map((sub) => ({
+      subject: sub,
+      totalMarks: defaultPerSub,
+    }));
+    setSubjectMarksConfig(nextConfig);
+    const newTotal = nextConfig.reduce((sum, item) => sum + item.totalMarks, 0);
 
     setFormData((prev) => ({
       ...prev,
@@ -103,7 +137,7 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
       streamGroup: stream,
       marksPerQuestion: pos,
       negativeMarks: neg,
-      totalMarks: questions.length > 0 ? questions.length * pos : 100,
+      totalMarks: newTotal,
       title: prev.title ? prev.title : `#1 ${type} Mock Test - ${prev.standard.replace('_', ' ')}`,
     }));
 
@@ -128,6 +162,12 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
         fileName: prev[i]?.fileName || '',
         fileSize: prev[i]?.fileSize || 0,
         uploadedAt: prev[i]?.uploadedAt || null,
+      }))
+    );
+    setSubjectMarksConfig((prev) =>
+      nextSubs.map((sub, i) => ({
+        subject: sub,
+        totalMarks: prev[i]?.totalMarks || (formData.examType === 'GUJCET' ? 40 : 100),
       }))
     );
   };
@@ -436,6 +476,7 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
       setSubmitting(true);
       const payload = {
         ...formData,
+        subjectMarksConfig,
         subjectPapers,
         questions,
       };
@@ -677,6 +718,57 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
                       After this time, the exam card disappears from the dashboard and submissions close.
                     </div>
                   </div>
+                </div>
+              </div>
+
+              {/* Subject Total Marks Configuration (Requirement 6) */}
+              <div className="bg-blue-50/60 border border-blue-200 rounded-xl p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                  <div className="flex items-center gap-2">
+                    <Award size={18} className="text-blue-600" />
+                    <h4 className="font-bold text-slate-900 text-sm">
+                      Total Marks for Each Subject
+                    </h4>
+                  </div>
+                  <span className="text-xs font-bold text-blue-900 bg-blue-100 px-3 py-1 rounded-full border border-blue-200">
+                    Combined Total: <strong>{formData.totalMarks} Marks</strong>
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mb-3">
+                  Set the maximum total marks for each subject. Individual student scores and percentages will be calculated dynamically based on these totals.
+                </p>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {subjectMarksConfig.map((subCfg, idx) => {
+                    const subQuestions = questions.filter(
+                      (q) => q.subject && q.subject.toLowerCase() === subCfg.subject.toLowerCase()
+                    );
+                    return (
+                      <div key={subCfg.subject || idx} className="bg-white p-3 rounded-lg border border-blue-200 shadow-sm">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <label className="text-xs font-bold text-slate-800">
+                            {subCfg.subject} Total Marks
+                          </label>
+                          <span className="text-[11px] text-slate-400 font-medium">
+                            {subQuestions.length} Questions
+                          </span>
+                        </div>
+                        <input
+                          type="number"
+                          min="1"
+                          max="720"
+                          className="cbt-form-input font-bold text-blue-700 text-sm"
+                          value={subCfg.totalMarks}
+                          onChange={(e) => handleSubjectMarkChange(idx, e.target.value)}
+                          placeholder="e.g. 40 or 100"
+                          required
+                        />
+                        <span className="text-[10px] text-slate-400 mt-1 block">
+                          Standard: {formData.examType === 'GUJCET' ? '40 Marks' : formData.examType === 'JEE' ? '100 Marks' : '180 Marks'}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 

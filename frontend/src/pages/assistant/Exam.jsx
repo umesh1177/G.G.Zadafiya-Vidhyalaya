@@ -117,6 +117,102 @@ export default function AssistantExam() {
     cbtExamId: '',
   });
 
+  const [availableCbtExams, setAvailableCbtExams] = useState([]);
+  const [cbtAutofillInfo, setCbtAutofillInfo] = useState(null);
+
+  // Load CBT exams for selection/auto-fill
+  useEffect(() => {
+    fetchCbtExams()
+      .then((res) => {
+        if (Array.isArray(res)) setAvailableCbtExams(res);
+      })
+      .catch((e) => console.warn('Could not load CBT exams for mapping:', e));
+  }, []);
+
+  const handleAutoFillFromCbt = async (cbtInputVal) => {
+    const raw = String(cbtInputVal || '').trim();
+    if (!raw) {
+      setCreateForm((prev) => ({ ...prev, cbtExamId: '' }));
+      setCbtAutofillInfo(null);
+      return;
+    }
+
+    setCreateForm((prev) => ({ ...prev, cbtExamId: raw }));
+
+    // Try finding in availableCbtExams first
+    let found = availableCbtExams.find(
+      (c) => c._id === raw || c.examCode?.toLowerCase() === raw.toLowerCase()
+    );
+
+    // If not found in memory, try fetching from backend
+    if (!found) {
+      try {
+        found = await fetchCbtExamById(raw);
+      } catch (err) {
+        console.warn('CBT exam lookup failed:', err);
+      }
+    }
+
+    if (found) {
+      const std = found.standard === 'STD_12' ? 'STD_12' : 'STD_11';
+      const div = found.division || 'ALL';
+      const type = found.examType || 'GUJCET';
+      const duration = found.durationMinutes || 60;
+
+      let marksSub = 100;
+      if (
+        found.subjectMarksConfig &&
+        Array.isArray(found.subjectMarksConfig) &&
+        found.subjectMarksConfig.length > 0 &&
+        found.subjectMarksConfig[0].totalMarks
+      ) {
+        marksSub = Number(found.subjectMarksConfig[0].totalMarks);
+      } else if (found.totalMarks) {
+        marksSub = Math.round(Number(found.totalMarks) / (found.subjects?.length || 3));
+      } else {
+        marksSub = type === 'GUJCET' ? 40 : 100;
+      }
+
+      let examDateVal = getTodayYmd();
+      let examTimeVal = '10:00';
+      if (found.startTime) {
+        const d = new Date(found.startTime);
+        examDateVal = d.toISOString().slice(0, 10);
+        examTimeVal = d.toTimeString().slice(0, 5);
+      }
+
+      let subVal = 'Physics';
+      if (found.subjects && found.subjects.length > 0) {
+        subVal = found.subjects[0];
+      } else if (type === 'NEET') {
+        subVal = 'Biology';
+      }
+
+      setCreateForm((prev) => ({
+        ...prev,
+        cbtExamId: found._id || raw,
+        standard: std,
+        division: div,
+        examType: type,
+        durationMinutes: duration,
+        marksPerSubject: marksSub,
+        examDate: examDateVal,
+        examTime: examTimeVal,
+        subject: subVal,
+      }));
+
+      setCbtAutofillInfo({
+        title: found.title,
+        examCode: found.examCode,
+        examType: type,
+        standard: std,
+        marksPerSubject: marksSub,
+      });
+    } else {
+      setCbtAutofillInfo(null);
+    }
+  };
+
   const loadExams = useCallback(async (silent = false) => {
     if (!silent) setIsLoading(true);
     try {
@@ -940,12 +1036,6 @@ export default function AssistantExam() {
                             >
                               View Marks
                             </Link>
-                            <Link
-                              to={`/assistant/exam-analysis/${exId}`}
-                              className="btn btn-primary btn-sm"
-                            >
-                              View Analysis
-                            </Link>
                             <button
                               type="button"
                               className="btn btn-sm"
@@ -1133,20 +1223,68 @@ export default function AssistantExam() {
               </div>
 
               {['JEE', 'NEET', 'GUJCET'].includes(createForm.examType) && (
-                <div className="form-group">
-                  <label className="field-label">Enter CBT Exam ID / Code *</label>
+                <div
+                  className="form-group"
+                  style={{
+                    background: '#F0F9FF',
+                    padding: 12,
+                    borderRadius: 10,
+                    border: '1px solid #BAE6FD',
+                  }}
+                >
+                  <label className="field-label" style={{ color: '#0369A1', fontWeight: 700 }}>
+                    Select / Enter CBT Exam to Auto-Fill Details *
+                  </label>
+
+                  {/* Dropdown for one-click selection of CBT Exam */}
+                  {availableCbtExams.length > 0 && (
+                    <div style={{ marginBottom: 8 }}>
+                      <select
+                        className="filter-select w-full"
+                        style={{ background: '#FFFFFF', borderColor: '#38BDF8', fontWeight: 600 }}
+                        value={createForm.cbtExamId}
+                        onChange={(e) => handleAutoFillFromCbt(e.target.value)}
+                      >
+                        <option value="">-- Choose from existing CBT exams to auto-fill --</option>
+                        {availableCbtExams.map((cbt) => (
+                          <option key={cbt._id} value={cbt._id}>
+                            [{cbt.examCode}] {cbt.title} ({cbt.examType} - {cbt.standard?.replace('_', ' ')})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  {/* Text input for direct ID/Code entry */}
                   <input
                     type="text"
                     className="field-input w-full"
-                    placeholder="e.g. CBT-2026-JEE-01 or paste CBT Exam ID"
+                    placeholder="Or enter CBT Exam ID / Code (e.g. CBT-GUJCET-123456)"
                     value={createForm.cbtExamId}
-                    onChange={(e) =>
-                      setCreateForm((prev) => ({ ...prev, cbtExamId: e.target.value }))
-                    }
+                    onChange={(e) => handleAutoFillFromCbt(e.target.value)}
                     required={['JEE', 'NEET', 'GUJCET'].includes(createForm.examType)}
                   />
-                  <span style={{ fontSize: '0.74rem', color: '#64748b', marginTop: 4, display: 'block' }}>
-                    Maps this exam with the CBT module. Student marks from CBT evaluation will automatically enter into this exam and move it to Completed Exam!
+
+                  {cbtAutofillInfo && (
+                    <div
+                      style={{
+                        marginTop: 8,
+                        padding: '6px 10px',
+                        background: '#DCFCE7',
+                        borderRadius: 6,
+                        border: '1px solid #86EFAC',
+                        color: '#166534',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                      }}
+                    >
+                      ✓ Auto-filled from CBT Exam: [{cbtAutofillInfo.examCode}] {cbtAutofillInfo.title} (
+                      {cbtAutofillInfo.examType} • {cbtAutofillInfo.standard} • {cbtAutofillInfo.marksPerSubject} Marks/Sub)
+                    </div>
+                  )}
+
+                  <span style={{ fontSize: '0.74rem', color: '#0284C7', marginTop: 4, display: 'block' }}>
+                    Maps this exam with the CBT module. Choosing a CBT Exam auto-fills Subject, Standard, Division, Exam Date & Time, Duration, and Marks!
                   </span>
                 </div>
               )}

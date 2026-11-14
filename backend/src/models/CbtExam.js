@@ -62,6 +62,14 @@ const cbtExamSchema = new mongoose.Schema(
     marksPerQuestion: { type: Number, default: 4 },
     negativeMarks: { type: Number, default: 1 },
 
+    // Subject Total Marks Configuration (e.g. Physics: 100, Chemistry: 100, Maths: 100)
+    subjectMarksConfig: [
+      {
+        subject: { type: String, required: true },
+        totalMarks: { type: Number, required: true, default: 100 },
+      },
+    ],
+
     // Visibility and Scheduling Timings
     scheduleTime: {
       type: Date,
