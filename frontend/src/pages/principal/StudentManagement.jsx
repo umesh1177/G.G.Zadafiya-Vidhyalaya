@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { AlertTriangle, CheckCircle2, RefreshCw, Eye, Pencil, Trash2 } from 'lucide-react';
 import { useOutletContext } from 'react-router-dom';
 import { studentApi } from '../../services/studentApi';
 
@@ -443,7 +444,7 @@ export default function StudentManagement() {
       showToast(`Record for ${student.fullName} removed.`);
       loadStudents(true);
     } catch (err) {
-      showToast(`⚠️ ${err.message || 'Failed to delete record from database'}`);
+      showToast(`${err.message || 'Failed to delete record from database'}`);
     }
   };
 
@@ -519,7 +520,7 @@ export default function StudentManagement() {
       {/* ── Live CRUD Success Toast ── */}
       {actionToast && (
         <div className="banner banner-success" style={{ marginBottom: 16 }}>
-          <span>✅ {actionToast}</span>
+          <CheckCircle2 size={14} style={{marginRight:4}}/><span>{actionToast}</span>
         </div>
       )}
 
@@ -541,7 +542,7 @@ export default function StudentManagement() {
           color: '#92400E'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 18 }}>⚠️</span>
+            <AlertTriangle size={18}/>
             <span><strong>Backend Server Offline:</strong> Make sure the backend server is running (<code style={{ background: '#FEF3C7', padding: '2px 6px', borderRadius: 4, fontFamily: 'monospace' }}>npm run backend</code>) to connect directly to MongoDB localhost.</span>
           </div>
           <button
@@ -557,7 +558,7 @@ export default function StudentManagement() {
               color: '#92400E'
             }}
           >
-            🔄 Retry
+            <><RefreshCw size={13} style={{marginRight:4}}/>Retry</>
           </button>
         </div>
       )}
@@ -1002,7 +1003,7 @@ export default function StudentManagement() {
                             title="View Profile"
                             onClick={() => setViewingStudent(student)}
                           >
-                            👁️ View
+                            <Eye size={13} style={{marginRight:4}}/>View
                           </button>
                           <button
                             className="btn btn-ghost btn-sm"
@@ -1010,7 +1011,7 @@ export default function StudentManagement() {
                             title="Edit Student"
                             onClick={() => { setEditError(null); setEditingStudent({ ...student }); }}
                           >
-                            ✏️ Edit
+                            <Pencil size={13} style={{marginRight:4}}/>Edit
                           </button>
                           <button
                             className="btn btn-danger-ghost btn-sm"
@@ -1018,7 +1019,7 @@ export default function StudentManagement() {
                             title="Delete Student"
                             onClick={() => handleDeleteStudent(student)}
                           >
-                            🗑️
+                            <Trash2 size={13}/>
                           </button>
                         </div>
                       </td>
@@ -1154,7 +1155,7 @@ export default function StudentManagement() {
                             onClick={() => setViewingStudent(alumni)}
                             title="View Alumni Profile"
                           >
-                            👁️ View
+                            <Eye size={13} style={{marginRight:4}}/>View
                           </button>
                           <button
                             className="btn btn-ghost btn-sm"
@@ -1162,7 +1163,7 @@ export default function StudentManagement() {
                             onClick={() => { setEditError(null); setEditingStudent({ ...alumni }); }}
                             title="Edit Alumni Profile"
                           >
-                            ✏️ Edit
+                            <Pencil size={13} style={{marginRight:4}}/>Edit
                           </button>
                           <button
                             className="btn btn-danger-ghost btn-sm"
@@ -1170,7 +1171,7 @@ export default function StudentManagement() {
                             onClick={() => handleDeleteStudent(alumni)}
                             title="Delete Alumni Record"
                           >
-                            🗑️
+                            <Trash2 size={13}/>
                           </button>
                         </div>
                       </td>
@@ -1212,12 +1213,12 @@ export default function StudentManagement() {
 
           {formError && (
             <div className="banner banner-danger" style={{ marginBottom: 20 }}>
-              <span>⚠️ {formError}</span>
+              <AlertTriangle size={14} style={{marginRight:4}}/><span>{formError}</span>
             </div>
           )}
           {formSuccess && (
             <div className="banner banner-success" style={{ marginBottom: 20 }}>
-              <span>✅ {formSuccess}</span>
+              <CheckCircle2 size={14} style={{marginRight:4}}/><span>{formSuccess}</span>
             </div>
           )}
 
@@ -1398,12 +1399,12 @@ export default function StudentManagement() {
 
           {formError && (
             <div className="banner banner-danger" style={{ marginBottom: 20 }}>
-              <span>⚠️ {formError}</span>
+              <AlertTriangle size={14} style={{marginRight:4}}/><span>{formError}</span>
             </div>
           )}
           {formSuccess && (
             <div className="banner banner-success" style={{ marginBottom: 20 }}>
-              <span>✅ {formSuccess}</span>
+              <CheckCircle2 size={14} style={{marginRight:4}}/><span>{formSuccess}</span>
             </div>
           )}
 
@@ -1640,7 +1641,7 @@ export default function StudentManagement() {
                   setViewingStudent(null);
                 }}
               >
-                ✏️ Update Record
+                <><Pencil size={13} style={{marginRight:4}}/>Update Record</>
               </button>
               <button className="btn btn-primary btn-sm" onClick={() => setViewingStudent(null)}>
                 Close
@@ -1670,7 +1671,7 @@ export default function StudentManagement() {
             <form onSubmit={handleUpdateStudent}>
               {editError && (
                 <div className="banner banner-danger" style={{ marginTop: 14, marginBottom: 4 }}>
-                  <span>⚠️ {editError}</span>
+                  <AlertTriangle size={14} style={{marginRight:4}}/><span>{editError}</span>
                 </div>
               )}
 

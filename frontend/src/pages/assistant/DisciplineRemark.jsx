@@ -5,6 +5,7 @@ import { disciplineApi } from '../../services/disciplineApi';
 import { studentApi } from '../../services/studentApi';
 import PaginationBar from '../../components/common/PaginationBar';
 import VoiceInputControl from '../../components/common/VoiceInputControl';
+import { X } from 'lucide-react';
 
 const PAGE_SIZE = 8;
 
@@ -336,7 +337,9 @@ export default function AssistantDiscipline() {
           style={{ marginBottom: 16, justifyContent: 'space-between', alignItems: 'center' }}
         >
           <span>{banner.text}</span>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setBanner(null)}>✕</button>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setBanner(null)} aria-label="Dismiss banner">
+            <X size={14} />
+          </button>
         </div>
       )}
 
@@ -780,9 +783,10 @@ export default function AssistantDiscipline() {
               <button
                 type="button"
                 onClick={() => setOpenModal(null)}
-                style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.16)', border: 'none', color: '#fff', cursor: 'pointer' }}
+                style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.16)', border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                aria-label="Close modal"
               >
-                ✕
+                <X size={16} />
               </button>
             </div>
 
@@ -795,7 +799,7 @@ export default function AssistantDiscipline() {
 
               <div style={{ marginTop: 12, paddingTop: 12, borderTop: '1px solid var(--line-soft)' }}>
                 <div className="text-slate" style={{ fontSize: 11.5, fontWeight: 700, marginBottom: 6 }}>OBSERVATION MESSAGE</div>
-                <p style={{ fontSize: 13.8, lineHeight: 1.6, overflowWrap: 'anywhere', margin: 0 }}>
+                <p style={{ fontSize: 13.8, lineHeight: 1.6, overflowWrap: 'break-word', wordBreak: 'normal', margin: 0 }}>
                   {openModal.message || openModal.description}
                 </p>
               </div>

@@ -13,6 +13,7 @@ import {
   isTopicCompleted,
 } from '../../utils/syllabusUtils';
 import VoiceInputControl from '../../components/common/VoiceInputControl';
+import { CheckCircle2, AlertTriangle, X, Eye, GraduationCap, Users, Lock, BookOpen, Lightbulb, FileText, Trophy, Check, Image as ImageIcon, HelpCircle, Search, Clock, Mic, ExternalLink } from 'lucide-react';
 
 export default function FacultySyllabus() {
   const { setHeader } = useOutletContext();
@@ -30,6 +31,7 @@ export default function FacultySyllabus() {
   const facultyId = user?.id || user?._id || user?.empCode || user?.username || 'faculty';
   const [selectedStandard, setSelectedStandard] = useState('Standard 11');
   const [selectedDivision, setSelectedDivision] = useState('Division A');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     setSelectedStandard('Standard 11');
@@ -514,7 +516,16 @@ export default function FacultySyllabus() {
       }}
       title={isDone ? 'Completed — click to mark pending' : 'Click to mark completed by faculty'}
     >
-      <span>{isDone ? '✓ Finished' : 'Finish'}</span>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+        {isDone ? (
+          <>
+            <Check size={12} />
+            <span>Finished</span>
+          </>
+        ) : (
+          <span>Finish</span>
+        )}
+      </span>
     </button>
   );
 
@@ -542,24 +553,48 @@ export default function FacultySyllabus() {
       }}
       title="View full text & details"
     >
-      <span>👁️</span>
+      <Eye size={13} />
       <span>View</span>
     </button>
   );
 
+  const filteredChapters = useMemo(() => {
+    if (!searchQuery.trim()) return chapters;
+    const q = searchQuery.toLowerCase().trim();
+    return chapters.filter(ch => {
+      if (ch.chapterName?.toLowerCase().includes(q) || ch.chapterNameGujarati?.toLowerCase().includes(q)) return true;
+      if (String(ch.chapterNo).includes(q)) return true;
+      return (ch.topics || []).some(t =>
+        t.title?.toLowerCase().includes(q) ||
+        t.titleGujarati?.toLowerCase().includes(q) ||
+        t.topicNo?.toLowerCase().includes(q)
+      );
+    });
+  }, [chapters, searchQuery]);
+
   return (
-    <div style={{ maxWidth: 980, margin: '0 auto', paddingBottom: 40 }}>
+    <div className="module-container" style={{ width: '100%', paddingBottom: 40 }}>
       {/* ── Top Feedback Banners ── */}
       {successMsg && (
-        <div className="banner banner-success" style={{ marginBottom: 16, justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>✅ {successMsg}</span>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setSuccessMsg(null)}>✕</button>
+        <div className="banner banner-success" style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <CheckCircle2 size={16} />
+            <span>{successMsg}</span>
+          </span>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setSuccessMsg(null)} aria-label="Dismiss banner">
+            <X size={14} />
+          </button>
         </div>
       )}
       {errorMsg && (
-        <div className="banner banner-warning" style={{ marginBottom: 16, justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>⚠️ {errorMsg}</span>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setErrorMsg(null)}>✕</button>
+        <div className="banner banner-warning" style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <AlertTriangle size={16} />
+            <span>{errorMsg}</span>
+          </span>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setErrorMsg(null)} aria-label="Dismiss banner">
+            <X size={14} />
+          </button>
         </div>
       )}
 
@@ -575,39 +610,91 @@ export default function FacultySyllabus() {
         flexDirection: 'column',
         gap: 14,
       }}>
-        <div className="form-grid-2" style={{ alignItems: 'center' }}>
+        <div className="filter-grid-4" style={{ alignItems: 'center', gap: 12 }}>
           {/* Standard Select */}
-          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, minWidth: 0 }}>
-            <span style={{ fontSize: 18, color: '#123B5D' }}>🎓</span>
-            <span style={{ fontWeight: 700, fontSize: 13.5, color: '#1E293B' }}>
-              ધોરણ (STANDARD):
-            </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+            <GraduationCap size={18} color="#123B5D" style={{ flexShrink: 0 }} />
             <select
-              className="filter-select"
+              className="filter-select w-full"
               value={selectedStandard}
               onChange={e => setSelectedStandard(e.target.value)}
-              style={{ flex: '1 1 140px', minWidth: 0, height: 38, borderRadius: 8, fontWeight: 600 }}
+              style={{ height: 38, borderRadius: 8, fontWeight: 600, fontSize: 13 }}
             >
               <option value="Standard 12">Standard 12</option>
               <option value="Standard 11">Standard 11</option>
             </select>
           </div>
 
+          {/* Subject Badge */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+            <div
+              className="filter-select w-full flex items-center justify-between"
+              style={{
+                background: '#F8FAFC',
+                borderColor: '#CBD5E1',
+                color: '#0F172A',
+                fontWeight: 600,
+                cursor: 'not-allowed',
+                padding: '8px 12px',
+                fontSize: 13,
+                height: 38,
+              }}
+              title="Assigned Subject"
+            >
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <Lock size={13} style={{ color: '#64748B' }} />
+                <span>{currentSubject}</span>
+              </span>
+              <span
+                style={{
+                  fontSize: '10.5px',
+                  color: '#2563EB',
+                  background: '#EFF6FF',
+                  padding: '1px 6px',
+                  borderRadius: '4px',
+                  border: '1px solid #BFDBFE',
+                  fontWeight: 700,
+                }}
+              >
+                Subject
+              </span>
+            </div>
+          </div>
+
           {/* Division Select */}
-          <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, minWidth: 0 }}>
-            <span style={{ fontSize: 18, color: '#123B5D' }}>👥</span>
-            <span style={{ fontWeight: 700, fontSize: 13.5, color: '#1E293B' }}>
-              ટુકડી (DIVISION):
-            </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+            <Users size={18} color="#123B5D" style={{ flexShrink: 0 }} />
             <select
-              className="filter-select"
+              className="filter-select w-full"
               value={selectedDivision}
               onChange={e => setSelectedDivision(e.target.value)}
-              style={{ flex: '1 1 140px', minWidth: 0, height: 38, borderRadius: 8, fontWeight: 600 }}
+              style={{ height: 38, borderRadius: 8, fontWeight: 600, fontSize: 13 }}
             >
               <option value="Division A">Division A</option>
               <option value="Division B">Division B</option>
             </select>
+          </div>
+
+          {/* Search Input */}
+          <div style={{ position: 'relative', minWidth: 0 }}>
+            <Search size={15} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#64748B' }} />
+            <input
+              type="text"
+              className="field-input w-full"
+              style={{ height: 38, paddingLeft: 32, fontSize: 13 }}
+              placeholder="Search topic or chapter..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8' }}
+              >
+                <X size={13} />
+              </button>
+            )}
           </div>
         </div>
 
@@ -650,7 +737,10 @@ export default function FacultySyllabus() {
               fontWeight: 700,
               border: '1px solid #BBF7D0',
             }}>
-              <span>🔒 Personal Progress</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <Lock size={12} />
+                <span>Personal Progress</span>
+              </span>
               <span>• Isolated ({user?.name || currentSubject})</span>
             </div>
           </div>
@@ -684,8 +774,12 @@ export default function FacultySyllabus() {
             fontSize: 12,
             fontWeight: 700,
             color: '#123B5D',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
           }}>
-            📘 ટોપિક્સ (Topics): {syllabusStats.topics.done}/{syllabusStats.topics.total} ({syllabusStats.topics.percent}%)
+            <BookOpen size={14} />
+            <span>ટોપિક્સ (Topics): {syllabusStats.topics.done}/{syllabusStats.topics.total} ({syllabusStats.topics.percent}%)</span>
           </div>
           <div style={{
             background: '#FAF5FF',
@@ -695,8 +789,12 @@ export default function FacultySyllabus() {
             fontSize: 12,
             fontWeight: 700,
             color: '#6B21A8',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
           }}>
-            💡 ઉદાહરણો (Examples): {syllabusStats.examples.done}/{syllabusStats.examples.total} ({syllabusStats.examples.percent}%)
+            <Lightbulb size={14} />
+            <span>ઉદાહરણો (Examples): {syllabusStats.examples.done}/{syllabusStats.examples.total} ({syllabusStats.examples.percent}%)</span>
           </div>
           <div style={{
             background: '#FFFBEB',
@@ -706,8 +804,12 @@ export default function FacultySyllabus() {
             fontSize: 12,
             fontWeight: 700,
             color: '#92400E',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
           }}>
-            📝 સ્વાધ્યાય (Exercises): {syllabusStats.exercises.done}/{syllabusStats.exercises.total} ({syllabusStats.exercises.percent}%)
+            <FileText size={14} />
+            <span>સ્વાધ્યાય (Exercises): {syllabusStats.exercises.done}/{syllabusStats.exercises.total} ({syllabusStats.exercises.percent}%)</span>
           </div>
           <div style={{
             background: '#F0FDF4',
@@ -717,8 +819,12 @@ export default function FacultySyllabus() {
             fontSize: 12,
             fontWeight: 700,
             color: '#166534',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
           }}>
-            🏆 પૂર્ણ પ્રકરણો: {syllabusStats.completedChapters}/{chapters.length}
+            <Trophy size={14} />
+            <span>પૂર્ણ પ્રકરણો: {syllabusStats.completedChapters}/{chapters.length}</span>
           </div>
         </div>
       </div>
@@ -743,9 +849,9 @@ export default function FacultySyllabus() {
           gap: 10,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flex: '1 1 220px' }}>
-            <span style={{ fontSize: 22, flexShrink: 0 }}>📚</span>
+            <BookOpen size={20} color="#123B5D" style={{ flexShrink: 0 }} />
             <div style={{ minWidth: 0 }}>
-              <h2 style={{ fontSize: 17, fontWeight: 800, color: '#0F172A', margin: 0, overflowWrap: 'anywhere' }}>
+              <h2 style={{ fontSize: 17, fontWeight: 800, color: '#0F172A', margin: 0, overflowWrap: 'break-word', wordBreak: 'normal' }}>
                 {selectedStandard === 'Standard 12' ? 'STD 12' : 'STD 11'} અભ્યાસક્રમનું માળખું ({currentSubject})
               </h2>
               <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
@@ -787,8 +893,12 @@ export default function FacultySyllabus() {
           <div style={{ padding: 40, textAlign: 'center', color: '#64748B' }}>
             કોઈ પ્રકરણ મળ્યા નથી. '+ પ્રકરણ ઉમેરો' બટન પર ક્લિક કરીને અભ્યાસક્રમ શરૂ કરો.
           </div>
+        ) : filteredChapters.length === 0 ? (
+          <div style={{ padding: 40, textAlign: 'center', color: '#64748B' }}>
+            {searchQuery ? `"${searchQuery}" માટે કોઈ પરિણામ મળ્યું નથી.` : "કોઈ પ્રકરણ મળ્યા નથી."}
+          </div>
         ) : (
-          chapters.map((chapter, chIndex) => {
+          filteredChapters.map((chapter, chIndex) => {
             const chKey = chapter.id || chapter._id || chapter.chapterNo;
             const isChExpanded = expandedChapters[chapter.chapterNo] !== false;
             const chStats = syllabusStats.chapterMap[chKey] || calculateChapterCompletion(chapter);
@@ -835,11 +945,11 @@ export default function FacultySyllabus() {
                       fontSize: 14,
                       flexShrink: 0,
                     }}>
-                      {chStats.percent === 100 ? '✓' : chapter.chapterNo}
+                      {chStats.percent === 100 ? <Check size={16} /> : chapter.chapterNo}
                     </div>
 
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 15.5, fontWeight: 800, color: '#0F172A', overflowWrap: 'anywhere' }}>
+                      <div style={{ fontSize: 15.5, fontWeight: 800, color: '#0F172A', overflowWrap: 'break-word', wordBreak: 'normal' }}>
                         {chapter.chapterName}
                         {hasDistinctGujarati(chapter.chapterName, chapter.chapterNameGujarati) && (
                           <span style={{ color: '#475569', fontWeight: 600, marginLeft: 8 }}>
@@ -915,7 +1025,7 @@ export default function FacultySyllabus() {
                         setShowAddTopicModal(true);
                       }}
                     >
-                      <span>📑</span>
+                      <FileText size={13} />
                       <span>+ ટોપિક</span>
                     </button>
                   </div>
@@ -970,7 +1080,7 @@ export default function FacultySyllabus() {
                                 }}>
                                   {topic.topicNo}
                                 </span>
-                                <div style={{ fontWeight: 700, fontSize: 14, color: '#0F172A', minWidth: 0, overflowWrap: 'anywhere' }}>
+                                <div style={{ fontWeight: 700, fontSize: 14, color: '#0F172A', minWidth: 0, overflowWrap: 'break-word', wordBreak: 'normal' }}>
                                   <span>{topic.title}</span>
                                   {hasDistinctGujarati(topic.title, topic.titleGujarati) && (
                                     <span style={{ color: '#475569', fontWeight: 600, marginLeft: 6 }}>
@@ -1093,7 +1203,7 @@ export default function FacultySyllabus() {
                                               fontWeight: 800,
                                               flexShrink: 0,
                                             }}>
-                                              {stDone ? '✓' : '•'}
+                                              {stDone ? <Check size={11} /> : '•'}
                                             </span>
                                             <span style={{
                                               padding: '2px 7px',
@@ -1107,7 +1217,7 @@ export default function FacultySyllabus() {
                                             }}>
                                               {st.subtopicNo}
                                             </span>
-                                            <div style={{ fontSize: 13.2, color: '#1E293B', fontWeight: 600, minWidth: 0, overflowWrap: 'anywhere' }}>
+                                            <div style={{ fontSize: 13.2, color: '#1E293B', fontWeight: 600, minWidth: 0, overflowWrap: 'break-word', wordBreak: 'normal' }}>
                                               <span>{st.title}</span>
                                               {hasDistinctGujarati(st.title, st.titleGujarati) && (
                                                 <span style={{ color: '#64748B', marginLeft: 6, fontSize: 12.2, fontWeight: 500 }}>
@@ -1219,7 +1329,7 @@ export default function FacultySyllabus() {
                                                     }}>
                                                       {sst.subSubtopicNo}
                                                     </span>
-                                                    <div style={{ fontSize: 12.5, color: '#334155', fontWeight: 500, minWidth: 0, overflowWrap: 'anywhere' }}>
+                                                    <div style={{ fontSize: 12.5, color: '#334155', fontWeight: 500, minWidth: 0, overflowWrap: 'break-word', wordBreak: 'normal' }}>
                                                       <span>{sst.title}</span>
                                                       {hasDistinctGujarati(sst.title, sst.titleGujarati) && (
                                                         <span style={{ color: '#64748B', marginLeft: 5, fontSize: 11.8 }}>
@@ -1303,7 +1413,7 @@ export default function FacultySyllabus() {
                         onClick={() => toggleExamplesDropdown(chKey)}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <span style={{ fontSize: 16 }}>💡</span>
+                          <Lightbulb size={16} color="#6B21A8" />
                           <span style={{ fontSize: 13.5, fontWeight: 800, color: '#6B21A8' }}>
                             ઉદાહરણો (EXAMPLES DROPDOWN)
                           </span>
@@ -1399,7 +1509,7 @@ export default function FacultySyllabus() {
                                     }}>
                                       {ex.exampleNo}
                                     </span>
-                                    <div style={{ fontSize: 13, color: '#334155', fontWeight: 500, minWidth: 0, overflowWrap: 'anywhere' }}>
+                                    <div style={{ fontSize: 13, color: '#334155', fontWeight: 500, minWidth: 0, overflowWrap: 'break-word', wordBreak: 'normal' }}>
                                       <span>{ex.title}</span>
                                       {hasDistinctGujarati(ex.title, ex.titleGujarati) && (
                                         <span style={{ color: '#7E22CE', marginLeft: 6, fontSize: 12 }}>
@@ -1457,7 +1567,10 @@ export default function FacultySyllabus() {
                                                 border: '1px solid #E0F2FE',
                                               }}
                                             />
-                                            <span>🖼️ {ex.figureNote || 'આકૃતિ જુઓ'}</span>
+                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                              <ImageIcon size={12} />
+                                              <span>{ex.figureNote || 'આકૃતિ જુઓ'}</span>
+                                            </span>
                                           </button>
                                         </div>
                                       )}
@@ -1525,7 +1638,7 @@ export default function FacultySyllabus() {
                         onClick={() => toggleExercisesDropdown(chKey)}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <span style={{ fontSize: 16 }}>❓</span>
+                          <HelpCircle size={16} color="#92400E" />
                           <span style={{ fontSize: 13.5, fontWeight: 800, color: '#92400E' }}>
                             સ્વાધ્યાય (SWADHYAY EXERCISES DROPDOWN)
                           </span>
@@ -1627,7 +1740,7 @@ export default function FacultySyllabus() {
                                     }}>
                                       {sw.exerciseNo}
                                     </span>
-                                    <div style={{ fontSize: 13, color: '#451A03', fontWeight: 500, minWidth: 0, overflowWrap: 'anywhere' }}>
+                                    <div style={{ fontSize: 13, color: '#451A03', fontWeight: 500, minWidth: 0, overflowWrap: 'break-word', wordBreak: 'normal' }}>
                                       <span>{sw.title}</span>
                                       {hasDistinctGujarati(sw.title, sw.titleGujarati) && (
                                         <span style={{ color: '#78350F', marginLeft: 6, fontSize: 12 }}>
@@ -1686,7 +1799,10 @@ export default function FacultySyllabus() {
                                                 border: '1px solid #FDE68A',
                                               }}
                                             />
-                                            <span>🖼️ {sw.figureNote || 'આકૃતિ જુઓ'}</span>
+                                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                              <ImageIcon size={12} />
+                                              <span>{sw.figureNote || 'આકૃતિ જુઓ'}</span>
+                                            </span>
                                           </button>
                                         </div>
                                       )}
@@ -1780,7 +1896,9 @@ export default function FacultySyllabus() {
                 </div>
                 <div className="card__title">સંપૂર્ણ વિગત (Full Content View)</div>
               </div>
-              <button className="modal-close" onClick={() => setViewingItem(null)}>✕</button>
+              <button className="modal-close" onClick={() => setViewingItem(null)} aria-label="Close modal">
+                <X size={16} />
+              </button>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14, margin: '18px 0' }}>
@@ -1825,7 +1943,7 @@ export default function FacultySyllabus() {
                     ? 'Full Title / Question (English)'
                     : 'Full Title / Content (સંપૂર્ણ વિગત)'}
                 </div>
-                <div style={{ fontSize: 15, fontWeight: 600, color: '#0F172A', lineHeight: 1.65, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+                <div style={{ fontSize: 15, fontWeight: 600, color: '#0F172A', lineHeight: 1.65, whiteSpace: 'pre-wrap', overflowWrap: 'break-word', wordBreak: 'normal' }}>
                   {viewingItem.title}
                 </div>
               </div>
@@ -1841,7 +1959,7 @@ export default function FacultySyllabus() {
                   <div style={{ fontSize: 11.5, fontWeight: 700, color: '#475569', marginBottom: 6 }}>
                     ગુજરાતીમાં સંપૂર્ણ વિગત (Gujarati)
                   </div>
-                  <div style={{ fontSize: 15, fontWeight: 600, color: '#1E293B', lineHeight: 1.65, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: '#1E293B', lineHeight: 1.65, whiteSpace: 'pre-wrap', overflowWrap: 'break-word', wordBreak: 'normal' }}>
                     {viewingItem.titleGujarati}
                   </div>
                 </div>
@@ -1868,7 +1986,10 @@ export default function FacultySyllabus() {
                     gap: 8,
                   }}>
                     <div style={{ fontSize: 12.5, fontWeight: 700, color: '#0369A1', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span>🖼️ પ્રશ્ન / કોયડા સાથેની આકૃતિ (Figure & Diagram)</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                        <ImageIcon size={14} />
+                        <span>પ્રશ્ન / કોયડા સાથેની આકૃતિ (Figure & Diagram)</span>
+                      </span>
                       {viewingItem.figureNote && (
                         <span style={{
                           background: '#E0F2FE',
@@ -1896,7 +2017,8 @@ export default function FacultySyllabus() {
                         gap: 4,
                       }}
                     >
-                      <span>🔍 મોટી સાઈઝમાં ખોલો (Full Size) ↗</span>
+                      <Search size={12} />
+                      <><span>મોટી સાઈઝમાં ખોલો (Full Size)</span><ExternalLink size={11} style={{marginLeft:4}}/></>
                     </a>
                   </div>
                   <div style={{
@@ -1935,7 +2057,17 @@ export default function FacultySyllabus() {
                 border: viewingItem.status === 'done' ? '1px solid #86EFAC' : '1px solid #FDE68A',
               }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: viewingItem.status === 'done' ? '#15803D' : '#92400E' }}>
-                  {viewingItem.status === 'done' ? '✓ સ્થિતિ: ફેકલ્ટી દ્વારા પૂર્ણ (Finished)' : '⏳ સ્થિતિ: બાકી (Pending Completion)'}
+                  {viewingItem.status === 'done' ? (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                      <Check size={14} />
+                      <span>સ્થિતિ: ફેકલ્ટી દ્વારા પૂર્ણ (Finished)</span>
+                    </span>
+                  ) : (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                      <Clock size={14} />
+                      <span>સ્થિતિ: બાકી (Pending Completion)</span>
+                    </span>
+                  )}
                 </div>
                 <FinishButton
                   isDone={viewingItem.status === 'done'}
@@ -1970,7 +2102,9 @@ export default function FacultySyllabus() {
                   {selectedStandard} • {selectedDivision} • {currentSubject}
                 </div>
               </div>
-              <button className="modal-close" onClick={() => { stopVoiceRecording(); setShowAddChapterModal(false); }}>✕</button>
+              <button className="modal-close" onClick={() => { stopVoiceRecording(); setShowAddChapterModal(false); }} aria-label="Close modal">
+                <X size={16} />
+              </button>
             </div>
 
             <form onSubmit={handleAddChapterSubmit}>
@@ -2012,7 +2146,7 @@ export default function FacultySyllabus() {
                         gap: 4,
                       }}
                     >
-                      <span>🎙️</span>
+                      <Mic size={12} />
                       <span>{(isRecording && recordingTargetField === 'chapterName') ? 'સાંભળે છે...' : 'Voice Input (English)'}</span>
                     </button>
                   </div>
@@ -2092,7 +2226,9 @@ export default function FacultySyllabus() {
                   તમે કોઈપણ પ્રકરણ અથવા ટોપિક વચ્ચે નવો ક્રમ ઉમેરી શકો છો
                 </div>
               </div>
-              <button className="modal-close" onClick={() => { stopVoiceRecording(); setShowAddTopicModal(false); }}>✕</button>
+              <button className="modal-close" onClick={() => { stopVoiceRecording(); setShowAddTopicModal(false); }} aria-label="Close modal">
+                <X size={16} />
+              </button>
             </div>
 
             <form onSubmit={handleAddTopicSubmit}>
@@ -2201,7 +2337,7 @@ export default function FacultySyllabus() {
                         gap: 4,
                       }}
                     >
-                      <span>🎙️</span>
+                      <Mic size={12} />
                       <span>{(isRecording && recordingTargetField === 'title') ? 'સાંભળે છે...' : 'Voice Dictate (English)'}</span>
                     </button>
                   </div>

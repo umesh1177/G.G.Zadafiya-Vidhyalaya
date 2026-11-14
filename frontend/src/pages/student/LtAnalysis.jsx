@@ -150,7 +150,7 @@ export default function StudentLtAnalysis() {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M18 6 6 18"/></svg>
               </button>
             </div>
-            <div className="detail-panel__row"><span>Topic</span><span style={{ overflowWrap: 'anywhere' }}>{openModal.topic}</span></div>
+            <div className="detail-panel__row"><span>Topic</span><span style={{ overflowWrap: 'break-word', wordBreak: 'normal' }}>{openModal.topic}</span></div>
             <div className="detail-panel__row"><span>Score</span><span>{openModal.score}</span></div>
           </div>
         </div>

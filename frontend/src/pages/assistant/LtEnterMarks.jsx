@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { ltApi } from '../../services/ltApi';
 import { studentApi } from '../../services/studentApi';
 import PaginationBar from '../../components/common/PaginationBar';
+import { AlertTriangle, X } from 'lucide-react';
 
 export default function LtEnterMarks() {
   const { id } = useParams();
@@ -199,8 +200,13 @@ export default function LtEnterMarks() {
 
       {errorMsg && (
         <div className="banner banner-danger" style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-          <span>⚠️ {errorMsg}</span>
-          <button type="button" className="btn btn-ghost btn-sm" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => setErrorMsg(null)}>✕</button>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <AlertTriangle size={16} />
+            <span>{errorMsg}</span>
+          </span>
+          <button type="button" className="btn btn-ghost btn-sm" style={{ padding: '2px 8px' }} onClick={() => setErrorMsg(null)} aria-label="Dismiss alert">
+            <X size={14} />
+          </button>
         </div>
       )}
 
@@ -245,7 +251,8 @@ export default function LtEnterMarks() {
 
           <form onSubmit={handleSave}>
             <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-              <div className="table-wrap" style={{ margin: 0 }}>
+              {/* Desktop Table View */}
+              <div className="table-wrap desktop-only" style={{ margin: 0 }}>
                 <table>
                   <thead>
                     <tr>
@@ -292,6 +299,60 @@ export default function LtEnterMarks() {
                     )}
                   </tbody>
                 </table>
+              </div>
+
+              {/* Mobile Cards View */}
+              <div className="mobile-only" style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: 12 }}>
+                {marksState.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: 24, color: 'var(--slate)' }}>
+                    No active students found.
+                  </div>
+                ) : (
+                  paginatedMarks.map((s) => (
+                    <div
+                      key={s.studentId}
+                      style={{
+                        background: '#FFFFFF',
+                        borderRadius: 10,
+                        border: '1px solid #E2E8F0',
+                        padding: 12,
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ fontSize: 13, fontWeight: 800, color: '#123B5D', background: '#E8F1F8', padding: '2px 8px', borderRadius: 4 }}>
+                            Roll #{s.rollNo}
+                          </span>
+                          <strong style={{ fontSize: 14, color: '#0F172A' }}>{s.name}</strong>
+                        </div>
+                        <span className="chip chip-neutral" style={{ fontSize: 11 }}>
+                          Div {s.division || '—'}
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6, marginTop: 8 }}>
+                        {['Excellent', 'Better', 'Good', 'AB'].map((grade) => (
+                          <button
+                            key={grade}
+                            type="button"
+                            style={{
+                              ...getGradePillStyle(grade, s.mark === grade),
+                              padding: '8px 4px',
+                              textAlign: 'center',
+                              width: '100%',
+                              borderRadius: 8,
+                              fontSize: 12,
+                            }}
+                            onClick={() => handleGradeChange(s.studentId, grade)}
+                          >
+                            {grade}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
 
               <PaginationBar

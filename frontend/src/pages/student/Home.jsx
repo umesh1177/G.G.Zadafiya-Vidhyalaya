@@ -22,7 +22,7 @@ export default function StudentHome() {
     const displayName = user?.name || s.name || 'Student'
     const firstName = displayName.split(' ')[0]
     setHeader({
-      title: `Hi ${firstName} 👋`,
+      title: `Hi ${firstName}`,
       subtitle: `Std ${String(user?.standard || s.standard || '11').replace('STD_', '')}-${user?.division || 'A'} Science • Today's Academic Summary`
     })
   }, [user, s.name, s.standard, setHeader])
@@ -94,7 +94,7 @@ export default function StudentHome() {
                 <div className="text-slate num" style={{ fontSize:'11.5px', marginBottom:4 }}>
                   {n.date ? new Date(n.date).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }) : '—'}
                 </div>
-                <div style={{ fontSize:'13px', color:'var(--ink-soft)', overflowWrap:'anywhere' }}>
+                <div style={{ fontSize:'13px', color:'var(--ink-soft)', overflowWrap: 'break-word', wordBreak: 'normal' }}>
                   {n.message.length > 90 ? n.message.slice(0,90) + '…' : n.message}
                 </div>
               </li>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Lightbulb } from 'lucide-react';
 import { useOutletContext } from 'react-router-dom';
 import { useData } from '../../context/DataContext';
 import {
@@ -95,7 +96,7 @@ export default function ProgressReport() {
       {reportData.message && (
         <div className="card" style={{ background: '#E8F1F8', border: '1px solid #C8DBED', marginBottom: 16, padding: '16px 20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 20 }}>💡</span>
+            <Lightbulb size={20}/>
             <div>
               <strong style={{ color: '#123B5D' }}>Principal Evaluation Summary:</strong>
               <div style={{ color: '#1C2340', fontSize: 13.5, marginTop: 2 }}>{reportData.message}</div>

@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate, useOutletContext } from 'react-router-dom
 import { useAuth } from '../../context/AuthContext';
 import { examApi, getQuestionPaperUrl } from '../../services/examApi';
 import PaginationBar from '../../components/common/PaginationBar';
+import { CheckCircle2, X } from 'lucide-react';
 
 function formatExamTypeLabel(t) {
   const map = {
@@ -269,9 +270,12 @@ export default function ExamViewMarks() {
           className="banner banner-success"
           style={{ marginBottom: 16, justifyContent: 'space-between', alignItems: 'center' }}
         >
-          <span>✅ {bannerMsg}</span>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setBannerMsg(null)}>
-            ✕
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <CheckCircle2 size={16} />
+            <span>{bannerMsg}</span>
+          </span>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setBannerMsg(null)} aria-label="Dismiss banner">
+            <X size={14} />
           </button>
         </div>
       )}

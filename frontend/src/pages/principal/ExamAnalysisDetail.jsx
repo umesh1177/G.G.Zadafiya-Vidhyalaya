@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { FileText, CheckCircle2, AlertTriangle, TrendingUp, TrendingDown, Search, Printer } from 'lucide-react';
 import { useParams, Link, useOutletContext } from 'react-router-dom';
 import {
   Chart as ChartJS,
@@ -484,14 +485,14 @@ export default function ExamAnalysisDetail() {
             className="btn btn-primary btn-sm"
             onClick={openGenerateReportModal}
           >
-            📄 Generate Report for Faculty
+            <><FileText size={13} style={{marginRight:4}}/>Generate Report for Faculty</>
           </button>
         </div>
       </div>
 
       {feedbackBanner && (
         <div className="banner banner-success" style={{ marginBottom: 14, justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>✅ {feedbackBanner}</span>
+          <CheckCircle2 size={14} style={{marginRight:4}}/><span>{feedbackBanner}</span>
           <button type="button" className="btn btn-ghost btn-sm" onClick={() => setFeedbackBanner(null)}>✕</button>
         </div>
       )}
@@ -503,7 +504,7 @@ export default function ExamAnalysisDetail() {
             <div style={{ fontSize: 16, fontWeight: 800, color: '#1C2340' }}>
               Exam #{exam.examNo} — {exam.subject} ({formatExamTypeLabel(exam.examType)})
             </div>
-            <div style={{ fontSize: 12.5, color: 'var(--slate)', marginTop: 3, overflowWrap: 'anywhere' }}>
+            <div style={{ fontSize: 12.5, color: 'var(--slate)', marginTop: 3, overflowWrap: 'break-word', wordBreak: 'normal' }}>
               {exam.standardLabel}{exam.division !== 'ALL' ? ` · Div ${exam.division}` : ''} • Exam Date: <strong>{formatDate(exam.examDate)}</strong>
               {exam.marksEnteredAt ? ` • Marks Entered: ${formatDate(exam.marksEnteredAt)} by ${exam.marksEnteredByName}` : ''}
               {exam.unitSummary ? ` • Units: ${exam.unitSummary}` : ''}
@@ -742,7 +743,7 @@ export default function ExamAnalysisDetail() {
                         minWidth: 54,
                       }}
                     >
-                      {comparison.increasedCount ?? 0} ↗
+                      {comparison.increasedCount ?? 0} <TrendingUp size={13}/>
                     </button>
                   ) : (
                     <strong className="num">—</strong>
@@ -772,7 +773,7 @@ export default function ExamAnalysisDetail() {
                         minWidth: 54,
                       }}
                     >
-                      {comparison.decreasedCount ?? 0} ↘
+                      {comparison.decreasedCount ?? 0} <TrendingDown size={13}/>
                     </button>
                   ) : (
                     <strong className="num">—</strong>
@@ -809,7 +810,7 @@ export default function ExamAnalysisDetail() {
                 }}
               >
                 <span style={{ fontSize: 18, lineHeight: 1.2, flexShrink: 0 }}>
-                  {isNegativeOutcome ? '⚠' : 'ⓘ'}
+                  {isNegativeOutcome ? <AlertTriangle size={12}/> : "ⓘ"}
                 </span>
                 <div>{comparison.performanceMessage}</div>
               </div>
@@ -853,7 +854,7 @@ export default function ExamAnalysisDetail() {
               <input
                 type="text"
                 className="field-input w-full"
-                placeholder="🔍 Filter by student name or roll #..."
+                placeholder="Filter by student name or roll #..."
                 value={leaderboardSearch}
                 onChange={(e) => {
                   setLeaderboardSearch(e.target.value);
@@ -955,7 +956,7 @@ export default function ExamAnalysisDetail() {
             <div className="card" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <div>
                 <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--line-soft)' }}>
-                  <div className="card__title">Top Growth Student List 📈 ({topGrowth.length})</div>
+                  <div className="card__title">Top Growth Student List ({topGrowth.length})</div>
                   <div className="card__desc">
                     {hasPrevExam
                       ? `Improved marks vs. Exam #${comparison.previousExam.examNo}`
@@ -1017,7 +1018,7 @@ export default function ExamAnalysisDetail() {
             <div className="card" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               <div>
                 <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--line-soft)' }}>
-                  <div className="card__title">Decrease Growth Student List 📉 ({decreaseGrowth.length})</div>
+                  <div className="card__title">Decrease Growth Student List ({decreaseGrowth.length})</div>
                   <div className="card__desc">
                     {hasPrevExam
                       ? `Declined marks vs. Exam #${comparison.previousExam.examNo}`
@@ -1400,7 +1401,7 @@ export default function ExamAnalysisDetail() {
                         {rep.acknowledgedByFaculty ? '✓ Reviewed by Faculty' : 'Pending Review'}
                       </span>
                     </div>
-                    <div style={{ fontSize: 13.5, color: '#1C2340', overflowWrap: 'anywhere' }}>
+                    <div style={{ fontSize: 13.5, color: '#1C2340', overflowWrap: 'break-word', wordBreak: 'normal' }}>
                       {rep.principalMessage || rep.alertMessage}
                     </div>
                   </div>
@@ -1410,7 +1411,7 @@ export default function ExamAnalysisDetail() {
                     className="btn btn-ghost btn-sm"
                     onClick={() => triggerFacultyReportPrint(rep, setReportToPrint)}
                   >
-                    🖨️ Print
+                    <><Printer size={13} style={{marginRight:4}}/>Print</>
                   </button>
                 </div>
               );
@@ -1673,7 +1674,7 @@ export default function ExamAnalysisDetail() {
               <div style={{ padding: '18px 22px', overflowY: 'auto', flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {modalError && (
                   <div className="banner banner-warning" style={{ marginBottom: 0 }}>
-                    <span>⚠️ {modalError}</span>
+                    <AlertTriangle size={14} style={{marginRight:4}}/><span>{modalError}</span>
                   </div>
                 )}
 
@@ -1899,7 +1900,7 @@ export default function ExamAnalysisDetail() {
                     );
                   }}
                 >
-                  🖨️ Print Report
+                  <><Printer size={13} style={{marginRight:4}}/>Print</> Report
                 </button>
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                   <button type="button" className="btn btn-ghost" onClick={() => setShowReportModal(false)}>

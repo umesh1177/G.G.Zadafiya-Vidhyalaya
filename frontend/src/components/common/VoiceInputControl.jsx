@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import GujaratiVirtualKeyboard from './GujaratiVirtualKeyboard';
+import { Mic, Square, Keyboard, Globe, Volume2, AlertTriangle } from 'lucide-react';
 
 /**
  * VoiceInputControl
@@ -107,8 +108,8 @@ export default function VoiceInputControl({
         setIsRecording(true);
         setStatusMsg(
           selectedLang === 'gu-IN'
-            ? '🎙️ સાંભળે છે... (ગુજરાતીમાં બોલો)'
-            : '🎙️ Listening... (Speak in English)'
+            ? 'સાંભળે છે... (ગુજરાતીમાં બોલો)'
+            : 'Listening... (Speak in English)'
         );
         setInterimText('');
       };
@@ -133,11 +134,11 @@ export default function VoiceInputControl({
       recognition.onerror = (event) => {
         console.warn('SpeechRecognition error:', event.error);
         if (event.error === 'not-allowed') {
-          setStatusMsg('⚠️ માઇક્રોફોન પરવાનગી આપો (Allow microphone permission in browser)');
+          setStatusMsg('માઇક્રોફોન પરવાનગી આપો (Allow microphone permission in browser)');
         } else if (event.error === 'no-speech') {
           // benign timeout
         } else {
-          setStatusMsg(`⚠️ Voice input error: ${event.error}`);
+          setStatusMsg(`Voice input error: ${event.error}`);
         }
         setTimeout(() => setStatusMsg(''), 4500);
       };
@@ -153,7 +154,7 @@ export default function VoiceInputControl({
     } catch (err) {
       console.error('Failed to start speech recognition:', err);
       setIsRecording(false);
-      setStatusMsg('⚠️ અવાજ રેકોર્ડિંગ શરૂ થઈ શક્યું નથી');
+      setStatusMsg('અવાજ રેકોર્ડિંગ શરૂ થઈ શક્યું નથી');
       setTimeout(() => setStatusMsg(''), 4000);
     }
   };
@@ -221,7 +222,7 @@ export default function VoiceInputControl({
             }}
             title="બોલવાની ભાષા: ગુજરાતી"
           >
-            <span>🇮🇳</span>
+            <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 3px', background: 'rgba(0,0,0,0.1)', borderRadius: 3 }}>GU</span>
             <span>ગુજરાતી</span>
           </button>
           <button
@@ -247,7 +248,7 @@ export default function VoiceInputControl({
             }}
             title="Voice Language: English"
           >
-            <span>🇬🇧</span>
+            <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 3px', background: 'rgba(0,0,0,0.1)', borderRadius: 3 }}>EN</span>
             <span>English</span>
           </button>
         </div>
@@ -273,7 +274,7 @@ export default function VoiceInputControl({
           }}
           title={isRecording ? 'Click to Stop Recording' : 'Click to Speak (Voice-to-Text)'}
         >
-          <span style={{ fontSize: 13 }}>{isRecording ? '⏹' : '🎙️'}</span>
+          {isRecording ? <Square size={13} fill="currentColor" /> : <Mic size={14} />}
           <span>
             {isRecording
               ? 'બોલવાનું બંધ કરો (Stop)'
@@ -303,7 +304,7 @@ export default function VoiceInputControl({
           }}
           title="ગુજરાતી કીબોર્ડ ખોલો/બંધ કરો (Toggle Gujarati Virtual Keyboard)"
         >
-          <span style={{ fontSize: 13 }}>⌨️</span>
+          <Keyboard size={14} />
           <span>ગુજરાતી કીબોર્ડ</span>
           <span style={{ fontSize: 10, color: '#64748B' }}>{showKeyboard ? '▲' : '▼'}</span>
         </button>
@@ -361,7 +362,7 @@ export default function VoiceInputControl({
             gap: 6,
           }}
         >
-          <span style={{ fontStyle: 'normal' }}>👂</span>
+          <Volume2 size={14} />
           <span>{interimText}</span>
         </div>
       )}

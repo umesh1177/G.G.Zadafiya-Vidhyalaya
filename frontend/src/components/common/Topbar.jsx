@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { usePwaInstall } from '../../hooks/usePwaInstall';
 import PwaInstallModal from './PwaInstallModal';
+import { Menu, RefreshCw, Download } from 'lucide-react';
 
 export default function Topbar({ title, subtitle, onOpenSidebar }) {
   const { user } = useAuth();
@@ -45,16 +46,14 @@ export default function Topbar({ title, subtitle, onOpenSidebar }) {
           <button
             className="topbar__menu-btn"
             type="button"
-            aria-label="Open menu"
+            aria-label="Open navigation menu"
             onClick={onOpenSidebar}
           >
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 6h16M4 12h16M4 18h16"/>
-            </svg>
+            <Menu size={22} strokeWidth={2.2} />
           </button>
           <div className="topbar__titles">
-            <div className="topbar__title">{title}</div>
-            {subtitle && <div className="topbar__subtitle">{subtitle}</div>}
+            <h1 className="topbar__title">{title}</h1>
+            {subtitle && <p className="topbar__subtitle">{subtitle}</p>}
           </div>
         </div>
         <div className="topbar__right">
@@ -70,7 +69,8 @@ export default function Topbar({ title, subtitle, onOpenSidebar }) {
               onClick={applyUpdate}
               title="A new version of GGZV Portal is ready. Click to update."
             >
-              ↻ Update App
+              <RefreshCw size={14} className="spin-on-hover" />
+              <span className="pwa-btn-label">Update App</span>
             </button>
           )}
           {canShowInstallAction && (
@@ -80,19 +80,20 @@ export default function Topbar({ title, subtitle, onOpenSidebar }) {
               onClick={handleInstallClick}
               title={canInstall ? 'Install G.G. Zadafiya Vidhyalaya Portal App' : 'How to install GGZV Portal App'}
             >
-              {canInstall ? '⬇ Install App' : '⬇ Get App'}
+              <Download size={14} />
+              <span className="pwa-btn-label">{canInstall ? 'Install App' : 'Get App'}</span>
             </button>
           )}
-          <span className="topbar__school-name" style={{ fontSize: '13px', fontWeight: 600, color: 'var(--slate)' }}>
+          <span className="topbar__school-name">
             {user?.school || 'G.G. Zadafiya Vidhyalaya'}
           </span>
-          <Link to={profilePath} className="topbar__user-chip" style={{ textDecoration: 'none', cursor: 'pointer' }} title="View Profile">
+          <Link to={profilePath} className="topbar__user-chip" title="View Profile">
             <div className="topbar__avatar">
               {user?.initials || 'ST'}
             </div>
-            <div className="topbar__user-info" style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.2 }}>
-              <span style={{ fontSize: '12.5px', fontWeight: 700, color: 'var(--ink)' }}>{user?.name || 'Faculty'}</span>
-              <span style={{ fontSize: '11px', color: 'var(--slate)' }}>{roleLabels[user?.role] || 'User'}</span>
+            <div className="topbar__user-info">
+              <span className="topbar__user-name">{user?.name || 'Faculty'}</span>
+              <span className="topbar__user-role">{roleLabels[user?.role] || 'User'}</span>
             </div>
           </Link>
         </div>

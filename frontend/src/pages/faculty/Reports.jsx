@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { reportApi } from '../../services/reportApi';
 import PaginationBar from '../../components/common/PaginationBar';
 import PrintableFacultyReport, { triggerFacultyReportPrint } from '../../components/common/PrintableFacultyReport';
+import { CheckCircle2, AlertTriangle, X, Eye, Printer, Check } from 'lucide-react';
 
 export default function FacultyReports() {
   const { setHeader } = useOutletContext();
@@ -118,15 +119,25 @@ export default function FacultyReports() {
   return (
     <div style={{ paddingBottom: 40 }}>
       {feedbackMsg && (
-        <div className="banner banner-success" style={{ marginBottom: 16, justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>✅ {feedbackMsg}</span>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setFeedbackMsg(null)}>✕</button>
+        <div className="banner banner-success" style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <CheckCircle2 size={16} />
+            <span>{feedbackMsg}</span>
+          </span>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setFeedbackMsg(null)} aria-label="Dismiss banner">
+            <X size={14} />
+          </button>
         </div>
       )}
       {errorMsg && (
-        <div className="banner banner-warning" style={{ marginBottom: 16, justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>⚠️ {errorMsg}</span>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setErrorMsg(null)}>✕</button>
+        <div className="banner banner-warning" style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <AlertTriangle size={16} />
+            <span>{errorMsg}</span>
+          </span>
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setErrorMsg(null)} aria-label="Dismiss banner">
+            <X size={14} />
+          </button>
         </div>
       )}
 
@@ -161,7 +172,7 @@ export default function FacultyReports() {
             <input
               type="text"
               className="field-input w-full"
-              placeholder="🔍 Search reports by LT/Exam #, type, topic, or Principal message..."
+              placeholder="Search reports by LT/Exam #, type, topic, or Principal message..."
               value={searchTerm}
               onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
             />
@@ -193,8 +204,8 @@ export default function FacultyReports() {
             onChange={(e) => { setFilterAlert(e.target.value); setCurrentPage(1); }}
           >
             <option value="">All Alert Types</option>
-            <option value="WEAK_TOPIC_UNDERSTANDING">⚠️ Revision / Attention Alert</option>
-            <option value="GOOD_UNDERSTANDING">✅ Good Understanding</option>
+            <option value="WEAK_TOPIC_UNDERSTANDING">Revision / Attention Alert</option>
+            <option value="GOOD_UNDERSTANDING">Good Understanding</option>
           </select>
         </div>
       </div>
@@ -298,7 +309,7 @@ export default function FacultyReports() {
                       </td>
                       <td>
                         <span className={`chip ${isWeak ? 'chip-warning' : 'chip-success'}`}>
-                          {isWeak ? (isEx ? '⚠️ Needs Revision' : '⚠️ Weak Topic') : '✅ Good'}
+                          {isWeak ? (isEx ? 'Needs Revision' : 'Weak Topic') : 'Good'}
                         </span>
                       </td>
                       <td style={{ maxWidth: 250 }}>
@@ -312,24 +323,30 @@ export default function FacultyReports() {
                             type="button"
                             className="btn btn-primary btn-sm"
                             onClick={() => setSelectedReport(r)}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
                           >
-                            👁️ View Report
+                            <Eye size={14} />
+                            <span>View Report</span>
                           </button>
                           <button
                             type="button"
                             className="btn btn-ghost btn-sm"
                             onClick={() => triggerFacultyReportPrint(r, setReportToPrint)}
                             title="Print Faculty Handover Report"
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
                           >
-                            🖨️ Print
+                            <Printer size={14} />
+                            <span>Print</span>
                           </button>
                           {!r.acknowledgedByFaculty ? (
                             <button
                               type="button"
                               className="btn btn-ghost btn-sm"
                               onClick={() => handleAcknowledge(rId)}
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
                             >
-                              ✓ Mark Read
+                              <Check size={14} />
+                              <span>Mark Read</span>
                             </button>
                           ) : (
                             <span className="chip chip-success" style={{ fontSize: 11 }}>Reviewed</span>
@@ -379,7 +396,7 @@ export default function FacultyReports() {
                   <div style={{ fontSize: 11.5, color: '#BEDBFF', fontWeight: 700, textTransform: 'uppercase' }}>
                     Official {isEx ? `${selectedReport.examType || 'Exam'} Diagnostic Report` : 'LT Diagnostic Report'} • Sent by {selectedReport.sentByName || 'Principal'}
                   </div>
-                  <h2 style={{ margin: '3px 0 0', fontSize: 20, fontWeight: 800, color: '#fff', overflowWrap: 'anywhere' }}>
+                  <h2 style={{ margin: '3px 0 0', fontSize: 20, fontWeight: 800, color: '#fff', overflowWrap: 'break-word', wordBreak: 'normal' }}>
                     {isEx
                       ? `Exam #${selectedReport.examNo} — ${selectedReport.targetSubject || selectedReport.subject} (${formatStd(selectedReport.standard)})`
                       : `LT #${selectedReport.ltNo} — ${selectedReport.subject} (${formatStd(selectedReport.standard)})`}
@@ -388,9 +405,10 @@ export default function FacultyReports() {
                 <button
                   type="button"
                   onClick={() => setSelectedReport(null)}
-                  style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.16)', border: 'none', color: '#fff', cursor: 'pointer', flexShrink: 0 }}
+                  style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.16)', border: 'none', color: '#fff', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  aria-label="Close modal"
                 >
-                  ✕
+                  <X size={16} />
                 </button>
               </div>
 
@@ -406,8 +424,8 @@ export default function FacultyReports() {
                 >
                   <div style={{ fontSize: 14, fontWeight: 800, color: '#1C2340' }}>
                     {selectedReport.alertTitle || (selectedReport.alertStatus === 'WEAK_TOPIC_UNDERSTANDING'
-                      ? '⚠️ Attention / Revision Alert'
-                      : '✅ Good Performance Alert')}
+                      ? 'Attention / Revision Alert'
+                      : 'Good Performance Alert')}
                   </div>
                   <div style={{ fontSize: 13, color: '#3A4262', marginTop: 3 }}>
                     {selectedReport.alertMessage}
@@ -492,7 +510,7 @@ export default function FacultyReports() {
                   <div style={{ fontSize: 12, fontWeight: 800, color: '#123B5D', textTransform: 'uppercase', marginBottom: 6 }}>
                     Principal&apos;s Message for You
                   </div>
-                  <div style={{ fontSize: 14, color: '#1C2340', lineHeight: 1.55, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+                  <div style={{ fontSize: 14, color: '#1C2340', lineHeight: 1.55, whiteSpace: 'pre-wrap', overflowWrap: 'break-word', wordBreak: 'normal' }}>
                     {selectedReport.principalMessage || 'No additional remarks provided.'}
                   </div>
                 </div>
@@ -530,7 +548,7 @@ export default function FacultyReports() {
                                 {q.sourceTopicTitle || 'General'} · {q.marks || 2}M
                               </span>
                             </div>
-                            <div style={{ color: '#1E293B', lineHeight: 1.45, overflowWrap: 'anywhere' }}>
+                            <div style={{ color: '#1E293B', lineHeight: 1.45, overflowWrap: 'break-word', wordBreak: 'normal' }}>
                               {q.questionText || '—'}
                             </div>
                           </div>
@@ -545,7 +563,7 @@ export default function FacultyReports() {
                 )}
 
                 {!isEx && selectedReport.topicsCovered?.length > 0 && (
-                  <div style={{ fontSize: 12.5, color: 'var(--slate)', overflowWrap: 'anywhere' }}>
+                  <div style={{ fontSize: 12.5, color: 'var(--slate)', overflowWrap: 'break-word', wordBreak: 'normal' }}>
                     <strong>Topics Assessed:</strong> {selectedReport.topicsCovered.join(' • ')}
                   </div>
                 )}
@@ -565,16 +583,20 @@ export default function FacultyReports() {
                     type="button"
                     className="btn btn-ghost btn-sm"
                     onClick={() => triggerFacultyReportPrint(selectedReport, setReportToPrint)}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
                   >
-                    🖨️ Print Report
+                    <Printer size={14} />
+                    <span>Print Report</span>
                   </button>
                   {!selectedReport.acknowledgedByFaculty && (
                     <button
                       type="button"
                       className="btn btn-primary btn-sm"
                       onClick={() => handleAcknowledge(selectedReport.id || selectedReport._id)}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}
                     >
-                      ✓ Mark Report Reviewed
+                      <Check size={14} />
+                      <span>Mark Report Reviewed</span>
                     </button>
                   )}
                   <button type="button" className="btn btn-ghost btn-sm" onClick={() => setSelectedReport(null)}>

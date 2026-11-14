@@ -1,4 +1,5 @@
 import React from 'react';
+import { FileText, Play, X } from 'lucide-react';
 
 export default function ViewFullLtModal({ lt, onClose, onStartTimer, onFinishLt, footerExtra }) {
   if (!lt) return null;
@@ -152,7 +153,7 @@ export default function ViewFullLtModal({ lt, onClose, onStartTimer, onFinishLt,
           {/* Questions List */}
           <div style={{ background: '#FAFBFD', border: '1px solid #E4E7F2', borderRadius: 12, padding: '14px 16px' }}>
             <div style={{ fontSize: 12.5, fontWeight: 800, color: '#123B5D', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span>📝</span>
+              <FileText size={16} />
               <span>Lecture Test Questions &amp; Covered Topics</span>
             </div>
 
@@ -236,7 +237,8 @@ export default function ViewFullLtModal({ lt, onClose, onStartTimer, onFinishLt,
                   onStartTimer(lt);
                 }}
               >
-                ▶ Start LT Timer
+                <Play size={13} fill="currentColor" />
+                <span>Start LT Timer</span>
               </button>
             )}
             {onFinishLt && lt.status === 'SCHEDULED' && (

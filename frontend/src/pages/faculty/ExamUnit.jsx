@@ -11,6 +11,7 @@ import {
   normalizeBaseSubject,
 } from '../../utils/syllabusUtils';
 import PaginationBar from '../../components/common/PaginationBar';
+import { X, Lock, Image, ExternalLink, FileText, Upload, CheckCircle2, Clock, Award, BarChart3, BookOpen } from 'lucide-react';
 
 const SUBJECT_OPTIONS = [
   'Physics',
@@ -592,8 +593,9 @@ export default function ExamUnit() {
             type="button"
             className="btn btn-ghost btn-sm"
             onClick={() => setFeedbackMsg(null)}
+            aria-label="Dismiss message"
           >
-            ✕
+            <X size={14} />
           </button>
         </div>
       )}
@@ -608,11 +610,51 @@ export default function ExamUnit() {
             type="button"
             className="btn btn-ghost btn-sm"
             onClick={() => setErrorMsg(null)}
+            aria-label="Dismiss message"
           >
-            ✕
+            <X size={14} />
           </button>
         </div>
       )}
+
+      {/* ── Overview Statistics Cards ── */}
+      <div className="kpi-grid" style={{ marginBottom: 20 }}>
+        <div className="kpi-card">
+          <div className="kpi-card__title">Total Exams Created</div>
+          <div className="kpi-card__value" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span>{examHistory.length}</span>
+            <Award size={18} style={{ color: '#123B5D', opacity: 0.6 }} />
+          </div>
+          <div className="kpi-card__sub">{defaultSubject} examinations</div>
+        </div>
+
+        <div className="kpi-card is-success">
+          <div className="kpi-card__title">Question Papers Ready</div>
+          <div className="kpi-card__value" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span>{examHistory.filter(e => e.questionPaperStatus === 'UPLOADED').length}</span>
+            <CheckCircle2 size={18} style={{ color: 'var(--success)' }} />
+          </div>
+          <div className="kpi-card__sub">PDF attachments uploaded</div>
+        </div>
+
+        <div className="kpi-card is-warning">
+          <div className="kpi-card__title">Pending Paper PDF</div>
+          <div className="kpi-card__value" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span>{examHistory.filter(e => e.questionPaperStatus !== 'UPLOADED').length}</span>
+            <Clock size={18} style={{ color: 'var(--warning)' }} />
+          </div>
+          <div className="kpi-card__sub">Awaiting question paper upload</div>
+        </div>
+
+        <div className="kpi-card">
+          <div className="kpi-card__title">Completed Chapters</div>
+          <div className="kpi-card__value" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span>{completedChapters.length}</span>
+            <BookOpen size={18} style={{ color: '#F59E0B' }} />
+          </div>
+          <div className="kpi-card__sub">Finished syllabus chapters</div>
+        </div>
+      </div>
 
       {/* Top Navigation Tabs matching reference screenshot with STS Navy theme */}
       <div className="tabs">
@@ -693,7 +735,10 @@ export default function ExamUnit() {
                 }}
                 title="Syllabus view is locked to your assigned subject"
               >
-                <span>🔒 {defaultSubject}</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <Lock size={13} />
+                  <span>{defaultSubject}</span>
+                </span>
                 <span style={{ fontSize: '11px', color: '#2563eb', background: '#eff6ff', padding: '1px 6px', borderRadius: '4px', border: '1px solid #bfdbfe' }}>
                   Assigned
                 </span>
@@ -832,7 +877,7 @@ export default function ExamUnit() {
                                           handleSelectTill(ch, node.code, node.title, 'TOPIC')
                                         }
                                       >
-                                        {isTopicTillSelected ? `✓ Till ${node.code}` : `Till ${node.code}`}
+                                        {isTopicTillSelected ? `Till ${node.code} (Selected)` : `Till ${node.code}`}
                                       </button>
                                     </div>
                                   );
@@ -871,7 +916,7 @@ export default function ExamUnit() {
                                           handleSelectTill(ch, node.code, node.title, 'TOPIC')
                                         }
                                       >
-                                        {isTopicTillSelected ? `✓ Till ${node.code}` : `Till ${node.code}`}
+                                        {isTopicTillSelected ? `Till ${node.code} (Selected)` : `Till ${node.code}`}
                                       </button>
                                     </div>
 
@@ -915,7 +960,7 @@ export default function ExamUnit() {
                                                   handleSelectTill(ch, st.code, st.title, 'SUBTOPIC')
                                                 }
                                               >
-                                                {isSubTillSelected ? `✓ Till ${st.code}` : `Till ${st.code}`}
+                                                {isSubTillSelected ? `Till ${st.code} (Selected)` : `Till ${st.code}`}
                                               </button>
                                             </div>
 
@@ -967,7 +1012,7 @@ export default function ExamUnit() {
                                                         }
                                                       >
                                                         {isSstTillSelected
-                                                          ? `✓ Till ${sst.subSubtopicNo}`
+                                                          ? `Till ${sst.subSubtopicNo} (Selected)`
                                                           : `Till ${sst.subSubtopicNo}`}
                                                       </button>
                                                     </div>
@@ -989,7 +1034,7 @@ export default function ExamUnit() {
                                   className={`btn btn-sm ${hasAllTopicsSelected ? 'btn-primary' : 'btn-ghost'}`}
                                   onClick={() => handleSelectAllTopics(ch)}
                                 >
-                                  {hasAllTopicsSelected ? '✓ All Completed Topics Selected' : 'All topics'}
+                                  {hasAllTopicsSelected ? 'All Completed Topics Selected' : 'All topics'}
                                 </button>
                               </div>
                             </div>
@@ -1076,7 +1121,8 @@ export default function ExamUnit() {
                                             title="View figure in new tab"
                                             onClick={(e) => e.stopPropagation()}
                                           >
-                                            🖼️ {ex.figureNote || 'આકૃતિ'} ↗
+                                            <Image size={12} />
+                                            <span>{ex.figureNote || "આકૃતિ"}<ExternalLink size={10} style={{marginLeft:2}}/></span>
                                           </a>
                                         )}
                                         {hasDistinctGujarati(ex.title, ex.titleGujarati) && (
@@ -1092,7 +1138,7 @@ export default function ExamUnit() {
                                           handleToggleItem(ch, 'EXAMPLE', ex.exampleNo, ex.title)
                                         }
                                       >
-                                        {isSel ? '✓ Selected' : 'Select'}
+                                        {isSel ? 'Selected' : 'Select'}
                                       </button>
                                     </div>
                                   );
@@ -1182,7 +1228,8 @@ export default function ExamUnit() {
                                             title="View figure in new tab"
                                             onClick={(e) => e.stopPropagation()}
                                           >
-                                            🖼️ {sw.figureNote || 'આકૃતિ'} ↗
+                                            <Image size={12} />
+                                            <span>{sw.figureNote || "આકૃતિ"}<ExternalLink size={10} style={{marginLeft:2}}/></span>
                                           </a>
                                         )}
                                         {hasDistinctGujarati(sw.title, sw.titleGujarati) && (
@@ -1198,7 +1245,7 @@ export default function ExamUnit() {
                                           handleToggleItem(ch, 'SWADHYAY', sw.exerciseNo, sw.title)
                                         }
                                       >
-                                        {isSel ? '✓ Selected' : 'Select'}
+                                        {isSel ? 'Selected' : 'Select'}
                                       </button>
                                     </div>
                                   );
@@ -1269,11 +1316,12 @@ export default function ExamUnit() {
                         <button
                           type="button"
                           className="btn btn-danger-ghost btn-sm"
-                          style={{ padding: '5px 10px' }}
+                          style={{ padding: '5px 10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                           onClick={() => handleRemoveSelectedUnit(item.key)}
                           title="Remove unit"
+                          aria-label="Remove unit"
                         >
-                          ✕
+                          <X size={13} />
                         </button>
                       </div>
                     ))}
@@ -1389,7 +1437,10 @@ export default function ExamUnit() {
                     }}
                     title="Exam creation is locked to your assigned subject"
                   >
-                    <span>🔒 {defaultSubject}</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <Lock size={13} />
+                  <span>{defaultSubject}</span>
+                </span>
                     <span style={{ fontSize: '11px', color: '#2563eb', background: '#eff6ff', padding: '2px 8px', borderRadius: '4px', border: '1px solid #bfdbfe' }}>
                       Assigned Subject
                     </span>
@@ -1514,7 +1565,7 @@ export default function ExamUnit() {
             </div>
           </div>
 
-          <div className="table-wrap" style={{ border: 'none', borderRadius: 0 }}>
+          <div className="table-wrap desktop-only" style={{ border: 'none', borderRadius: 0 }}>
             <table>
               <thead>
                 <tr>
@@ -1631,6 +1682,100 @@ export default function ExamUnit() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Cards View */}
+          <div className="mobile-only" style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 12 }}>
+            {isLoadingHistory ? (
+              <div style={{ textAlign: 'center', padding: 24, color: 'var(--slate)' }}>Loading exams...</div>
+            ) : filteredHistory.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 24, color: 'var(--slate)' }}>No submitted exams found.</div>
+            ) : (
+              paginatedHistory.map((ex) => {
+                const exId = ex.id || ex._id;
+                const isPdfUploaded = ex.questionPaperStatus === 'UPLOADED';
+                const statusBadge =
+                  ex.status === 'MARKS_ENTERED' || ex.status === 'RESULT_PUBLISHED'
+                    ? { cls: 'chip-success', label: 'Completed' }
+                    : ex.status === 'CONDUCTED'
+                    ? { cls: 'chip-warning', label: 'Pending Marks' }
+                    : { cls: 'chip-neutral', label: 'Upcoming' };
+
+                return (
+                  <div
+                    key={exId}
+                    style={{
+                      background: '#FFFFFF',
+                      borderRadius: 10,
+                      border: '1px solid #E2E8F0',
+                      padding: 14,
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 15, fontWeight: 800, color: '#123B5D' }}>#{ex.examNo}</span>
+                        <span className="chip chip-neutral" style={{ fontSize: 11 }}>{formatExamTypeLabel(ex.examType)}</span>
+                      </div>
+                      <span className={`chip ${statusBadge.cls}`} style={{ fontSize: 11 }}>{statusBadge.label}</span>
+                    </div>
+
+                    <div style={{ fontSize: 12.5, color: '#334155', marginBottom: 8, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      <div><strong>Date:</strong> {formatExamDate(ex.examDate)} • {ex.examTime || '10:00 AM'} ({ex.durationMinutes || 60}m)</div>
+                      <div><strong>Class:</strong> Std {ex.standard === 'STD_11' ? '11' : '12'} - Div {ex.division || 'ALL'} • <strong>Subject:</strong> {ex.subject}</div>
+                      {ex.unitSummary && (
+                        <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
+                          <strong>Units:</strong> {ex.unitSummary}
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, paddingTop: 10, borderTop: '1px solid #F1F5F9' }}>
+                      {isPdfUploaded ? (
+                        <>
+                          <a
+                            href={getQuestionPaperUrl(exId)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="btn btn-primary btn-sm"
+                            style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
+                          >
+                            <FileText size={13} />
+                            <span>View PDF</span>
+                          </a>
+                          <button
+                            type="button"
+                            className="btn btn-ghost btn-sm"
+                            onClick={() => triggerRowPdfUpload(exId)}
+                          >
+                            Replace PDF
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          className="btn btn-primary btn-sm"
+                          style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
+                          onClick={() => triggerRowPdfUpload(exId)}
+                        >
+                          <Upload size={13} />
+                          <span>Upload PDF</span>
+                        </button>
+                      )}
+                      {ex.status === 'SCHEDULED' && (
+                        <button
+                          type="button"
+                          className="btn btn-danger-ghost btn-sm"
+                          onClick={() => handleDeleteExam(ex)}
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
 
           <PaginationBar

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { CheckCircle2, AlertTriangle, FileText, Printer } from 'lucide-react';
 import { useParams, Link, useOutletContext } from 'react-router-dom';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
@@ -282,7 +283,7 @@ export default function LtAnalysisDetail() {
       {/* Submission Feedback Banner */}
       {reportFeedback && (
         <div className="banner banner-success" style={{ marginBottom: 14, justifyContent: 'space-between', alignItems: 'center' }}>
-          <span>✅ {reportFeedback}</span>
+          <CheckCircle2 size={14} style={{marginRight:4}}/><span>{reportFeedback}</span>
           <button type="button" className="btn btn-ghost btn-sm" onClick={() => setReportFeedback(null)}>✕</button>
         </div>
       )}
@@ -316,7 +317,7 @@ export default function LtAnalysisDetail() {
                 fontWeight: 800,
               }}
             >
-              {isWeakAlert ? '⚠️ WEAK TOPIC UNDERSTANDING ALERT' : '✅ GOOD CLASS PERFORMANCE'}
+              {isWeakAlert ? 'WEAK TOPIC UNDERSTANDING ALERT' : 'GOOD CLASS PERFORMANCE'}
             </span>
             <span style={{ fontSize: 12, fontWeight: 700, color: '#123B5D' }}>
               Evaluation Status: {overallAverage}
@@ -339,7 +340,7 @@ export default function LtAnalysisDetail() {
           }}
           style={{ flexShrink: 0 }}
         >
-          📄 Generate Report for Faculty
+          <><FileText size={13} style={{marginRight:4}}/>Generate Report for Faculty</>
         </button>
       </div>
 
@@ -920,7 +921,7 @@ export default function LtAnalysisDetail() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', marginBottom: 6 }}>
                       <span className={`chip ${repWeak ? 'chip-warning' : 'chip-success'}`}>
-                        {repWeak ? '⚠️ Weak Topic Alert' : '✅ Good Understanding'}
+                        {repWeak ? 'Weak Topic Alert' : 'Good Understanding'}
                       </span>
                       <span className={`chip ${rep.acknowledgedByFaculty ? 'chip-success' : 'chip-neutral'}`}>
                         {rep.acknowledgedByFaculty ? '✓ Acknowledged by Faculty' : 'Pending Faculty Acknowledgement'}
@@ -932,7 +933,7 @@ export default function LtAnalysisDetail() {
                         Sent {formatDate(rep.createdAt)} by {rep.sentByName || 'Principal'}
                       </span>
                     </div>
-                    <div style={{ fontSize: 13.5, color: '#1C2340', lineHeight: 1.5, overflowWrap: 'anywhere' }}>
+                    <div style={{ fontSize: 13.5, color: '#1C2340', lineHeight: 1.5, overflowWrap: 'break-word', wordBreak: 'normal' }}>
                       {rep.principalMessage || 'No written note attached.'}
                     </div>
                   </div>
@@ -941,7 +942,7 @@ export default function LtAnalysisDetail() {
                     className="btn btn-ghost btn-sm"
                     onClick={() => triggerFacultyReportPrint(printPayload, setReportToPrint)}
                   >
-                    🖨️ Print Report
+                    <><Printer size={13} style={{marginRight:4}}/>Print Report</>
                   </button>
                 </div>
               );
@@ -1104,7 +1105,7 @@ export default function LtAnalysisDetail() {
               <div style={{ padding: '18px 22px', overflowY: 'auto', flex: '1 1 auto', minHeight: 0, display: 'flex', flexDirection: 'column', gap: 15 }}>
                 {modalError && (
                   <div className="banner banner-warning" style={{ marginBottom: 0 }}>
-                    <span>⚠️ {modalError}</span>
+                    <AlertTriangle size={14} style={{marginRight:4}}/><span>{modalError}</span>
                   </div>
                 )}
 
@@ -1121,8 +1122,8 @@ export default function LtAnalysisDetail() {
                   }}
                 >
                   {isWeakAlert
-                    ? '⚠️ Weak Topic Understanding Alert — Flagged for Subject Faculty Review'
-                    : '✅ Good Topic Understanding Alert — Satisfactory Class Performance'}
+                    ? 'Weak Topic Understanding Alert — Flagged for Subject Faculty Review'
+                    : 'Good Topic Understanding Alert — Satisfactory Class Performance'}
                 </div>
 
                 {/* Metrics Preview Grid */}
@@ -1188,7 +1189,7 @@ export default function LtAnalysisDetail() {
                               {q.sourceTopicTitle || 'General'} · {q.marks || 2}M
                             </span>
                           </div>
-                          <div style={{ color: '#1E293B', lineHeight: 1.45, overflowWrap: 'anywhere' }}>
+                          <div style={{ color: '#1E293B', lineHeight: 1.45, overflowWrap: 'break-word', wordBreak: 'normal' }}>
                             {q.questionText || '—'}
                           </div>
                         </div>
@@ -1269,7 +1270,7 @@ export default function LtAnalysisDetail() {
                     )
                   }
                 >
-                  🖨️ Print Report
+                  <><Printer size={13} style={{marginRight:4}}/>Print Report</>
                 </button>
                 <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                   <button type="button" className="btn btn-ghost" onClick={() => setShowReportModal(false)}>

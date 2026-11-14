@@ -13,6 +13,17 @@ import {
 import { Bar, Line } from 'react-chartjs-2';
 import { ltApi } from '../../services/ltApi';
 import PrintableLtReport, { triggerLtReportPrint } from './PrintableLtReport';
+import {
+  Calendar,
+  CalendarDays,
+  User,
+  ClipboardList,
+  Printer,
+  Clipboard,
+  Trophy,
+  AlertTriangle,
+  CheckCircle2,
+} from 'lucide-react';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend);
 
@@ -462,29 +473,37 @@ export default function LtReportsWorkspace() {
             type="button"
             className={`tab-btn ${subTab === 'weekly' ? 'is-active' : ''}`}
             onClick={() => setSubTab('weekly')}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
           >
-            📅 Weekly Report
+            <Calendar size={14} />
+            <span>Weekly Report</span>
           </button>
           <button
             type="button"
             className={`tab-btn ${subTab === 'monthly' ? 'is-active' : ''}`}
             onClick={() => setSubTab('monthly')}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
           >
-            🗓️ Monthly Report
+            <CalendarDays size={14} />
+            <span>Monthly Report</span>
           </button>
           <button
             type="button"
             className={`tab-btn ${subTab === 'student' ? 'is-active' : ''}`}
             onClick={() => setSubTab('student')}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
           >
-            👤 Student Performance
+            <User size={14} />
+            <span>Student Performance</span>
           </button>
           <button
             type="button"
             className={`tab-btn ${subTab === 'saved' ? 'is-active' : ''}`}
             onClick={() => setSubTab('saved')}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
           >
-            📑 Printed Reports ({savedReports.length})
+            <ClipboardList size={14} />
+            <span>Printed Reports ({savedReports.length})</span>
           </button>
         </div>
 
@@ -495,8 +514,10 @@ export default function LtReportsWorkspace() {
             className="btn btn-primary btn-sm"
             onClick={() => handlePrint('WEEKLY', weeklyData)}
             title="Print professional weekly diagnostic report"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
           >
-            🖨️ Print Weekly Report
+            <Printer size={14} />
+            <span>Print Weekly Report</span>
           </button>
         )}
         {subTab === 'monthly' && monthlyData && (
@@ -505,8 +526,10 @@ export default function LtReportsWorkspace() {
             className="btn btn-primary btn-sm"
             onClick={() => handlePrint('MONTHLY', monthlyData)}
             title="Print monthly academic trajectory report"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
           >
-            🖨️ Print Monthly Report
+            <Printer size={14} />
+            <span>Print Monthly Report</span>
           </button>
         )}
         {subTab === 'student' && studentPerfData && (
@@ -515,8 +538,10 @@ export default function LtReportsWorkspace() {
             className="btn btn-primary btn-sm"
             onClick={() => handlePrint('STUDENT', studentPerfData)}
             title="Print student academic performance dossier"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
           >
-            🖨️ Print Student Dossier
+            <Printer size={14} />
+            <span>Print Student Dossier</span>
           </button>
         )}
       </div>
@@ -781,8 +806,9 @@ export default function LtReportsWorkspace() {
                       marginBottom: '12px',
                     }}
                   >
-                    <div style={{ fontWeight: 700, fontSize: '13px', color: '#123B5D' }}>
-                      📋 Executive Summary:
+                    <div style={{ fontWeight: 700, fontSize: '13px', color: '#123B5D', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Clipboard size={15} />
+                      <span>Executive Summary:</span>
                     </div>
                     <div style={{ fontSize: '12.5px', color: 'var(--ink)', marginTop: '4px' }}>
                       {weeklyData.kpis.growthDownfallText}
@@ -829,7 +855,7 @@ export default function LtReportsWorkspace() {
                 <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--line-soft)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <div className="card__title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ color: '#D97706' }}>⚠️</span>
+                      <AlertTriangle size={18} color="#D97706" />
                       Weak LT Questions (Attention Required)
                     </div>
                     <div className="card__desc">
@@ -855,7 +881,10 @@ export default function LtReportsWorkspace() {
                       {weeklyData.weakQuestions.length === 0 ? (
                         <tr>
                           <td colSpan={4} style={{ textAlign: 'center', padding: '24px', color: '#059669', fontWeight: 600 }}>
-                            ✓ Outstanding conceptual mastery! No weak Lecture Tests flagged for this selection.
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                              <CheckCircle2 size={16} />
+                              Outstanding conceptual mastery! No weak Lecture Tests flagged for this selection.
+                            </span>
                           </td>
                         </tr>
                       ) : (
@@ -901,7 +930,8 @@ export default function LtReportsWorkspace() {
                 <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
                   <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--line-soft)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div style={{ fontWeight: 800, fontSize: 14.5, color: '#059669', display: 'flex', alignItems: 'center', gap: 6 }}>
-                      🏆 Top Performers of the Week
+                      <Trophy size={16} />
+                      <span>Top Performers of the Week</span>
                     </div>
                     <span className="chip chip-success">{weeklyData.topPerformers.length} Students</span>
                   </div>
@@ -940,7 +970,8 @@ export default function LtReportsWorkspace() {
                 <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
                   <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--line-soft)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div style={{ fontWeight: 800, fontSize: 14.5, color: '#DC2626', display: 'flex', alignItems: 'center', gap: 6 }}>
-                      ⚠️ Needs Academic Support / Low Tier
+                      <AlertTriangle size={16} />
+                      <span>Needs Academic Support / Low Tier</span>
                     </div>
                     <span className="chip chip-warning">{weeklyData.poorPerformers.length} Students</span>
                   </div>
@@ -1108,7 +1139,7 @@ export default function LtReportsWorkspace() {
                 <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--line-soft)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <div className="card__title" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ color: '#D97706' }}>⚠️</span>
+                      <AlertTriangle size={18} color="#D97706" />
                       Monthly Weak LT Questions
                     </div>
                     <div className="card__desc">
@@ -1134,7 +1165,10 @@ export default function LtReportsWorkspace() {
                       {!monthlyData.weakQuestions || monthlyData.weakQuestions.length === 0 ? (
                         <tr>
                           <td colSpan={4} style={{ textAlign: 'center', padding: '24px', color: '#059669', fontWeight: 600 }}>
-                            ✓ No weak Lecture Tests flagged for this month.
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                              <CheckCircle2 size={16} />
+                              No weak Lecture Tests flagged for this month.
+                            </span>
                           </td>
                         </tr>
                       ) : (
@@ -1227,8 +1261,10 @@ export default function LtReportsWorkspace() {
                       type="button"
                       className="btn btn-primary btn-sm"
                       onClick={() => handlePrint('STUDENT', studentPerfData)}
+                      style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
                     >
-                      🖨️ Print Student Dossier
+                      <Printer size={14} />
+                      <span>Print Student Dossier</span>
                     </button>
                   </div>
                 </div>
@@ -1489,7 +1525,7 @@ export default function LtReportsWorkspace() {
                         <button
                           type="button"
                           className="btn btn-ghost btn-sm"
-                          style={{ marginRight: 6 }}
+                          style={{ marginRight: 6, display: 'inline-flex', alignItems: 'center', gap: 4 }}
                           onClick={() => {
                             if (sr.dataSnapshot) {
                               setPrintType(sr.reportType);
@@ -1498,7 +1534,8 @@ export default function LtReportsWorkspace() {
                             }
                           }}
                         >
-                          🖨️ Re-Print
+                          <Printer size={13} />
+                          <span>Re-Print</span>
                         </button>
                       </td>
                     </tr>

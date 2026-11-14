@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { X, LogOut, GraduationCap } from 'lucide-react';
 
 export default function Sidebar({ isOpen, onClose }) {
   const { user, logout } = useAuth();
@@ -42,10 +43,8 @@ export default function Sidebar({ isOpen, onClose }) {
             <div className="sidebar__brand-title" style={{ fontSize: '13.5px', lineHeight: 1.25 }}>G.G. Zadafiya Vidhyalaya</div>
             <div className="sidebar__workspace">{workspaceTitle}</div>
           </div>
-          <button className="sidebar__collapse-btn" type="button" onClick={onClose} aria-label="Collapse">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ width: 16, height: 16 }}>
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
+          <button className="sidebar__collapse-btn" type="button" onClick={onClose} aria-label="Close navigation menu">
+            <X size={20} strokeWidth={2.5} />
           </button>
         </div>
 
@@ -312,7 +311,7 @@ export default function Sidebar({ isOpen, onClose }) {
                 </svg>
                 LT Analysis
               </NavLink>
-              4
+
               <NavLink to="/student/progress-report" className={({ isActive }) => `navlink ${isActive ? 'is-active' : ''}`} onClick={onClose}>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M4 19V5M4 19h16" />

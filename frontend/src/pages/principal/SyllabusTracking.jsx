@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { User, AlertTriangle, Eye, Lightbulb, Image, FileText, Search, ExternalLink } from 'lucide-react';
 import { useOutletContext } from 'react-router-dom';
 import { syllabusApi } from '../../services/syllabusApi';
 import {
@@ -124,7 +125,7 @@ function FacultyContributorBadges({ completedBy = [], maxShow = 3 }) {
           }}
           title={`${c.facultyName}${c.facultySubject ? ` · ${c.facultySubject}` : ''}${c.completedAt ? ` · ${fmtDateTime(c.completedAt)}` : ''}`}
         >
-          <span>👤</span>
+          <User size={14}/>
           <span>Completed by: {c.facultyName}</span>
           {c.facultySubject && (
             <span style={{ color: '#475569', fontWeight: 600 }}>({c.facultySubject})</span>
@@ -415,7 +416,7 @@ export default function SyllabusTracking() {
     <div style={{ paddingBottom: 36 }}>
       {errorMsg && (
         <div className="banner banner-warning" style={{ marginBottom: 16 }}>
-          <span>⚠️ {errorMsg}</span>
+          <AlertTriangle size={14} style={{marginRight:4}}/><span>{errorMsg}</span>
         </div>
       )}
 
@@ -833,7 +834,7 @@ export default function SyllabusTracking() {
 
                       <div style={{ minWidth: 0, flex: 1 }}>
                         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 }}>
-                          <span style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', overflowWrap: 'anywhere' }}>
+                          <span style={{ fontSize: 15, fontWeight: 800, color: '#0F172A', overflowWrap: 'break-word', wordBreak: 'normal' }}>
                             Ch {chapter.chapterNo}: {chapter.chapterName}
                             {hasDistinctGujarati(chapter.chapterName, chapter.chapterNameGujarati) && (
                               <span style={{ color: '#475569', fontWeight: 600, marginLeft: 6 }}>
@@ -938,7 +939,7 @@ export default function SyllabusTracking() {
                                 >
                                   {topic.topicNo}
                                 </span>
-                                <div style={{ fontWeight: 700, fontSize: 13.5, color: '#0F172A', minWidth: 0, overflowWrap: 'anywhere' }}>
+                                <div style={{ fontWeight: 700, fontSize: 13.5, color: '#0F172A', minWidth: 0, overflowWrap: 'break-word', wordBreak: 'normal' }}>
                                   <span>{topic.title}</span>
                                   {hasDistinctGujarati(topic.title, topic.titleGujarati) && (
                                     <span style={{ color: '#475569', fontWeight: 500, marginLeft: 6 }}>
@@ -971,7 +972,7 @@ export default function SyllabusTracking() {
                                     })
                                   }
                                 >
-                                  👁️ View
+                                  <Eye size={13} style={{marginRight:4}}/>View
                                 </button>
                               </div>
                             </div>
@@ -1027,7 +1028,7 @@ export default function SyllabusTracking() {
                                             >
                                               {st.subtopicNo}
                                             </span>
-                                            <div style={{ fontSize: 13, fontWeight: 600, color: '#1E293B', minWidth: 0, overflowWrap: 'anywhere' }}>
+                                            <div style={{ fontSize: 13, fontWeight: 600, color: '#1E293B', minWidth: 0, overflowWrap: 'break-word', wordBreak: 'normal' }}>
                                               <span>{st.title}</span>
                                               {hasDistinctGujarati(st.title, st.titleGujarati) && (
                                                 <span style={{ color: '#64748B', marginLeft: 5, fontSize: 12, fontWeight: 500 }}>
@@ -1058,7 +1059,7 @@ export default function SyllabusTracking() {
                                                 })
                                               }
                                             >
-                                              👁️ View
+                                              <Eye size={13} style={{marginRight:4}}/>View
                                             </button>
                                           </div>
                                         </div>
@@ -1108,7 +1109,7 @@ export default function SyllabusTracking() {
                                                     >
                                                       {sst.subSubtopicNo}
                                                     </span>
-                                                    <span style={{ fontSize: 12.5, color: '#334155', overflowWrap: 'anywhere' }}>
+                                                    <span style={{ fontSize: 12.5, color: '#334155', overflowWrap: 'break-word', wordBreak: 'normal' }}>
                                                       {sst.title}
                                                     </span>
                                                   </div>
@@ -1134,7 +1135,7 @@ export default function SyllabusTracking() {
                                                         })
                                                       }
                                                     >
-                                                      👁️ View
+                                                      <Eye size={13} style={{marginRight:4}}/>View
                                                     </button>
                                                   </div>
                                                 </div>
@@ -1170,7 +1171,7 @@ export default function SyllabusTracking() {
                           }}
                         >
                           <span style={{ fontSize: 13, fontWeight: 800, color: '#6B21A8' }}>
-                            💡 Examples ({chapterExamples.filter((e) => e.status === 'done').length}/{chapterExamples.length} completed)
+                            <Lightbulb size={13} style={{marginRight:4}}/>Examples ({chapterExamples.filter((e) => e.status === 'done').length}/{chapterExamples.length} completed)
                           </span>
                           <span style={{ fontSize: 12, color: '#6B21A8', fontWeight: 700 }}>
                             {isExOpen ? 'Hide ▲' : 'Show ▼'}
@@ -1197,7 +1198,7 @@ export default function SyllabusTracking() {
                                   <span style={{ padding: '2px 8px', background: '#F3E8FF', color: '#7C3AED', borderRadius: 5, fontWeight: 800, fontSize: 11.5, flexShrink: 0 }}>
                                     {ex.exampleNo}
                                   </span>
-                                  <span style={{ fontSize: 13, color: '#334155', overflowWrap: 'anywhere' }}>{ex.title}</span>
+                                  <span style={{ fontSize: 13, color: '#334155', overflowWrap: 'break-word', wordBreak: 'normal' }}>{ex.title}</span>
                                   {ex.imageUrl && (
                                     <span
                                       style={{
@@ -1213,7 +1214,7 @@ export default function SyllabusTracking() {
                                         color: '#1D4ED8',
                                       }}
                                     >
-                                      🖼️ {ex.figureNote || 'આકૃતિ'}
+                                      <><Image size={12} style={{marginRight:3}}/>{ex.figureNote || "આકૃતિ"}</>
                                     </span>
                                   )}
                                 </div>
@@ -1238,7 +1239,7 @@ export default function SyllabusTracking() {
                                       })
                                     }
                                   >
-                                    👁️ View
+                                    <Eye size={13} style={{marginRight:4}}/>View
                                   </button>
                                 </div>
                               </div>
@@ -1261,7 +1262,7 @@ export default function SyllabusTracking() {
                           }}
                         >
                           <span style={{ fontSize: 13, fontWeight: 800, color: '#92400E' }}>
-                            📝 Swadhyay Exercises ({chapterExercises.filter((s) => s.status === 'done').length}/{chapterExercises.length} completed)
+                            <><FileText size={13} style={{marginRight:4}}/>Swadhyay Exercises</> ({chapterExercises.filter((s) => s.status === 'done').length}/{chapterExercises.length} completed)
                           </span>
                           <span style={{ fontSize: 12, color: '#92400E', fontWeight: 700 }}>
                             {isSwOpen ? 'Hide ▲' : 'Show ▼'}
@@ -1304,7 +1305,7 @@ export default function SyllabusTracking() {
                                   >
                                     {sw.exerciseNo}
                                   </span>
-                                  <span style={{ fontSize: 13, color: '#451A03', overflowWrap: 'anywhere' }}>{sw.title}</span>
+                                  <span style={{ fontSize: 13, color: '#451A03', overflowWrap: 'break-word', wordBreak: 'normal' }}>{sw.title}</span>
                                   {sw.imageUrl && (
                                     <span
                                       style={{
@@ -1320,7 +1321,7 @@ export default function SyllabusTracking() {
                                         color: '#92400E',
                                       }}
                                     >
-                                      🖼️ {sw.figureNote || 'આકૃતિ'}
+                                      <><Image size={12} style={{marginRight:3}}/>{sw.figureNote || "આકૃતિ"}</>
                                     </span>
                                   )}
                                 </div>
@@ -1345,7 +1346,7 @@ export default function SyllabusTracking() {
                                       })
                                     }
                                   >
-                                    👁️ View
+                                    <Eye size={13} style={{marginRight:4}}/>View
                                   </button>
                                 </div>
                               </div>
@@ -1455,7 +1456,7 @@ export default function SyllabusTracking() {
                 <div style={{ fontSize: 11.5, fontWeight: 700, color: '#64748B', marginBottom: 6, textTransform: 'uppercase' }}>
                   Unit Content
                 </div>
-                <div style={{ fontSize: 15, fontWeight: 600, color: '#0F172A', lineHeight: 1.6, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+                <div style={{ fontSize: 15, fontWeight: 600, color: '#0F172A', lineHeight: 1.6, whiteSpace: 'pre-wrap', overflowWrap: 'break-word', wordBreak: 'normal' }}>
                   {viewingItem.title}
                 </div>
                 {hasDistinctGujarati(viewingItem.title, viewingItem.titleGujarati) && (
@@ -1486,7 +1487,7 @@ export default function SyllabusTracking() {
                     gap: 8,
                   }}>
                     <div style={{ fontSize: 12.5, fontWeight: 700, color: '#0369A1', display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span>🖼️ Question Diagram / Figure</span>
+                      <><Image size={13} style={{marginRight:4}}/>Question Diagram / Figure</>
                       {viewingItem.figureNote && (
                         <span style={{
                           background: '#E0F2FE',
@@ -1514,7 +1515,7 @@ export default function SyllabusTracking() {
                         gap: 4,
                       }}
                     >
-                      <span>🔍 Full Size ↗</span>
+                      <><Search size={12} style={{marginRight:3}}/>Full Size <ExternalLink size={11}/></>
                     </a>
                   </div>
                   <div style={{

@@ -5,6 +5,18 @@ import { ltApi } from '../../services/ltApi';
 import { studentApi } from '../../services/studentApi';
 import PaginationBar from '../../components/common/PaginationBar';
 import ViewFullLtModal from '../../components/common/ViewFullLtModal';
+import {
+  CheckCircle2,
+  AlertTriangle,
+  X,
+  Timer,
+  Pause,
+  Play,
+  Clock,
+  Check,
+  Eye,
+  Pencil,
+} from 'lucide-react';
 
 export default function AssistantLt() {
   const { setHeader } = useOutletContext();
@@ -405,14 +417,24 @@ export default function AssistantLt() {
       {/* Feedback Banners */}
       {bannerMsg && (
         <div className="banner banner-success" style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-          <span>✅ {bannerMsg}</span>
-          <button type="button" className="btn btn-ghost btn-sm" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => setBannerMsg(null)}>✕</button>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <CheckCircle2 size={16} />
+            <span>{bannerMsg}</span>
+          </span>
+          <button type="button" className="btn btn-ghost btn-sm" style={{ padding: '2px 8px' }} onClick={() => setBannerMsg(null)} aria-label="Dismiss banner">
+            <X size={14} />
+          </button>
         </div>
       )}
       {errorMsg && (
         <div className="banner banner-danger" style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-          <span>⚠️ {errorMsg}</span>
-          <button type="button" className="btn btn-ghost btn-sm" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => setErrorMsg(null)}>✕</button>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <AlertTriangle size={16} />
+            <span>{errorMsg}</span>
+          </span>
+          <button type="button" className="btn btn-ghost btn-sm" style={{ padding: '2px 8px' }} onClick={() => setErrorMsg(null)} aria-label="Dismiss banner">
+            <X size={14} />
+          </button>
         </div>
       )}
 
@@ -474,9 +496,13 @@ export default function AssistantLt() {
                 fontWeight: 700,
                 fontSize: 13.5,
                 cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
               }}
             >
-              ✕ Exit Fullscreen
+              <X size={15} />
+              <span>Exit Fullscreen</span>
             </button>
           </div>
 
@@ -558,8 +584,9 @@ export default function AssistantLt() {
                 boxShadow: '0 8px 24px rgba(0,0,0,0.28)',
               }}
             >
-              <div style={{ fontSize: 11, fontWeight: 800, color: '#8EC5FF', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-                ⏱ Time Remaining
+              <div style={{ fontSize: 11, fontWeight: 800, color: '#8EC5FF', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Timer size={14} />
+                <span>Time Remaining</span>
               </div>
 
               <div
@@ -604,9 +631,23 @@ export default function AssistantLt() {
                     fontSize: 13,
                     fontWeight: 800,
                     cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
                   }}
                 >
-                  {isTimerRunning ? '⏸ Pause' : '▶ Start / Resume'}
+                  {isTimerRunning ? (
+                    <>
+                      <Pause size={14} />
+                      <span>Pause</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play size={14} fill="currentColor" />
+                      <span>Start / Resume</span>
+                    </>
+                  )}
                 </button>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 5 }}>
                   <button
@@ -743,8 +784,10 @@ export default function AssistantLt() {
               type="button"
               className="btn btn-primary"
               onClick={() => openSetTimerForLt(todayLts[0] || null)}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
             >
-              🕒 Set LT Timer
+              <Clock size={15} />
+              <span>Set LT Timer</span>
             </button>
           </div>
 
@@ -824,8 +867,10 @@ export default function AssistantLt() {
                                 type="button"
                                 className="btn btn-primary btn-sm"
                                 onClick={() => openSetTimerForLt(lt)}
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}
                               >
-                                ▶ Start LT Timer
+                                <Play size={13} fill="currentColor" />
+                                <span>Start LT Timer</span>
                               </button>
                               <button
                                 type="button"
@@ -841,10 +886,14 @@ export default function AssistantLt() {
                                   background: '#E6F8EF',
                                   color: '#1F9D6B',
                                   border: '1.5px solid #1F9D6B',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: 5,
                                 }}
                                 onClick={() => handleFinishLt(lt)}
                               >
-                                ✓ Finish
+                                <Check size={14} />
+                                <span>Finish</span>
                               </button>
                             </div>
                           </td>
@@ -924,8 +973,10 @@ export default function AssistantLt() {
                                 type="button"
                                 className="btn btn-ghost btn-sm"
                                 onClick={() => setViewingLt(lt)}
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}
                               >
-                                👁️ View Full LT
+                                <Eye size={14} />
+                                <span>View Full LT</span>
                               </button>
                               <Link to={`/assistant/lt/history/${ltId}`} className="btn btn-ghost btn-sm">
                                 View Marksheet
@@ -933,6 +984,7 @@ export default function AssistantLt() {
                               <button
                                 type="button"
                                 className={isEditOpen ? 'btn btn-ghost btn-sm' : 'btn btn-primary btn-sm'}
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}
                                 onClick={async () => {
                                   const nextOpen = !isEditOpen;
                                   setExpandedPendingLts(prev => ({ ...prev, [`edit-${ltId}`]: nextOpen }));
@@ -941,7 +993,14 @@ export default function AssistantLt() {
                                   }
                                 }}
                               >
-                                {isEditOpen ? 'Close Update ▲' : '✏️ Update Marks ▼'}
+                                {isEditOpen ? (
+                                  <span>Close Update ▲</span>
+                                ) : (
+                                  <>
+                                    <Pencil size={13} />
+                                    <span>Update Marks ▼</span>
+                                  </>
+                                )}
                               </button>
                             </div>
                           </td>
@@ -1021,12 +1080,20 @@ export default function AssistantLt() {
                                     type="button"
                                     className="btn btn-primary btn-sm"
                                     disabled={savingLtId === ltId}
+                                    style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}
                                     onClick={async () => {
                                       await handleSavePendingMarks(lt);
                                       setExpandedPendingLts(prev => ({ ...prev, [`edit-${ltId}`]: false }));
                                     }}
                                   >
-                                    {savingLtId === ltId ? 'Updating...' : '✓ Save Updated Marks'}
+                                    {savingLtId === ltId ? (
+                                      'Updating...'
+                                    ) : (
+                                      <>
+                                        <Check size={14} />
+                                        <span>Save Updated Marks</span>
+                                      </>
+                                    )}
                                   </button>
                                 </div>
                               </div>
@@ -1118,7 +1185,7 @@ export default function AssistantLt() {
                           #{lt.ltNo}
                         </div>
                         <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: 15, fontWeight: 800, color: '#1C2340', overflowWrap: 'anywhere' }}>
+                          <div style={{ fontSize: 15, fontWeight: 800, color: '#1C2340', overflowWrap: 'break-word', wordBreak: 'normal' }}>
                             LT #{lt.ltNo} — {lt.subject} ({formatStd(lt.standard)})
                           </div>
                           <div style={{ fontSize: 12, color: '#6B7290', marginTop: 2 }}>
@@ -1220,9 +1287,17 @@ export default function AssistantLt() {
                             type="button"
                             className="btn btn-primary"
                             disabled={savingLtId === ltId || matchingStudents.length === 0}
+                            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
                             onClick={() => handleSavePendingMarks(lt)}
                           >
-                            {savingLtId === ltId ? 'Saving Marks...' : '✓ Save & Submit Marks'}
+                            {savingLtId === ltId ? (
+                              'Saving Marks...'
+                            ) : (
+                              <>
+                                <Check size={15} />
+                                <span>Save &amp; Submit Marks</span>
+                              </>
+                            )}
                           </button>
                         </div>
                       </div>
@@ -1263,7 +1338,9 @@ export default function AssistantLt() {
                     : 'Configure classroom assessment duration'}
                 </div>
               </div>
-              <button className="modal-close" onClick={() => setShowTimerModal(false)}>✕</button>
+              <button className="modal-close" onClick={() => setShowTimerModal(false)} aria-label="Close modal">
+                <X size={16} />
+              </button>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16, margin: '18px 0' }}>
@@ -1374,8 +1451,10 @@ export default function AssistantLt() {
                 type="button"
                 className="btn btn-primary"
                 onClick={() => handleConfirmTimerModal(true)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
               >
-                ▶ Start &amp; Open Full Projector
+                <Play size={14} fill="currentColor" />
+                <span>Start &amp; Open Full Projector</span>
               </button>
             </div>
           </div>

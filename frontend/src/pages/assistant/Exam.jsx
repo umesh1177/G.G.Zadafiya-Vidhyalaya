@@ -3,6 +3,7 @@ import { Link, useOutletContext } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { examApi, readPdfFileAsPayload, getQuestionPaperUrl } from '../../services/examApi';
 import PaginationBar from '../../components/common/PaginationBar';
+import { X } from 'lucide-react';
 
 const SUBJECT_OPTIONS = [
   'Physics',
@@ -431,8 +432,8 @@ export default function AssistantExam() {
           style={{ marginBottom: 16, justifyContent: 'space-between', alignItems: 'center', gap: 10 }}
         >
           <span>{bannerMsg}</span>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setBannerMsg(null)}>
-            ✕
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setBannerMsg(null)} aria-label="Dismiss banner">
+            <X size={14} />
           </button>
         </div>
       )}
@@ -443,8 +444,8 @@ export default function AssistantExam() {
           style={{ marginBottom: 16, justifyContent: 'space-between', alignItems: 'center', gap: 10 }}
         >
           <span>{errorMsg}</span>
-          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setErrorMsg(null)}>
-            ✕
+          <button type="button" className="btn btn-ghost btn-sm" onClick={() => setErrorMsg(null)} aria-label="Dismiss banner">
+            <X size={14} />
           </button>
         </div>
       )}

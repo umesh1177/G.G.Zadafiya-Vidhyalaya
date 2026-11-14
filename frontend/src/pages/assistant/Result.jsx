@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useOutletContext } from 'react-router-dom'
 import { useData } from '../../context/DataContext'
+import { CheckCircle2, X } from 'lucide-react'
 
 export default function AssistantResult() {
   const { setHeader } = useOutletContext()
@@ -50,8 +51,13 @@ export default function AssistantResult() {
     <div className="content">
       {bannerMsg && (
         <div className="banner banner-success" style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
-          <span>✅ {bannerMsg}</span>
-          <button type="button" className="btn btn-ghost btn-sm" style={{ padding: '2px 8px', fontSize: 12 }} onClick={() => setBannerMsg(null)}>✕</button>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <CheckCircle2 size={16} />
+            <span>{bannerMsg}</span>
+          </span>
+          <button type="button" className="btn btn-ghost btn-sm" style={{ padding: '2px 8px' }} onClick={() => setBannerMsg(null)} aria-label="Dismiss banner">
+            <X size={14} />
+          </button>
         </div>
       )}
 
@@ -197,7 +203,9 @@ export default function AssistantResult() {
                 <div className="card__title">Result Batch – Std {viewBatch.standard}-{viewBatch.division}</div>
                 <div className="card__desc">{viewBatch.type} Result · {viewBatch.date}</div>
               </div>
-              <button className="modal-close" onClick={() => setViewBatch(null)}>✕</button>
+              <button className="modal-close" onClick={() => setViewBatch(null)} aria-label="Close modal">
+                <X size={16} />
+              </button>
             </div>
             <div className="table-wrap" style={{ marginBottom: 14 }}>
               <table>

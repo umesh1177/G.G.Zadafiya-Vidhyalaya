@@ -97,7 +97,7 @@ export default function StudentNoticeMessage() {
                     <td className="num">{(safePage - 1) * PAGE_SIZE + idx + 1}</td>
                     <td className="num">{formatDate(n.date || n.createdAt)}</td>
                     <td><span className="chip chip-neutral">{n.type || 'General'}</span></td>
-                    <td style={{ overflowWrap: 'anywhere' }}>
+                    <td style={{ overflowWrap: 'break-word', wordBreak: 'normal' }}>
                       {n.message.length > 70 ? `${n.message.slice(0, 70)}…` : n.message}
                       {Array.isArray(n.attachments) && n.attachments.length > 0 && (
                         <span className="chip chip-neutral" style={{ marginLeft: 8, fontSize: 11 }}>
@@ -145,7 +145,7 @@ export default function StudentNoticeMessage() {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M18 6 6 18" /></svg>
               </button>
             </div>
-            <p style={{ fontSize: '13.6px', lineHeight: 1.6, overflowWrap: 'anywhere', whiteSpace: 'pre-wrap' }}>
+            <p style={{ fontSize: '13.6px', lineHeight: 1.6, overflowWrap: 'break-word', wordBreak: 'normal', whiteSpace: 'pre-wrap' }}>
               {openModal.message}
             </p>
             {Array.isArray(openModal.attachments) && openModal.attachments.length > 0 && (

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { AlertTriangle, CheckCircle2, RefreshCw, Lock, Eye, Pencil, Trash2, XCircle } from 'lucide-react';
 import { useOutletContext } from 'react-router-dom';
 import { facultyApi } from '../../services/facultyApi';
 import { normalizeBaseSubject } from '../../utils/syllabusUtils';
@@ -148,7 +149,7 @@ function TablePagination({ totalItems, currentPage, pageSize, onPageChange, onPa
 }
 
 // ─── Main FacultyManagement Component ────────────────────────────────────────
-export default function FacultyManagement() {
+export default function FacultyManagement({ defaultTab } = {}) {
   const { setHeader } = useOutletContext();
 
   useEffect(() => {
@@ -159,7 +160,11 @@ export default function FacultyManagement() {
   }, [setHeader]);
 
   // Active Tab: 'active-faculty' | 'subject-faculty' | 'assistant-faculty' | 'deactivated' | 'register-faculty'
-  const [activeTab, setActiveTab] = useState('active-faculty');
+  const [activeTab, setActiveTab] = useState(
+    defaultTab === 'add-faculty' || defaultTab === 'register-faculty'
+      ? 'register-faculty'
+      : 'active-faculty'
+  );
 
   // Filter States
   const [searchTerm, setSearchTerm] = useState('');
@@ -412,7 +417,7 @@ export default function FacultyManagement() {
       showToast(`Faculty record ${faculty.fullName} deleted.`);
       loadFaculty(true);
     } catch (err) {
-      showToast(`⚠️ ${err.message || 'Failed to delete faculty from database'}`);
+      showToast(`${err.message || 'Failed to delete faculty from database'}`);
     }
   };
 
@@ -460,7 +465,7 @@ export default function FacultyManagement() {
       {/* ── Live CRUD Success Toast ── */}
       {actionToast && (
         <div className="banner banner-success" style={{ marginBottom: 16 }}>
-          <span>✅ {actionToast}</span>
+          <CheckCircle2 size={14} style={{marginRight:4}}/><span>{actionToast}</span>
         </div>
       )}
 
@@ -482,7 +487,7 @@ export default function FacultyManagement() {
           color: '#92400E'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 18 }}>⚠️</span>
+            <AlertTriangle size={18}/>
             <span><strong>Backend Server Offline:</strong> Run <code style={{ background: '#FEF3C7', padding: '2px 6px', borderRadius: 4, fontFamily: 'monospace' }}>npm run backend</code> to connect to MongoDB localhost.</span>
           </div>
           <button
@@ -498,7 +503,7 @@ export default function FacultyManagement() {
               color: '#92400E'
             }}
           >
-            🔄 Retry
+            <><RefreshCw size={13} style={{marginRight:4}}/>Retry</>
           </button>
         </div>
       )}
@@ -744,7 +749,7 @@ export default function FacultyManagement() {
               color: '#1E293B',
             }}>
               <span style={{ fontWeight: 800, color: '#123B5D' }}>
-                🔒 Multi-Faculty Subject Assignment (Isolated Progress):
+                <><Lock size={13} style={{marginRight:4}}/>Multi-Faculty Subject Assignment (Isolated Progress):</>
               </span>
               {multiFacultySubjects.map(grp => (
                 <span key={grp.subject} style={{
@@ -966,7 +971,7 @@ export default function FacultyManagement() {
                             title="View Profile"
                             onClick={() => setViewingFaculty(faculty)}
                           >
-                            👁️ View
+                            <Eye size={13} style={{marginRight:4}}/>View
                           </button>
                           <button
                             className="btn btn-ghost btn-sm"
@@ -974,7 +979,7 @@ export default function FacultyManagement() {
                             title="Edit Faculty"
                             onClick={() => { setEditError(null); setEditingFaculty({ ...faculty }); }}
                           >
-                            ✏️ Edit
+                            <Pencil size={13} style={{marginRight:4}}/>Edit
                           </button>
                           <button
                             className="btn btn-danger-ghost btn-sm"
@@ -982,7 +987,7 @@ export default function FacultyManagement() {
                             title="Delete Faculty"
                             onClick={() => handleDeleteFaculty(faculty)}
                           >
-                            🗑️
+                            <Trash2 size={13}/>
                           </button>
                         </div>
                       </td>
@@ -1024,12 +1029,12 @@ export default function FacultyManagement() {
 
           {formError && (
             <div className="banner banner-danger" style={{ marginBottom: 20 }}>
-              <span>⚠️ {formError}</span>
+              <AlertTriangle size={14} style={{marginRight:4}}/><span>{formError}</span>
             </div>
           )}
           {formSuccess && (
             <div className="banner banner-success" style={{ marginBottom: 20 }}>
-              <span>✅ {formSuccess}</span>
+              <CheckCircle2 size={14} style={{marginRight:4}}/><span>{formSuccess}</span>
             </div>
           )}
 
@@ -1308,7 +1313,7 @@ export default function FacultyManagement() {
                   setViewingFaculty(null);
                 }}
               >
-                ✏️ Update Profile
+                <><Pencil size={13} style={{marginRight:4}}/>Update Profile</>
               </button>
               <button className="btn btn-primary btn-sm" onClick={() => setViewingFaculty(null)}>
                 Close
@@ -1336,7 +1341,7 @@ export default function FacultyManagement() {
             <form onSubmit={handleUpdateFaculty}>
               {editError && (
                 <div className="banner banner-danger" style={{ marginTop: 14, marginBottom: 4 }}>
-                  <span>⚠️ {editError}</span>
+                  <AlertTriangle size={14} style={{marginRight:4}}/><span>{editError}</span>
                 </div>
               )}
               <div className="form-grid-2" style={{ margin: '18px 0' }}>
@@ -1508,7 +1513,7 @@ export default function FacultyManagement() {
                     gap: 6
                   }}
                 >
-                  {editingFaculty.status === 'DEACTIVATED' ? '✅ Reactivate Faculty' : '🚫 Deactivate Faculty'}
+                  {editingFaculty.status === 'DEACTIVATED' ? 'Reactivate Faculty' : 'Deactivate Faculty'}
                 </button>
 
                 {/* Save / Cancel on the right */}

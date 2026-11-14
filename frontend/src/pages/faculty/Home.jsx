@@ -8,6 +8,7 @@ import { ltApi } from '../../services/ltApi';
 import { calculateSyllabusCompletion } from '../../utils/syllabusUtils';
 import PaginationBar from '../../components/common/PaginationBar';
 import ViewFullLtModal from '../../components/common/ViewFullLtModal';
+import { Eye } from 'lucide-react';
 
 export default function FacultyHome() {
   const { setHeader } = useOutletContext();
@@ -279,8 +280,10 @@ export default function FacultyHome() {
                         type="button"
                         className="btn btn-primary btn-sm"
                         onClick={() => setViewingLt(lt)}
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
                       >
-                        👁️ View LT
+                        <Eye size={14} />
+                        <span>View LT</span>
                       </button>
                     </td>
                   </tr>

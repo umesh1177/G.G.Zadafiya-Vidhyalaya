@@ -31,3 +31,7 @@ frontend/.env
 Thumbs.db
 .vscode/
 .idea/
+
+# Local Analysis Documentation
+docs/PROJECT_ANALYSIS.md
+

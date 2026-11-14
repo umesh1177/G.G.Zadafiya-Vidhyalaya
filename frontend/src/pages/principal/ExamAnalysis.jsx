@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { AlertTriangle } from 'lucide-react';
 import { Link, useOutletContext } from 'react-router-dom';
 import { examApi } from '../../services/examApi';
 import PaginationBar from '../../components/common/PaginationBar';
@@ -218,7 +219,7 @@ export default function ExamAnalysis() {
 
       {errorMsg && (
         <div className="banner banner-warning" style={{ marginBottom: 16 }}>
-          <span>⚠️ {errorMsg}</span>
+          <AlertTriangle size={14} style={{marginRight:4}}/><span>{errorMsg}</span>
         </div>
       )}
 

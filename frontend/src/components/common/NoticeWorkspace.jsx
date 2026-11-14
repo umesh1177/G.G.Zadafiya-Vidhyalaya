@@ -496,7 +496,7 @@ export default function NoticeWorkspace({ viewerRole = 'principal' }) {
                   )}
 
                   {/* Message Body */}
-                  <p style={{ fontSize: 14, color: 'var(--ink)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+                  <p style={{ fontSize: 14, color: 'var(--ink)', lineHeight: 1.6, margin: 0, whiteSpace: 'pre-wrap', overflowWrap: 'break-word', wordBreak: 'normal' }}>
                     {n.message}
                   </p>
 
@@ -1101,7 +1101,7 @@ export default function NoticeWorkspace({ viewerRole = 'principal' }) {
 
               <div style={{ marginTop: 14, paddingTop: 12, borderTop: '1px solid var(--line-soft)' }}>
                 <div style={{ fontSize: 11.5, fontWeight: 700, color: 'var(--slate)', marginBottom: 6 }}>MESSAGE</div>
-                <p style={{ fontSize: 14.2, lineHeight: 1.65, whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', margin: 0 }}>
+                <p style={{ fontSize: 14.2, lineHeight: 1.65, whiteSpace: 'pre-wrap', overflowWrap: 'break-word', wordBreak: 'normal', margin: 0 }}>
                   {viewingNotice.message}
                 </p>
               </div>

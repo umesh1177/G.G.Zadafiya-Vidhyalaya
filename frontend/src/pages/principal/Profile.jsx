@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { CheckCircle2, AlertTriangle, Pencil, Lock } from 'lucide-react';
 import { useOutletContext } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
@@ -48,7 +49,7 @@ export default function PrincipalProfile() {
     <div style={{ maxWidth: 840, margin: '0 auto' }}>
       {successMsg && (
         <div className="banner banner-success" style={{ marginBottom: 18 }}>
-          <span>✅ {successMsg}</span>
+          <CheckCircle2 size={14} style={{marginRight:4}}/>
         </div>
       )}
 
@@ -60,7 +61,7 @@ export default function PrincipalProfile() {
               {user?.initials || 'PR'}
             </div>
             <div style={{ minWidth: 0 }}>
-              <h2 style={{ fontSize: 20, margin: 0, color: 'var(--ink)', overflowWrap: 'anywhere' }}>{user?.name || 'School Principal'}</h2>
+              <h2 style={{ fontSize: 20, margin: 0, color: 'var(--ink)', overflowWrap: 'break-word', wordBreak: 'normal' }}>{user?.name || 'School Principal'}</h2>
               <div style={{ color: '#64748b', fontSize: 13.5, marginTop: 4 }}>
                 Chief Academic Administrator • {user?.school || 'G.G. Zadafiya Vidhyalaya'}
               </div>
@@ -75,7 +76,7 @@ export default function PrincipalProfile() {
             style={{ fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}
             onClick={() => setIsEditing(true)}
           >
-            ✏️ Edit Profile Coordinates
+            <><Pencil size={14} style={{marginRight:5}}/>Edit Profile Coordinates</>
           </button>
         </div>
       </div>
@@ -92,12 +93,12 @@ export default function PrincipalProfile() {
           <div>
             <div style={{ fontSize: 11.5, color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>Official Full Name</div>
             <div style={{ fontSize: 15, fontWeight: 700, marginTop: 4, color: '#0F172A' }}>{user?.name || 'Principal'}</div>
-            <span style={{ fontSize: 11, color: '#94A3B8' }}>🔒 Read-only official record</span>
+            <span style={{ fontSize: 11, color: '#94A3B8' }}><><Lock size={11} style={{marginRight:3}}/>Read-only official record</></span>
           </div>
           <div>
             <div style={{ fontSize: 11.5, color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>System Role</div>
             <div style={{ fontSize: 15, fontWeight: 700, marginTop: 4, color: '#123B5D' }}>Principal / Administrator</div>
-            <span style={{ fontSize: 11, color: '#94A3B8' }}>🔒 Read-only permission level</span>
+            <span style={{ fontSize: 11, color: '#94A3B8' }}><><Lock size={11} style={{marginRight:3}}/>Read-only permission level</></span>
           </div>
           <div>
             <div style={{ fontSize: 11.5, color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>Institution</div>

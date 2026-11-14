@@ -182,7 +182,7 @@ export default function PrintableLtReport({ report, reportType = 'WEEKLY', onClo
             </table>
           ) : (
             <div style={{ padding: '8px 12px', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '6px', fontSize: '11.5px', color: '#059669', fontWeight: 600 }}>
-              ✓ No weak LT performance questions found for the selected filters.
+              No weak LT performance questions found for the selected filters.
             </div>
           )}
 
@@ -310,7 +310,7 @@ export default function PrintableLtReport({ report, reportType = 'WEEKLY', onClo
             </table>
           ) : (
             <div style={{ padding: '8px 12px', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '6px', fontSize: '11.5px', color: '#059669', fontWeight: 600 }}>
-              ✓ No weak LT performance questions found for this month.
+              No weak LT performance questions found for this month.
             </div>
           )}
         </>
@@ -403,9 +403,9 @@ export default function PrintableLtReport({ report, reportType = 'WEEKLY', onClo
                   <td>{sb.classGrade}</td>
                   <td>
                     {sb.studentGrade === 'Excellent'
-                      ? '✓ Mastered'
+                      ? 'Mastered'
                       : sb.studentGrade === 'Good'
-                      ? '⚠️ Remedial Practice Needed'
+                      ? 'Remedial Practice Needed'
                       : 'Consistent Understanding'}
                   </td>
                 </tr>

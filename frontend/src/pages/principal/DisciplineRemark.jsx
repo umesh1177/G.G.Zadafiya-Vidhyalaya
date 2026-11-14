@@ -726,7 +726,7 @@ export default function DisciplineRemark() {
                           </div>
                         </td>
                         <td className="num">{formatDate(inc.date)}</td>
-                        <td style={{ maxWidth: 240, overflowWrap: 'anywhere' }}>
+                        <td style={{ maxWidth: 240, overflowWrap: 'break-word', wordBreak: 'normal' }}>
                           {String(inc.message || inc.description || '').length > 65
                             ? `${String(inc.message || inc.description).slice(0, 65)}...`
                             : inc.message || inc.description}
@@ -1022,7 +1022,7 @@ export default function DisciplineRemark() {
                         {formatDate(h.date)} · Noted by {h.notedBy}
                       </span>
                     </div>
-                    <p style={{ margin: 0, fontSize: 13.4, color: 'var(--ink)', lineHeight: 1.5, overflowWrap: 'anywhere' }}>
+                    <p style={{ margin: 0, fontSize: 13.4, color: 'var(--ink)', lineHeight: 1.5, overflowWrap: 'break-word', wordBreak: 'normal' }}>
                       {h.message}
                     </p>
                     {h.principalNote && (

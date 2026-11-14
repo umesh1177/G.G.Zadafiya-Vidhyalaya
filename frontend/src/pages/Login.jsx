@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { usePwaInstall } from '../hooks/usePwaInstall';
 import PwaInstallModal from '../components/common/PwaInstallModal';
+import { School, Download, GraduationCap, BookOpen, FlaskConical, Atom, Ruler, Dna, Microscope, Backpack } from 'lucide-react';
 
 export default function Login() {
   const { user, login } = useAuth();
@@ -97,7 +98,7 @@ export default function Login() {
                 ? '● Offline Mode'
                 : isInstalled
                   ? '✓ App Installed'
-                  : '🏫 Academic Portal'}
+                  : <><School size={13} style={{marginRight:4}}/> Academic Portal</>}
             </span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               {swUpdateReady && (
@@ -115,7 +116,7 @@ export default function Login() {
                   className="login-install-btn"
                   onClick={handleInstallClick}
                 >
-                  {canInstall ? '⬇ Install App' : '⬇ Install Guide'}
+                  {canInstall ? <><Download size={13} style={{marginRight:4}}/>Install App</> : <><Download size={13} style={{marginRight:4}}/>Install Guide</>}
                 </button>
               )}
             </div>
@@ -172,35 +173,35 @@ export default function Login() {
             <div className="role-hints__title">Quick Login — Portal Roles</div>
             <div className="role-grid">
               <button type="button" className="role-card" onClick={() => handleQuickLogin('admin', 'admin123')}>
-                <div className="role-card__name">🎓 Principal</div>
+                <div className="role-card__name"><><GraduationCap size={14} style={{marginRight:4}}/>Principal</></div>
                 <div className="role-card__cred"><span>admin</span> / admin123</div>
               </button>
               <button type="button" className="role-card" onClick={() => handleQuickLogin('faculty', 'faculty123')}>
-                <div className="role-card__name">📚 Physics Faculty</div>
+                <div className="role-card__name"><><BookOpen size={14} style={{marginRight:4}}/>Physics Faculty</></div>
                 <div className="role-card__cred"><span>FAC101</span> / faculty123</div>
               </button>
               <button type="button" className="role-card" onClick={() => handleQuickLogin('nisha.rao@ggzv.edu.in', 'faculty123')}>
-                <div className="role-card__name">🧪 Chem (Board)</div>
+                <div className="role-card__name"><><FlaskConical size={14} style={{marginRight:4}}/>Chem (Board)</></div>
                 <div className="role-card__cred"><span>FAC102</span> / faculty123</div>
               </button>
               <button type="button" className="role-card" onClick={() => handleQuickLogin('harsh.patel@ggzv.edu.in', 'faculty123')}>
-                <div className="role-card__name">⚗️ Chem (JEE)</div>
+                <div className="role-card__name"><><Atom size={14} style={{marginRight:4}}/>Chem (JEE)</></div>
                 <div className="role-card__cred"><span>FAC108</span> / faculty123</div>
               </button>
               <button type="button" className="role-card" onClick={() => handleQuickLogin('FAC103', 'faculty123')}>
-                <div className="role-card__name">📐 Maths Faculty</div>
+                <div className="role-card__name"><><Ruler size={14} style={{marginRight:4}}/>Maths Faculty</></div>
                 <div className="role-card__cred"><span>FAC103</span> / faculty123</div>
               </button>
               <button type="button" className="role-card" onClick={() => handleQuickLogin('FAC104', 'faculty123')}>
-                <div className="role-card__name">🧬 Biology Faculty</div>
+                <div className="role-card__name"><><Dna size={14} style={{marginRight:4}}/>Biology Faculty</></div>
                 <div className="role-card__cred"><span>FAC104</span> / faculty123</div>
               </button>
               <button type="button" className="role-card" onClick={() => handleQuickLogin('assistant', 'asst123')}>
-                <div className="role-card__name">🔬 Asst. Faculty</div>
+                <div className="role-card__name"><><Microscope size={14} style={{marginRight:4}}/>Asst. Faculty</></div>
                 <div className="role-card__cred"><span>assistant</span> / asst123</div>
               </button>
               <button type="button" className="role-card" onClick={() => handleQuickLogin('student', 'student123')}>
-                <div className="role-card__name">🎒 Student</div>
+                <div className="role-card__name"><><Backpack size={14} style={{marginRight:4}}/>Student</></div>
                 <div className="role-card__cred"><span>student</span> / student123</div>
               </button>
             </div>

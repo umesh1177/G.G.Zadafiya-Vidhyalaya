@@ -304,7 +304,7 @@ export default function PrincipalHome() {
                       {n.date ? new Date(n.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'}
                     </span>
                   </div>
-                  <div style={{ fontSize: 13, color: 'var(--ink-soft)', overflowWrap: 'anywhere' }}>
+                  <div style={{ fontSize: 13, color: 'var(--ink-soft)', overflowWrap: 'break-word', wordBreak: 'normal' }}>
                     {n.message.length > 90 ? n.message.slice(0, 90) + '…' : n.message}
                   </div>
                 </li>

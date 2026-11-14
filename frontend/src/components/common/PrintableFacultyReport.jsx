@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 function fmtDate(d) {
   if (!d) return '—';
@@ -117,9 +118,9 @@ export default function PrintableFacultyReport({ report, onClose }) {
       </table>
 
       <div className={`print-alert-box ${isWeak ? 'is-weak' : 'is-good'}`}>
-        <div className="print-alert-title">
-          {isWeak ? '⚠ ' : '✓ '}
-          {report.alertTitle || (isWeak ? 'Attention / Revision Alert' : 'Good Class Understanding Alert')}
+        <div className="print-alert-title" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {isWeak ? <AlertTriangle size={16} /> : <CheckCircle2 size={16} />}
+          <span>{report.alertTitle || (isWeak ? 'Attention / Revision Alert' : 'Good Class Understanding Alert')}</span>
         </div>
         {report.alertMessage && <div className="print-alert-msg">{report.alertMessage}</div>}
       </div>

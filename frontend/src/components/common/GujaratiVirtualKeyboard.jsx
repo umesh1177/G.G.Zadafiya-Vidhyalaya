@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Keyboard, X } from 'lucide-react';
 
 /**
  * GujaratiVirtualKeyboard
@@ -201,7 +202,7 @@ export default function GujaratiVirtualKeyboard({
       {/* Header with Title and Tabs */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10, paddingBottom: 8, borderBottom: '1px solid #E2E8F0', flexWrap: 'wrap', gap: 6 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 16 }}>⌨️</span>
+          <Keyboard size={18} color="#0F2942" />
           <span style={{ fontWeight: 700, fontSize: 13.5, color: '#0F2942' }}>
             ગુજરાતી કીબોર્ડ (Gujarati Keyboard)
           </span>
@@ -211,23 +212,21 @@ export default function GujaratiVirtualKeyboard({
           <button
             type="button"
             onClick={onClose}
+            aria-label="Close Gujarati keyboard"
             style={{
               background: '#F1F5F9',
               border: 'none',
               borderRadius: 6,
-              width: 26,
-              height: 26,
+              width: 28,
+              height: 28,
               cursor: 'pointer',
-              fontWeight: 700,
-              fontSize: 13,
-              color: '#64748B',
-              display: 'flex',
+              display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
+              color: '#64748B',
             }}
-            title="Close Keyboard"
           >
-            ✕
+            <X size={15} />
           </button>
         )}
       </div>

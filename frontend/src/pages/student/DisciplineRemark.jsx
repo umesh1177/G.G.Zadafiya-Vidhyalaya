@@ -151,7 +151,7 @@ export default function StudentDisciplineRemark() {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 6l12 12M18 6 6 18" /></svg>
               </button>
             </div>
-            <p style={{ fontSize: '13.6px', lineHeight: 1.6, overflowWrap: 'anywhere' }}>
+            <p style={{ fontSize: '13.6px', lineHeight: 1.6, overflowWrap: 'break-word', wordBreak: 'normal' }}>
               {openModal.message || openModal.description}
             </p>
           </div>

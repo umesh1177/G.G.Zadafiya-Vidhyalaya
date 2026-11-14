@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { facultyApi } from '../../services/facultyApi';
+import { CheckCircle2, Pencil, Lock, X } from 'lucide-react';
 
 export default function AssistantProfile() {
   const { setHeader } = useOutletContext();
@@ -74,7 +75,10 @@ export default function AssistantProfile() {
     <div style={{ maxWidth: 840, margin: '0 auto' }}>
       {successMsg && (
         <div className="banner banner-success" style={{ marginBottom: 18 }}>
-          <span>✅ {successMsg}</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <CheckCircle2 size={16} />
+            <span>{successMsg}</span>
+          </span>
         </div>
       )}
 
@@ -103,7 +107,8 @@ export default function AssistantProfile() {
             style={{ fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}
             onClick={() => setIsEditing(true)}
           >
-            ✏️ Edit Profile Coordinates
+            <Pencil size={14} />
+            <span>Edit Profile Coordinates</span>
           </button>
         </div>
       </div>
@@ -120,22 +125,30 @@ export default function AssistantProfile() {
           <div>
             <div style={{ fontSize: 11.5, color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>Official Full Name</div>
             <div style={{ fontSize: 15, fontWeight: 700, marginTop: 4, color: '#0F172A' }}>{user?.name || 'Rajiv Mehta'}</div>
-            <span style={{ fontSize: 11, color: '#94A3B8' }}>🔒 Read-only official record</span>
+            <span style={{ fontSize: 11, color: '#94A3B8', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <Lock size={11} /> Read-only official record
+            </span>
           </div>
           <div>
             <div style={{ fontSize: 11.5, color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>Faculty Role</div>
             <div style={{ fontSize: 15, fontWeight: 700, marginTop: 4, color: '#059669' }}>Assistant Faculty (Lab &amp; Marks Entry)</div>
-            <span style={{ fontSize: 11, color: '#94A3B8' }}>🔒 Read-only role</span>
+            <span style={{ fontSize: 11, color: '#94A3B8', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <Lock size={11} /> Read-only role
+            </span>
           </div>
           <div>
             <div style={{ fontSize: 11.5, color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>Assigned Department / Lab</div>
             <div style={{ fontSize: 15, fontWeight: 700, marginTop: 4, color: '#123B5D' }}>{user?.subject || 'Lab — Physics/Chemistry'}</div>
-            <span style={{ fontSize: 11, color: '#94A3B8' }}>🔒 Read-only lab stream</span>
+            <span style={{ fontSize: 11, color: '#94A3B8', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <Lock size={11} /> Read-only lab stream
+            </span>
           </div>
           <div>
             <div style={{ fontSize: 11.5, color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>Employee Code</div>
             <div className="num" style={{ fontSize: 15, fontWeight: 800, marginTop: 4, color: '#047857' }}>{user?.empCode || 'FAC102'}</div>
-            <span style={{ fontSize: 11, color: '#94A3B8' }}>🔒 Read-only ID</span>
+            <span style={{ fontSize: 11, color: '#94A3B8', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <Lock size={11} /> Read-only ID
+            </span>
           </div>
         </div>
       </div>
@@ -159,7 +172,7 @@ export default function AssistantProfile() {
             <div style={{ fontSize: 11.5, color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>
               Official Email <span style={{ color: '#059669', fontSize: 10.5 }}>● EDITABLE</span>
             </div>
-            <div style={{ fontSize: 15, fontWeight: 600, marginTop: 4, color: '#123B5D', overflowWrap: 'anywhere' }}>{user?.email || editForm.email}</div>
+            <div style={{ fontSize: 15, fontWeight: 600, marginTop: 4, color: '#123B5D', overflowWrap: 'break-word', wordBreak: 'normal' }}>{user?.email || editForm.email}</div>
           </div>
           <div>
             <div style={{ fontSize: 11.5, color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>
@@ -185,7 +198,9 @@ export default function AssistantProfile() {
                 <div className="card__title">Edit Assistant Faculty Coordinates</div>
                 <div className="card__desc">Update personal communications and qualifications</div>
               </div>
-              <button className="modal-close" onClick={() => setIsEditing(false)}>✕</button>
+              <button className="modal-close" onClick={() => setIsEditing(false)} aria-label="Close modal">
+                <X size={16} />
+              </button>
             </div>
 
             <form onSubmit={handleSave}>

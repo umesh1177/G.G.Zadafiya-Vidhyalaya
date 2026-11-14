@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { CheckCircle2, Pencil, Lock } from 'lucide-react';
 import { useOutletContext } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { studentApi } from '../../services/studentApi';
@@ -74,7 +75,7 @@ export default function StudentProfile() {
     <div style={{ maxWidth: 840, margin: '0 auto' }}>
       {successMsg && (
         <div className="banner banner-success" style={{ marginBottom: 18 }}>
-          <span>✅ {successMsg}</span>
+          <CheckCircle2 size={14} style={{marginRight:4}}/><span>{successMsg}</span>
         </div>
       )}
 
@@ -103,7 +104,7 @@ export default function StudentProfile() {
             style={{ fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6 }}
             onClick={() => setIsEditing(true)}
           >
-            ✏️ Edit Contact Coordinates
+            <><Pencil size={13} style={{marginRight:4}}/>Edit Contact Coordinates</>
           </button>
         </div>
       </div>
@@ -120,26 +121,26 @@ export default function StudentProfile() {
           <div>
             <div style={{ fontSize: 11.5, color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>Official Student Name</div>
             <div style={{ fontSize: 15, fontWeight: 700, marginTop: 4, color: '#0F172A' }}>{user?.name || 'Umesh Pal'}</div>
-            <span style={{ fontSize: 11, color: '#94A3B8' }}>🔒 Read-only official record</span>
+            <span style={{ fontSize: 11, color: '#94A3B8' }}><><Lock size={11} style={{marginRight:3}}/>Read-only official record</></span>
           </div>
           <div>
             <div style={{ fontSize: 11.5, color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>Roll Number</div>
             <div className="num" style={{ fontSize: 15, fontWeight: 800, marginTop: 4, color: '#123B5D' }}>#{user?.rollNo || 7}</div>
-            <span style={{ fontSize: 11, color: '#94A3B8' }}>🔒 Read-only class roll</span>
+            <span style={{ fontSize: 11, color: '#94A3B8' }}><><Lock size={11} style={{marginRight:3}}/>Read-only class roll</></span>
           </div>
           <div>
             <div style={{ fontSize: 11.5, color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>Class &amp; Section</div>
             <div style={{ fontSize: 15, fontWeight: 700, marginTop: 4, color: '#123B5D' }}>
               Standard {String(user?.standard || '11').replace('STD_', '')} — Division {user?.division || 'A'}
             </div>
-            <span style={{ fontSize: 11, color: '#94A3B8' }}>🔒 Read-only division</span>
+            <span style={{ fontSize: 11, color: '#94A3B8' }}><><Lock size={11} style={{marginRight:3}}/>Read-only division</></span>
           </div>
           <div>
             <div style={{ fontSize: 11.5, color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>Science Stream Allocation</div>
             <div style={{ fontSize: 14.5, fontWeight: 700, marginTop: 4, color: '#047857' }}>
               {getStreamTitle(user?.streamGroup)}
             </div>
-            <span style={{ fontSize: 11, color: '#94A3B8' }}>🔒 Read-only stream</span>
+            <span style={{ fontSize: 11, color: '#94A3B8' }}><><Lock size={11} style={{marginRight:3}}/>Read-only stream</></span>
           </div>
         </div>
       </div>
@@ -163,7 +164,7 @@ export default function StudentProfile() {
             <div style={{ fontSize: 11.5, color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>
               Official Email <span style={{ color: '#059669', fontSize: 10.5 }}>● EDITABLE</span>
             </div>
-            <div style={{ fontSize: 15, fontWeight: 600, marginTop: 4, color: '#123B5D', overflowWrap: 'anywhere' }}>{user?.email || editForm.email}</div>
+            <div style={{ fontSize: 15, fontWeight: 600, marginTop: 4, color: '#123B5D', overflowWrap: 'break-word', wordBreak: 'normal' }}>{user?.email || editForm.email}</div>
           </div>
           <div>
             <div style={{ fontSize: 11.5, color: '#64748b', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.04em' }}>

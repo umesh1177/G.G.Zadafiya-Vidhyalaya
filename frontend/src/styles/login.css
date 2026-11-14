@@ -342,7 +342,7 @@
   font-size: 10.5px;
   color: var(--login-ink-faint);
   line-height: 1.5;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word; word-break: normal;
 }
 
 .role-card__cred span {
