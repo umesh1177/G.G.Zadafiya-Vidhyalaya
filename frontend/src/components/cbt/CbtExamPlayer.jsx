@@ -544,6 +544,7 @@ export default function CbtExamPlayer({
               {currentQ?.options?.map((optText, optIdx) => {
                 const optKey = ['A', 'B', 'C', 'D'][optIdx];
                 const isSelected = selectedOption === optKey;
+                const isImageOpt = typeof optText === 'string' && optText.startsWith('data:image/');
                 const cleanText = typeof optText === 'string'
                   ? optText.replace(/^(?:\(?([A-Da-dઅબકડ])[\.\)\:\-]|\b([A-Da-dઅબકડ])[\.\)])\s*/, '').trim()
                   : String(optText || '');
@@ -555,7 +556,15 @@ export default function CbtExamPlayer({
                     onClick={() => handleSelectOption(optKey)}
                   >
                     <span className="cbt-option-letter">{optKey}.</span>
-                    <span className="cbt-option-text">{cleanText}</span>
+                    {isImageOpt ? (
+                      <img
+                        src={optText}
+                        alt={`Option ${optKey}`}
+                        className="max-h-20 max-w-full object-contain inline-block my-1 bg-white p-1 rounded border border-slate-200"
+                      />
+                    ) : (
+                      <span className="cbt-option-text">{cleanText}</span>
+                    )}
                   </div>
                 );
               })}

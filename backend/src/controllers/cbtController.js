@@ -385,11 +385,13 @@ exports.startExam = async (req, res) => {
     (exam.questions || []).forEach((q, idx) => {
       const qId = q.id || (q._id ? q._id.toString() : `q_${idx + 1}`);
 
-      // Ensure 4 clean options without duplicate prefix letters
+      // Ensure 4 clean options without duplicate prefix letters (preserve base64 image options)
       let cleanOpts = Array.isArray(q.options) && q.options.length > 0 ? [...q.options] : [];
       cleanOpts = cleanOpts.map(opt =>
         typeof opt === 'string'
-          ? opt.replace(/^(?:\(?([A-Da-dઅબકડ])[\.\)\:\-]|\b([A-Da-dઅબકડ])[\.\)])\s*/, '').trim()
+          ? opt.startsWith('data:image/')
+            ? opt
+            : opt.replace(/^(?:\(?([A-Da-dઅબકડ])[\.\)\:\-]|\b([A-Da-dઅબકડ])[\.\)])\s*/, '').trim()
           : String(opt || '')
       );
       while (cleanOpts.length < 4) {
@@ -432,7 +434,9 @@ exports.startExam = async (req, res) => {
         let cleanOpts = Array.isArray(q.options) && q.options.length > 0 ? [...q.options] : [];
         cleanOpts = cleanOpts.map(opt =>
           typeof opt === 'string'
-            ? opt.replace(/^(?:\(?([A-Da-dઅબકડ])[\.\)\:\-]|\b([A-Da-dઅબકડ])[\.\)])\s*/, '').trim()
+            ? opt.startsWith('data:image/')
+              ? opt
+              : opt.replace(/^(?:\(?([A-Da-dઅબકડ])[\.\)\:\-]|\b([A-Da-dઅબકડ])[\.\)])\s*/, '').trim()
             : String(opt || '')
         );
         while (cleanOpts.length < 4) {
@@ -1403,8 +1407,37 @@ exports.extractPaper = async (req, res) => {
             }
             await parser.destroy().catch(() => {});
 
-            // Check if this is a Quantum Paper format or Gopika ASCII font PDF
-            if (isQuantumPaperOrGopika(rawPdfText)) {
+            // 1. If Gemini Vision API key is configured, attempt multimodal visual extraction
+            const geminiApiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+            if (geminiApiKey) {
+              try {
+                const { extractQuestionsWithGeminiVision } = require('../utils/cbtGeminiVisionExtractor');
+                const { PDFParse } = require('pdf-parse');
+                const vParser = new PDFParse({ data: cleanPdfBuf });
+                await vParser.load();
+                const screenshots = await vParser.getScreenshot({ scale: 2, imageBuffer: true });
+                if (screenshots && Array.isArray(screenshots.pages) && screenshots.pages.length > 0) {
+                  const pageBuffers = screenshots.pages.map(p => p.data);
+                  const gQuestions = await extractQuestionsWithGeminiVision({
+                    pageBuffers,
+                    subject,
+                    marks: Number(marks),
+                    negativeMarks: Number(negativeMarks),
+                    apiKey: geminiApiKey,
+                  });
+                  if (gQuestions && gQuestions.length > 0) {
+                    questions = gQuestions;
+                    textContent = rawPdfText;
+                  }
+                }
+                await vParser.destroy().catch(() => {});
+              } catch (gErr) {
+                console.warn('Gemini vision extraction failed, falling back to local coordinate pipeline:', gErr.message);
+              }
+            }
+
+            // 2. High-precision local coordinate & font pipeline for Quantum Paper & regional PDFs
+            if (questions.length === 0 && isQuantumPaperOrGopika(rawPdfText)) {
               try {
                 const qpQuestions = await parseQuantumPaperPdf(cleanPdfBuf, subject, Number(marks), Number(negativeMarks));
                 if (qpQuestions && qpQuestions.length > 0) {

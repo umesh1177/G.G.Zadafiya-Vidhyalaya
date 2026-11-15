@@ -1153,7 +1153,15 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
                               }`}
                             >
                               <span className="font-bold mr-1.5">{['A', 'B', 'C', 'D'][oIdx]}.</span>
-                              {opt}
+                              {typeof opt === 'string' && opt.startsWith('data:image/') ? (
+                                <img
+                                  src={opt}
+                                  alt={`Option ${['A', 'B', 'C', 'D'][oIdx]}`}
+                                  className="max-h-20 max-w-full object-contain inline-block my-1 bg-white p-1 rounded border border-slate-200"
+                                />
+                              ) : (
+                                opt
+                              )}
                             </div>
                           ))}
                         </div>

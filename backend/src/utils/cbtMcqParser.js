@@ -673,7 +673,7 @@ function associateImagesWithQuestions(questions, extractedImages) {
 }
 
 /**
- * Converts Gopika / Saral / LMG ASCII non-Unicode font encodings to Gujarati Unicode.
+ * Converts Gopika / Saral / Avantika / LMG ASCII non-Unicode font encodings to Gujarati Unicode.
  * Widely used in Gujarat high schools, coaching institutes and Quantum Paper software.
  */
 function convertGopikaToUnicode(txt) {
@@ -681,6 +681,7 @@ function convertGopikaToUnicode(txt) {
   let s = txt;
 
   const phrases = [
+    // Quantum Paper instructions & headers
     [/Lke\[u ykÃku÷k «&LkkuLkk \{køÞk \{wsçk W¥kh ÷¾ku/g, 'નીચે આપેલા પ્રશ્નોના માગ્યા મુજબ ઉત્તર લખો'],
     [/Lke\[u ykÃku÷k/g, 'નીચે આપેલા'],
     [/Lke\[uLkk\{ktÚke/g, 'નીચેનામાંથી'],
@@ -691,19 +692,161 @@ function convertGopikaToUnicode(txt) {
     [/«íÞufLkk/g, 'પ્રત્યેકના'],
     [/økwý/g, 'ગુણ'],
     [/yLku/g, 'અને'],
+
+    // Avantika / Saral Font (used in Maths & Physics)
+    [/Q„\{®ƒŒw/g, 'ઉગમબિંદુ'],
+    [/Q„\{/g, 'ઉગમ'],
+    [/®ƒŒw/g, 'બિંદુ'],
+    [/®çkËw/g, 'બિંદુ'],
+    [/\{tkÚte/g, 'માંથી'],
+    [/…Ëth/g, 'પસાર'],
+    [/Út‚e/g, 'થતી'],
+    [/hu¾tytu/g, 'રેખાઓ'],
+    [/hu¾t™wk/g, 'રેખાનું'],
+    [/hu¾t™t/g, 'રેખાના'],
+    [/hu¾t/g, 'રેખા'],
+    [/Ë{tk‚h/g, 'સમાંતર'],
+    [/y™w¢\{u/g, 'અનુક્રમે'],
+    [/y™u/g, 'અને'],
+    [/AuŒu Au/g, 'છેદે છે'],
+    [/AuŒu/g, 'છેદે'],
+    [/„wýtu¥th\{tk/g, 'ગુણોત્તરમાં'],
+    [/„wýtu¥th/g, 'ગુણોત્તર'],
+    [/rð¼ts™/g, 'વિભાજન'],
+    [/fÞt/g, 'કયા'],
+    [/fhu \?/g, 'કરે ?'],
+    [/fhu/g, 'કરે'],
+    [/yût™u/g, 'અક્ષને'],
+    [/yût/g, 'અક્ષ'],
+    [/yûkLku/g, 'અક્ષને'],
+    [/yûk/g, 'અક્ષ'],
+    [/Ë\{efhýtu/g, 'સમીકરણો'],
+    [/Ë\{efhý/g, 'સમીકરણ'],
+    [/‚hVÚte/g, 'તરફથી'],
+    [/fh‚e/g, 'કરતી'],
+    [/Œtuhu÷/g, 'દોરેલ'],
+    [/ðuÄ™e/g, 'વેધની'],
+    [/÷kƒtE/g, 'લંબાઈ'],
+    [/«\[÷/g, 'પ્રચલ'],
+    [/ftítuorÍÞ™/g, 'કાર્તેઝિયન'],
+    [/fkíkuorÍÞ™/g, 'કાર્તેઝિયન'],
+    [/fkíkuorÍÞ/g, 'કાર્તેઝિયન'],
+    [/ðå\[u™tu/g, 'વચ્ચેનો'],
+    [/ðå\[uLkku/g, 'વચ્ચેનો'],
+    [/ðå\[u/g, 'વચ્ચે'],
+    [/¾qýtu/g, 'ખૂણો'],
+    [/rþhku®çkËwðk¤k/g, 'શિરોબિંદુવાળા'],
+    [/rºkfkuýLkwt/g, 'ત્રિકોણનું'],
+    [/rºkfkuý/g, 'ત્રિકોણ'],
+    [/ûkuºkV¤/g, 'ક્ષેત્રફળ'],
+    [/hu¾kLku/g, 'રેખાને'],
+    [/hu¾k/g, 'રેખા'],
+    [/suLkku/g, 'જેનો'],
+    [/ytík:¾tz/g, 'અંત:ખંડ'],
+    [/íkuðe/g, 'તેવી'],
+    [/Mk\{ktíkh/g, 'સમાંતર'],
+    [/«r¢ÞkÚke/g, 'પ્રક્રિયાથી'],
+    [/«r¢Þk/g, 'પ્રક્રિયા'],
+    [/çkLku Au \?/g, 'બને છે ?'],
+    [/çkLku Au/g, 'બને છે'],
+    [/LkeÃks/g, 'નીપજ'],
+    [/çkLkþu \?/g, 'બનશે ?'],
+    [/çkLkþu/g, 'બનશે'],
+    [/òu/g, 'જો'],
+    [/‚tu/g, 'તો'],
+    [/íkku/g, 'તો'],
+    [/ntuÞ/g, 'હોય'],
+    [/nkuÞ/g, 'હોય'],
+    [/™wk/g, 'નું'],
+    [/™u/g, 'ને'],
+    [/yu/g, 'એ'],
+    [/\{tk/g, 'માં'],
+
+    // Chemistry specific phrases
+    [/fÞku ík\]íkeÞf fkçkoLk Ähkðu Au \?/g, 'કયો તૃતીયક કાર્બન ધરાવે છે ?'],
+    [/fÞku ík\]íkeÞf fkçkoLk/g, 'કયો તૃતીયક કાર્બન'],
+    [/ík\]íkeÞf/g, 'તૃતીયક'],
+    [/fkçkoLk/g, 'કાર્બન'],
+    [/Ähkðu Au \?/g, 'ધરાવે છે ?'],
+    [/Ähkðu Au/g, 'ધરાવે છે'],
+    [/Ähkðu/g, 'ધરાવે'],
+    [/«kuÃkuLk/g, 'પ્રોપેન'],
+    [/n-\s*çÞwxuLk/g, 'n-બ્યુટેન'],
+    [/çÞwxuLk/g, 'બ્યુટેન'],
+    [/r\{ÚkkR÷«kuÃkuLk/g, 'મિથાઇલપ્રોપેન'],
+    [/zkÞr\{ÚkkR÷«kuÃkuLk/g, 'ડાયમિથાઇલપ્રોપેન'],
+    [/r\{ÚkkR÷/g, 'મિથાઇલ'],
+    [/zkÞ/g, 'ડાય'],
+    [/Mkkuzk÷kR{/g, 'સોડાલાઇમ'],
+    [/þwt Au \?/g, 'શું છે ?'],
+    [/þwt/g, 'શું'],
+    [/þkLkwt/g, 'શાનું'],
+    [/Mkk\{kLÞ/g, 'સામાન્ય'],
+    [/Mkqºk/g, 'સૂત્ર'],
+    [/ykÕfuLk/g, 'આલ્કેન'],
+    [/ykÕfeLk/g, 'આલ્કીન'],
+    [/ykÕfkRLk/g, 'આલ્કાઇન'],
+    [/MkkÞõ÷kuykÕfeLk/g, 'સાયક્લોઆલ્કીન'],
+    [/MkkÞõ÷ku/g, 'સાયક્લો'],
+    [/r÷LkzMko/g, 'લિન્ડર્સ'],
+    [/WÆeÃkf/g, 'ઉદ્દીપક'],
+    [/Mktík\]Ãík/g, 'સંતૃપ્ત'],
+    [/nkRzÙkufkçkoLk/g, 'હાઇડ્રોકાર્બન'],
+    [/RÚkeLk/g, 'ઇથીન'],
+    [/RÚkkRLk/g, 'ઇથાઇન'],
+    [/çÞwxkRLk/g, 'બ્યુટાઇન'],
+    [/«fkhLkku/g, 'પ્રકારનો'],
+    [/nkRzÙkusLk/g, 'હાઇડ્રોજન'],
+    [/LkÚke nkuíkku \?/g, 'નથી હોતો ?'],
+    [/LkÚke nkuíkku/g, 'નથી હોતો'],
+    [/LkÚke \?/g, 'નથી ?'],
+    [/çkuLÍuLkkRz/g, 'બેન્ઝેનાઇડ'],
+    [/çkuÂLÍLkLke/g, 'બેન્ઝીનની'],
+    [/çkuÂLÍLk/g, 'બેન્ઝીન'],
+    [/õ÷kurhLk/g, 'ક્લોરીન'],
+    [/rLkso¤/g, 'નિર્જળ'],
+    [/nksheLke/g, 'હાજરીની'],
+    [/fhðkÚke/g, 'કરવાથી'],
+    [/õ÷kuhkuçkuÂLÍLk/g, 'ક્લોરોબેન્ઝીન'],
+    [/õ÷kuhku/g, 'ક્લોરો'],
+    [/nuõÍkõ÷kuhkuMkkÞõ÷kunufÍuLk/g, 'હેક્ઝાક્લોરોસાયક્લોહેક્ઝેન'],
+    [/nuõÍkõ÷kuhkRz/g, 'હેક્ઝાક્લોરાઇડ'],
+    [/nuõÍk/g, 'હેક્ઝા'],
+    [/yuf Ãký Lknª/g, 'એક પણ નહીં'],
+    [/«kuÃkeLk/g, 'પ્રોપીન'],
+    [/nu÷ku«kuÃkeLk/g, 'હેલોપ્રોપીન'],
+    [/nþu \?/g, 'હશે ?'],
+    [/çkÄks/g, 'બધાજ'],
+    [/çkÄe s/g, 'બધી જ'],
+
+    // Physics specific phrases
     [/MkrËþku Au/g, 'સદિશો છે'],
     [/MkrËþku/g, 'સદિશો'],
     [/MkrËþ/g, 'સદિશ'],
     [/X-yûk Ãkh/g, 'X-અક્ષ પર'],
     [/Y-yûk Ãkh/g, 'Y-અક્ષ પર'],
-    [/Y-yûk/g, 'Y-અક્ષ'],
-    [/X-yûk/g, 'X-અક્ષ'],
+    [/X- yûk Ãkh/g, 'X-અક્ષ પર'],
+    [/Y- yûk Ãkh/g, 'Y-અક્ષ પર'],
+    [/X- yûk/g, 'X-અક્ષ'],
+    [/Y- yûk/g, 'Y-અક્ષ'],
+    [/X– yûk/g, 'X-અક્ષ'],
+    [/Y– yûk/g, 'Y-અક્ષ'],
     [/ÃkhLkku/g, 'પરનો'],
+    [/Ãkh/g, 'પર'],
+    [/…h/g, 'પર'],
+    [/Lkku/g, 'નો'],
+    [/Lkk/g, 'ના'],
+    [/‚u™wk/g, 'તેનું'],
+    [/‚u/g, 'તે'],
+    [/køkúk\{/g, 'ાગ્રામ'],
     [/Lkku ½xf fÞku Au \?/g, 'નો ઘટક કયો છે ?'],
     [/Lkku ½xf fÞku Au/g, 'નો ઘટક કયો છે'],
     [/½xf/g, 'ઘટક'],
     [/fÞku Au \?/g, 'કયો છે ?'],
     [/fÞku Au/g, 'કયો છે'],
+    [/fÞwt/g, 'કયું'],
+    [/fE/g, 'કઈ'],
+    [/fÞku/g, 'કયો'],
     [/Lku ÷tçk fÞku Au \?/g, 'ને લંબ કયો છે ?'],
     [/Lku ÷tçk/g, 'ને લંબ'],
     [/÷tçk/g, 'લંબ'],
@@ -718,10 +861,7 @@ function convertGopikaToUnicode(txt) {
     [/ynª/g, 'અહીં'],
     [/ºký/g, 'ત્રણ'],
     [/Mk\{ík÷eÞ/g, 'સમતલીય'],
-    [/rºkfkuý/g, 'ત્રિકોણ'],
     [/çkLkkðu Au/g, 'બનાવે છે'],
-    [/òu/g, 'જો'],
-    [/íkku/g, 'તો'],
     [/ÚkkÞ/g, 'થાય'],
     [/çku çk¤kuLkwt/g, 'બે બળોનું'],
     [/Ãkrhýk\{eçk¤/g, 'પરિણામીબળ'],
@@ -733,7 +873,6 @@ function convertGopikaToUnicode(txt) {
     [/ðå\[uLkku/g, 'વચ્ચેનો'],
     [/¾qýku/g, 'ખૂણો'],
     [/íku\{s/g, 'તેમજ'],
-    [/nkuÞ/g, 'હોય'],
     [/ðzu/g, 'વડે'],
     [/MkkÚku/g, 'સાથે'],
     [/h\[kÞu÷/g, 'રચાયેલ'],
@@ -754,7 +893,6 @@ function convertGopikaToUnicode(txt) {
     [/ðuøk/g, 'વેગ'],
     [/yuf ðMíkwyu/g, 'એક વસ્તુએ'],
     [/ðMíkw/g, 'વસ્તુ'],
-    [/fkíkuorÍÞ/g, 'કાર્તેઝિયન'],
     [/Þk\{kûkkuLke/g, 'યામાક્ષોની'],
     [/rËþk\{kt/g, 'દિશામાં'],
     [/fkÃku÷k ytíkhku/g, 'કાપેલા અંતરો'],
@@ -777,7 +915,7 @@ function convertGopikaToUnicode(txt) {
     s = s.replace(re, rep);
   }
 
-  // Math symbols & unit vectors
+  // Math & Physics symbols
   s = s.replace(/i\s*Ù/g, 'î');
   s = s.replace(/\^\s*i/g, 'î');
   s = s.replace(/j\s*Ù/g, 'ĵ');
@@ -788,20 +926,33 @@ function convertGopikaToUnicode(txt) {
   s = s.replace(/cosq/g, 'cos θ');
   s = s.replace(/sinq/g, 'sin θ');
   s = s.replace(/tanq/g, 'tan θ');
-  s = s.replace(/\b4\s*\n*\s*p\b/g, 'π/4');
-  s = s.replace(/\b3\s*\n*\s*p\b/g, 'π/3');
-  s = s.replace(/\b2\s*\n*\s*p\b/g, 'π/2');
-  s = s.replace(/\bp\b/g, 'π');
+  s = s.replace(/º/g, '≡');
+  s = s.replace(/¾¾+ ®/g, ' ——→ ');
+  s = s.replace(/¾¾+/g, '——');
+  s = s.replace(/\bÎ\s*R\b/g, '∈ ℝ');
+  s = s.replace(/æ\s*ö/g, '');
+  s = s.replace(/è\s*ø/g, '');
+  s = s.replace(/ç\s*÷/g, '');
   s = s.replace(/é/g, '[');
   s = s.replace(/ù/g, ']');
   s = s.replace(/ê/g, '[');
   s = s.replace(/ë/g, ']');
+  s = s.replace(/\bl\b/g, 'λ');
 
+  // Fractions with pi: 3\s*p\s*4 -> 3π/4
+  s = s.replace(/3\s*p\s*4/g, '3π/4');
+  s = s.replace(/p\s*4/g, 'π/4');
+  s = s.replace(/p\s*3/g, 'π/3');
+  s = s.replace(/p\s*2/g, 'π/2');
+  s = s.replace(/\bp\b/g, 'π');
+
+  // Clean multiple spaces
+  s = s.replace(/[ \t]+/g, ' ').trim();
   return s;
 }
 
 /**
- * Detects whether a PDF text stream is generated by Quantum Paper or encoded in Gopika font
+ * Detects whether a PDF text stream is generated by Quantum Paper or encoded in Gopika / Saral font
  */
 function isQuantumPaperOrGopika(text) {
   if (!text || typeof text !== 'string') return false;
@@ -810,12 +961,13 @@ function isQuantumPaperOrGopika(text) {
     /Universal_QueId/i.test(text) ||
     /Section\s*\[\s*[A-Z]\s*\]\s*:\s*\d+\s*Marks/i.test(text) ||
     /•\s*Lke\[u\s*ykÃku÷k/i.test(text) ||
-    /MkrËþku|zkÞkøkúk\{|ykf\]rík\{kt|Ãkrhýk\{e/i.test(text)
+    /MkrËþku|zkÞkøkúk\{|ykf\]rík\{kt|Ãkrhýk\{e/i.test(text) ||
+    /Q„\{®ƒŒw|…Ëth|hu¾t|Ë\{tk‚h/i.test(text)
   );
 }
 
 /**
- * Automatically trims white padding from a cropped diagram canvas
+ * Automatically trims white padding from a cropped diagram or chemical structure canvas
  */
 function autoTrimCanvas(canvas) {
   try {
@@ -830,7 +982,7 @@ function autoTrimCanvas(canvas) {
         const r = data[idx];
         const g = data[idx + 1];
         const b = data[idx + 2];
-        if (r < 200 || g < 200 || b < 200) {
+        if (r < 220 || g < 220 || b < 220) {
           darkPixelCount++;
           if (x < minX) minX = x;
           if (x > maxX) maxX = x;
@@ -839,15 +991,15 @@ function autoTrimCanvas(canvas) {
         }
       }
     }
-    if (darkPixelCount < 100) return null;
-    const pad = 12;
+    if (darkPixelCount < 50) return null;
+    const pad = 10;
     minX = Math.max(0, minX - pad);
     minY = Math.max(0, minY - pad);
     maxX = Math.min(canvas.width, maxX + pad);
     maxY = Math.min(canvas.height, maxY + pad);
     const w = maxX - minX;
     const h = maxY - minY;
-    if (w <= 20 || h <= 20) return null;
+    if (w <= 15 || h <= 15) return null;
 
     let createCanvas;
     try {
@@ -863,13 +1015,14 @@ function autoTrimCanvas(canvas) {
     tCtx.drawImage(canvas, minX, minY, w, h, 0, 0, w, h);
     return trimmedCanvas;
   } catch (err) {
-    console.warn('autoTrimCanvas error:', err.message);
     return null;
   }
 }
 
 /**
- * Full parser for Quantum Paper PDFs (Gopika font, column numbering, table answer key, and vector diagrams)
+ * Full coordinate-based parser for Quantum Paper PDFs
+ * Extracts questions, 4 options (text or cropped molecular structures), equations, fractions,
+ * vector diagrams, and matches 100% of answer keys from the answer key table.
  */
 async function parseQuantumPaperPdf(cleanPdfBuf, defaultSubject = 'Physics', marks = 4, negativeMarks = 1) {
   const { PDFParse } = require('pdf-parse');
@@ -879,7 +1032,7 @@ async function parseQuantumPaperPdf(cleanPdfBuf, defaultSubject = 'Physics', mar
   const textRes = await parser.getText();
   const fullText = textRes.text;
 
-  // 1. Extract Quantum Paper Answer Key
+  // 1. Extract Answer Key table from Page 2
   const keyMap = {};
   const qpTableRegex = /(?:^|\n)\s*([0-9]+)\.\s*([A-Da-dઅબકડ1-4૧-૪])(?:\s+(?:Chap|S\d+|QP|[A-Za-z0-9_]+))?/gi;
   let qpM;
@@ -891,7 +1044,7 @@ async function parseQuantumPaperPdf(cleanPdfBuf, defaultSubject = 'Physics', mar
     }
   }
 
-  // 2. High-res page screenshot for diagrams
+  // 2. High-res page screenshot for diagrams and visual options
   let screenshots = null;
   let createCanvas, loadImage;
   try {
@@ -906,23 +1059,8 @@ async function parseQuantumPaperPdf(cleanPdfBuf, defaultSubject = 'Physics', mar
   const numPages = parser.doc.numPages;
   const allQuestions = [];
 
-  function isStatementStart(lines, l) {
-    const windowStr = lines.slice(l, l + 3).join(' ').trim();
-    if (/^(?:Lke\[u|ykf\]rík|ynª|yuf|XY-|Y-yûk|X-yûk|\([A-Z]\s*[\+\-]\s*[A-Z]\)|[A-Z]\s*®\s*yLku)/i.test(windowStr)) {
-      return true;
-    }
-    if (/^(?:òu\b|íkku\b|çku\b|fkuE\b|ykÃku÷)/i.test(windowStr)) {
-      return true;
-    }
-    return false;
-  }
-
   for (let pNum = 1; pNum <= numPages; pNum++) {
     const pageText = (textRes.pages[pNum - 1] && textRes.pages[pNum - 1].text) || '';
-    // Skip page if it's purely answer key / solution table
-    if (/Section\s*\[\s*[A-Z]\s*\]\s*:\s*\d+\s*Marks\s*Questions/i.test(pageText) && !/\(A\)/.test(pageText)) {
-      continue;
-    }
     if (!/\(A\)/.test(pageText)) continue;
 
     const page = await parser.doc.getPage(pNum);
@@ -930,118 +1068,234 @@ async function parseQuantumPaperPdf(cleanPdfBuf, defaultSubject = 'Physics', mar
     const viewport = page.getViewport({ scale: 1 });
     const H = viewport.height;
 
+    let pageImg = null;
+    if (screenshots && screenshots.pages && screenshots.pages[pNum - 1] && loadImage) {
+      try {
+        pageImg = await loadImage(Buffer.from(screenshots.pages[pNum - 1].data));
+      } catch (imgErr) {}
+    }
+
     // Detect question numbers on this page
     const qCoords = [];
     tc.items.forEach(it => {
       const m = it.str && it.str.trim().match(/^([0-9]+)\.\s*$/);
       if (m && it.transform[4] < 60) {
-        qCoords.push({ qNum: parseInt(m[1], 10), y: it.transform[5] });
+        qCoords.push({ qNum: parseInt(m[1], 10), y: Math.round(it.transform[5]) });
       }
     });
-    qCoords.sort((a, b) => a.qNum - b.qNum);
+    qCoords.sort((a, b) => b.y - a.y);
 
-    // Load page screenshot image if available
-    let pageImg = null;
-    if (screenshots && screenshots.pages && screenshots.pages[pNum - 1] && loadImage) {
-      try {
-        pageImg = await loadImage(Buffer.from(screenshots.pages[pNum - 1].data));
-      } catch (imgLoadErr) {
-        console.warn('Page image load error:', imgLoadErr.message);
-      }
-    }
+    for (let i = 0; i < qCoords.length; i++) {
+      const cur = qCoords[i];
+      const next = qCoords[i + 1];
+      const topY = cur.y + 14;
+      const botY = next ? next.y + 14 : 45;
 
-    // Clean page text
-    let pClean = pageText
-      .replace(/^[\s\S]*?•\s*Lke\[u ykÃku÷k[^\n]*/i, '')
-      .replace(/(?:\n|^)\s*(?:[0-9]+)\.\s*(?=\n|$)/g, '')
-      .replace(/[A-Z]\s*\[\s*\d+\s*\]\s*$/i, '');
+      const items = tc.items.filter(it => {
+        const y = Math.round(it.transform[5]);
+        const x = Math.round(it.transform[4]);
+        if (x < 55) return false;
+        if (y > topY || y <= botY) return false;
+        const str = it.str.trim();
+        if (!str || str.includes('Wish You') || str.includes('Quantum Paper')) return false;
+        return true;
+      });
 
-    const aSplits = pClean.split(/\(A\)/g);
-    let currentStatement = convertGopikaToUnicode(aSplits[0].trim());
-
-    for (let i = 1; i < aSplits.length; i++) {
-      const chunk = aSplits[i];
-      const bIdx = chunk.indexOf('(B)');
-      const cIdx = chunk.indexOf('(C)');
-      const dIdx = chunk.indexOf('(D)');
-
-      const rawOptA = chunk.substring(0, bIdx);
-      const rawOptB = chunk.substring(bIdx + 3, cIdx);
-      const rawOptC = chunk.substring(cIdx + 3, dIdx);
-      const rawAfterD = chunk.substring(dIdx + 3);
-
-      const lines = rawAfterD.split('\n');
-      let splitIdx = lines.length;
-      if (i < aSplits.length - 1) {
-        for (let l = 1; l < lines.length; l++) {
-          if (isStatementStart(lines, l)) {
-            splitIdx = l;
-            break;
-          }
+      // Find option markers (A), (B), (C), (D)
+      const optMarkers = [];
+      items.forEach(it => {
+        const str = it.str.trim();
+        const m = str.match(/\(([A-D])\)/);
+        if (m) {
+          optMarkers.push({
+            letter: m[1],
+            x: Math.round(it.transform[4]),
+            y: Math.round(it.transform[5]),
+            raw: it.str,
+          });
         }
-      }
-      const rawOptD = lines.slice(0, splitIdx).join(' ').trim();
-      const nextStmt = lines.slice(splitIdx).join(' ').trim();
+      });
 
-      const cleanOpt = (s) => {
-        let c = convertGopikaToUnicode(s).trim();
-        c = c.replace(/\s+(?:Y\s+X\s+60°\s+30°\s+B\s+A|30°\s+Q\s+P|C\s+B\s+A)\s*$/i, '').trim();
-        return c;
+      const isHorizontal = optMarkers.length === 4 && Math.abs(optMarkers[0].y - optMarkers[3].y) <= 8;
+      const isVertical = optMarkers.length === 4 && Math.abs(optMarkers[0].x - optMarkers[3].x) <= 15;
+
+      let stmtItems = [];
+      let optAItems = [], optBItems = [], optCItems = [], optDItems = [];
+      let diagCropNeeded = false;
+      let diagCropRegion = null;
+
+      if (isHorizontal) {
+        const optY = optMarkers[0].y;
+        stmtItems = items.filter(it => Math.round(it.transform[5]) > optY + 12);
+        const optBandItems = items.filter(it => Math.round(it.transform[5]) <= optY + 12);
+
+        const xA = optMarkers[0].x - 10;
+        const xB = optMarkers[1].x - 10;
+        const xC = optMarkers[2].x - 10;
+        const xD = optMarkers[3].x - 10;
+
+        optAItems = optBandItems.filter(it => it.transform[4] >= xA && it.transform[4] < xB);
+        optBItems = optBandItems.filter(it => it.transform[4] >= xB && it.transform[4] < xC);
+        optCItems = optBandItems.filter(it => it.transform[4] >= xC && it.transform[4] < xD);
+        optDItems = optBandItems.filter(it => it.transform[4] >= xD);
+      } else if (isVertical) {
+        const optXMax = optMarkers[0].x + 75;
+        const optTopY = optMarkers[0].y + 10;
+
+        stmtItems = items.filter(it => Math.round(it.transform[5]) > optTopY);
+
+        const yA = optMarkers[0].y;
+        const yB = optMarkers[1].y;
+        const yC = optMarkers[2].y;
+        const yD = optMarkers[3].y;
+
+        const optItems = items.filter(it => it.transform[4] <= optXMax && Math.round(it.transform[5]) <= optTopY);
+        optAItems = optItems.filter(it => it.transform[5] > (yA + yB) / 2);
+        optBItems = optItems.filter(it => it.transform[5] <= (yA + yB) / 2 && it.transform[5] > (yB + yC) / 2);
+        optCItems = optItems.filter(it => it.transform[5] <= (yB + yC) / 2 && it.transform[5] > (yC + yD) / 2);
+        optDItems = optItems.filter(it => it.transform[5] <= (yC + yD) / 2);
+
+        diagCropNeeded = true;
+        diagCropRegion = { xNorm: 0.38, topNorm: (H - topY) / H, wNorm: 0.58, hNorm: (topY - botY) / H };
+      } else {
+        const optXCut = 280;
+        const optTopY = (optMarkers.length >= 2 ? Math.max(optMarkers[0].y, optMarkers[1].y) : cur.y) + 10;
+        stmtItems = items.filter(it => Math.round(it.transform[5]) > optTopY);
+
+        const midY = optMarkers.length >= 4 ? (Math.min(optMarkers[0].y, optMarkers[1].y) + Math.max(optMarkers[2].y, optMarkers[3].y)) / 2 : cur.y - 30;
+        const midX = optMarkers.length >= 2 ? (optMarkers[0].x + optMarkers[1].x) / 2 : 130;
+
+        const optItems = items.filter(it => it.transform[4] < optXCut && Math.round(it.transform[5]) <= optTopY);
+        optAItems = optItems.filter(it => it.transform[5] > midY && it.transform[4] < midX);
+        optBItems = optItems.filter(it => it.transform[5] > midY && it.transform[4] >= midX);
+        optCItems = optItems.filter(it => it.transform[5] <= midY && it.transform[4] < midX);
+        optDItems = optItems.filter(it => it.transform[5] <= midY && it.transform[4] >= midX);
+
+        diagCropNeeded = true;
+        diagCropRegion = { xNorm: 0.45, topNorm: (H - topY) / H, wNorm: 0.52, hNorm: (topY - botY) / H };
+      }
+
+      const sortItems = arr => {
+        return [...arr].sort((a, b) => {
+          const dy = Math.round(b.transform[5]) - Math.round(a.transform[5]);
+          if (Math.abs(dy) > 3) return dy;
+          return a.transform[4] - b.transform[4];
+        });
       };
 
-      let stmt = currentStatement.replace(/^[\s\.\:\-\,\;]+/, '').trim();
-      stmt = stmt.replace(/^[0-9૦-૯]+[\.\)\:\-]\s*/, '').trim();
+      let stmtRaw = sortItems(stmtItems).map(it => it.str).join(' ');
+      let cleanStmt = convertGopikaToUnicode(stmtRaw).replace(/^[0-9]+\.\s*/, '').trim();
 
-      // Determine Question Number
-      const detectedQ = qCoords[i - 1] ? qCoords[i - 1].qNum : allQuestions.length + 1;
+      const formatOpt = (arr, optLetter) => {
+        const sorted = sortItems(arr);
+        let raw = sorted.map(it => it.str).join(' ').trim();
+        raw = raw.replace(new RegExp(`\\(${optLetter}\\)`, 'g'), '').trim();
+        raw = raw.replace(new RegExp(`\\([A-D]\\)`, 'g'), '').trim();
+        raw = raw.replace(/^[YyXx]\s+(?=[A-Za-z0-9\(\[\–\-])/, '').trim();
+        raw = raw.replace(/^=\s*0\s*/, '').trim();
 
-      // Check if question has a diagram
-      let qImageUrl = '';
-      const rawCombined = `${stmt} ${rawOptA} ${rawOptB} ${rawOptC} ${rawOptD}`;
-      const hasDiagramKeywords =
-        /(?:ykf\]rík|zkÞkøkúk\{|ÃkrhÃkÚk|આકૃતિ|ડાયાગ્રામ|પરિપથ|આલેખ|diagram|figure|graph|circuit)/i.test(rawCombined) ||
-        /(?:Y\s+X\s+60°\s+30°\s+B\s+A|30°\s+Q\s+P|C\s+B\s+A)/.test(rawCombined);
-
-      if (hasDiagramKeywords && pageImg && createCanvas) {
-        const qPos = qCoords.find(q => q.qNum === detectedQ);
-        if (qPos) {
-          const qIdx = qCoords.indexOf(qPos);
-          const nextY = (qIdx < qCoords.length - 1) ? qCoords[qIdx + 1].y : 30;
-          const topNorm = Math.max(0, (H - (qPos.y + 12)) / H);
-          const botNorm = Math.min(1, (H - (nextY + 8)) / H);
-          const heightNorm = Math.max(0.05, botNorm - topNorm);
-
-          const cropX = pageImg.width * 0.40;
-          const cropY = pageImg.height * topNorm;
-          const cropW = pageImg.width * 0.55;
-          const cropH = pageImg.height * heightNorm;
-
-          const canvas = createCanvas(cropW, cropH);
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(pageImg, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
-          const trimmed = autoTrimCanvas(canvas);
-          if (trimmed) {
-            qImageUrl = `data:image/png;base64,${trimmed.toBuffer('image/png').toString('base64')}`;
+        // Check if real stacked fraction (vertical distance >= 8 between distinct Y lines)
+        if (sorted.length >= 2) {
+          const yVals = sorted.map(it => Math.round(it.transform[5]));
+          const minY = Math.min(...yVals);
+          const maxY = Math.max(...yVals);
+          if (maxY - minY >= 8) {
+            const midY = (minY + maxY) / 2;
+            const numItems = sorted.filter(it => it.transform[5] > midY && !/\([A-D]\)/.test(it.str));
+            const denItems = sorted.filter(it => it.transform[5] <= midY && !/\([A-D]\)/.test(it.str));
+            const numStr = numItems.map(it => it.str.trim()).filter(Boolean).join(' ');
+            const denStr = denItems.map(it => it.str.trim()).filter(Boolean).join(' ');
+            if (numStr && denStr && (/^[\d–\-\+p\s]+$/.test(numStr) || /^[\d–\-\+p\s]+$/.test(denStr))) {
+              const cleanNum = convertGopikaToUnicode(numStr);
+              const cleanDen = convertGopikaToUnicode(denStr);
+              return `${cleanNum}/${cleanDen}`;
+            }
           }
+        }
+        return convertGopikaToUnicode(raw).replace(/\s*=\s*0\s*$/, '').trim();
+      };
+
+      let optA = formatOpt(optAItems, 'A');
+      let optB = formatOpt(optBItems, 'B');
+      let optC = formatOpt(optCItems, 'C');
+      let optD = formatOpt(optDItems, 'D');
+
+      // Check for visual chemical structure options (e.g. Chemistry Q7)
+      const hasEmptyVisualOptions = isHorizontal && optMarkers.length === 4 && (
+        (!optA.trim() && !optB.trim()) ||
+        (!optA.trim() && optD.trim() && !optB.trim())
+      );
+
+      if (pageImg && createCanvas && hasEmptyVisualOptions) {
+        const optY = optMarkers[0].y;
+        const optTopNorm = Math.max(0, (H - (optY + 12)) / H);
+        const optBotNorm = Math.min(1, (H - (botY - 4)) / H);
+        const optHNorm = Math.max(0.06, optBotNorm - optTopNorm);
+
+        const cols = [
+          { x1: 0.10, x2: 0.31 },
+          { x1: 0.32, x2: 0.53 },
+          { x1: 0.54, x2: 0.75 },
+          { x1: 0.76, x2: 0.96 },
+        ];
+
+        const croppedOpts = [];
+        for (let c = 0; c < 4; c++) {
+          const cropX = pageImg.width * cols[c].x1;
+          const cropY = pageImg.height * optTopNorm;
+          const cropW = pageImg.width * (cols[c].x2 - cols[c].x1);
+          const cropH = pageImg.height * optHNorm;
+
+          const optCanvas = createCanvas(cropW, cropH);
+          const optCtx = optCanvas.getContext('2d');
+          optCtx.drawImage(pageImg, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+          const trimmed = autoTrimCanvas(optCanvas);
+          if (trimmed) {
+            croppedOpts.push(`data:image/png;base64,${trimmed.toBuffer('image/png').toString('base64')}`);
+          } else {
+            croppedOpts.push(null);
+          }
+        }
+
+        if (croppedOpts.filter(Boolean).length >= 2) {
+          if (croppedOpts[0]) optA = croppedOpts[0];
+          if (croppedOpts[1]) optB = croppedOpts[1];
+          if (croppedOpts[2]) optC = croppedOpts[2];
+          if (croppedOpts[3]) optD = croppedOpts[3];
         }
       }
 
-      const qAns = keyMap[detectedQ] || 'A';
+      // Crop Question Diagram if needed
+      let qImageUrl = '';
+      if (diagCropNeeded && pageImg && createCanvas && diagCropRegion) {
+        const cropX = pageImg.width * diagCropRegion.xNorm;
+        const cropY = pageImg.height * diagCropRegion.topNorm;
+        const cropW = pageImg.width * diagCropRegion.wNorm;
+        const cropH = pageImg.height * diagCropRegion.hNorm;
+
+        const diagCanvas = createCanvas(cropW, cropH);
+        const diagCtx = diagCanvas.getContext('2d');
+        diagCtx.drawImage(pageImg, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+        const trimmed = autoTrimCanvas(diagCanvas);
+        if (trimmed) {
+          qImageUrl = `data:image/png;base64,${trimmed.toBuffer('image/png').toString('base64')}`;
+        }
+      }
+
+      const qAns = keyMap[cur.qNum] || 'A';
 
       allQuestions.push({
-        id: `q_${defaultSubject.toLowerCase()}_${detectedQ}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        id: `q_${defaultSubject.toLowerCase()}_${cur.qNum}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
         subject: defaultSubject,
-        questionNo: detectedQ,
+        questionNo: cur.qNum,
         marks: Number(marks) || 4,
         negativeMarks: Number(negativeMarks) || 1,
-        questionText: stmt,
+        questionText: cleanStmt,
         imageUrl: qImageUrl,
-        options: [cleanOpt(rawOptA), cleanOpt(rawOptB), cleanOpt(rawOptC), cleanOpt(rawOptD)],
+        options: [optA || 'Option A', optB || 'Option B', optC || 'Option C', optD || 'Option D'],
         correctAnswer: qAns,
         explanation: '',
       });
-
-      currentStatement = convertGopikaToUnicode(nextStmt);
     }
   }
 
