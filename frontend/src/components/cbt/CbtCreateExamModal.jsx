@@ -508,7 +508,7 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
 
   return (
     <div className="cbt-modal-overlay">
-      <div className="cbt-create-modal-container" style={{ maxWidth: 960 }}>
+      <div className="cbt-create-modal-container">
         {/* Modal Header */}
         <div className="cbt-modal-header">
           <div className="cbt-header-left">
@@ -573,7 +573,8 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="cbt-modal-body p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="cbt-modal-form-wrap">
+          <div className="cbt-modal-body p-4 md:p-6 space-y-6">
           {/* TAB 1: BASIC SETUP & 3 TIMINGS */}
           {activeTab === 'setup' && (
             <div className="space-y-6">
@@ -1164,12 +1165,14 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
             </div>
           )}
 
+          </div>
+
           {/* Footer Actions */}
-          <div className="cbt-modal-footer mt-6 pt-4 border-t flex items-center justify-between">
-            <div className="text-xs text-slate-500">
+          <div className="cbt-modal-footer">
+            <div className="cbt-modal-footer-summary">
               Exam: <strong>{formData.examType}</strong> • {questions.length} MCQs • Total: <strong>{formData.totalMarks} Marks</strong>
             </div>
-            <div className="flex gap-3">
+            <div className="cbt-modal-footer-actions">
               <button type="button" className="cbt-btn-secondary" onClick={onClose}>
                 Cancel
               </button>

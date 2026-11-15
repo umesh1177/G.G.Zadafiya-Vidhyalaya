@@ -6,6 +6,7 @@ const {
   parseMcqText,
   extractImagesFromPdf,
   extractImagesFromDocx,
+  parseDocxWithImages,
   associateImagesWithQuestions,
 } = require('../utils/cbtMcqParser');
 const { getSampleQuestionsForExam } = require('../data/cbtSampleQuestions');
@@ -1357,6 +1358,7 @@ exports.extractPaper = async (req, res) => {
 
     let textContent = rawText || '';
     let extractedImages = [];
+    let imageMap = {};
 
     // If file payload is provided (PDF or DOCX or TXT)
     if (pdfBase64 && typeof pdfBase64 === 'string') {
@@ -1375,11 +1377,12 @@ exports.extractPaper = async (req, res) => {
             (fileName && /\.docx$/i.test(fileName));
 
           if (isDocx) {
-            const docxText = extractDocxText(fileBuffer);
-            if (docxText && docxText.trim()) {
-              textContent = docxText;
+            const docxResult = parseDocxWithImages(fileBuffer);
+            if (docxResult.textContent && docxResult.textContent.trim()) {
+              textContent = docxResult.textContent;
             }
-            extractedImages = extractImagesFromDocx(fileBuffer);
+            extractedImages = docxResult.extractedImages || [];
+            imageMap = docxResult.imgMap || {};
           } else {
             // PDF file extraction
             const pdfIdx = fileBuffer.indexOf('%PDF');
@@ -1415,7 +1418,7 @@ exports.extractPaper = async (req, res) => {
 
     let questions = [];
     if (textContent && textContent.trim()) {
-      questions = parseMcqText(textContent, subject, Number(marks), Number(negativeMarks));
+      questions = parseMcqText(textContent, subject, Number(marks), Number(negativeMarks), imageMap);
     }
 
     // Auto-link extracted diagram images to questions
