@@ -178,14 +178,21 @@ exports.createExam = async (req, res) => {
       }));
     }
 
-    // Ensure every question has a unique id and sequential questionNo
-    questions = questions.map((q, idx) => ({
-      ...q,
-      id: q.id || `q_${(q.subject || 'gen').toLowerCase()}_${idx + 1}_${Date.now()}`,
-      questionNo: q.questionNo || (idx + 1),
-      marks: q.marks !== undefined ? Number(q.marks) : finalMarksPerQuestion,
-      negativeMarks: q.negativeMarks !== undefined ? Number(q.negativeMarks) : finalNegativeMarks,
-    }));
+    // Ensure every question has a unique id, sequential questionNo, and guaranteed non-empty questionText
+    questions = questions.map((q, idx) => {
+      let qText = (q.questionText || q.questionTextGujarati || q.question || q.text || '').trim();
+      if (!qText) {
+        qText = `પ્રશ્ન ${q.questionNo || idx + 1}`;
+      }
+      return {
+        ...q,
+        id: q.id || `q_${(q.subject || 'gen').toLowerCase()}_${idx + 1}_${Date.now()}_${idx}`,
+        questionNo: q.questionNo || (idx + 1),
+        questionText: qText,
+        marks: q.marks !== undefined ? Number(q.marks) : finalMarksPerQuestion,
+        negativeMarks: q.negativeMarks !== undefined ? Number(q.negativeMarks) : finalNegativeMarks,
+      };
+    });
 
     // Determine subjects from questions
     const subjectSet = new Set(questions.map(q => q.subject));
@@ -264,11 +271,18 @@ exports.updateExam = async (req, res) => {
     }
 
     if (updates.questions && Array.isArray(updates.questions)) {
-      updates.questions = updates.questions.map((q, idx) => ({
-        ...q,
-        id: q.id || `q_${(q.subject || 'gen').toLowerCase()}_${idx + 1}_${Date.now()}`,
-        questionNo: q.questionNo || (idx + 1),
-      }));
+      updates.questions = updates.questions.map((q, idx) => {
+        let qText = (q.questionText || q.questionTextGujarati || q.question || q.text || '').trim();
+        if (!qText) {
+          qText = `પ્રશ્ન ${q.questionNo || idx + 1}`;
+        }
+        return {
+          ...q,
+          id: q.id || `q_${(q.subject || 'gen').toLowerCase()}_${idx + 1}_${Date.now()}_${idx}`,
+          questionNo: q.questionNo || (idx + 1),
+          questionText: qText,
+        };
+      });
     }
 
     if (updates.subjectMarksConfig && Array.isArray(updates.subjectMarksConfig) && updates.subjectMarksConfig.length > 0 && !updates.totalMarks) {
@@ -1495,6 +1509,17 @@ exports.extractPaper = async (req, res) => {
       }
       isFallback = true;
     }
+
+    // Ensure every question has valid non-empty questionText
+    questions = questions.map((q, idx) => {
+      let qText = (q.questionText || q.questionTextGujarati || q.question || q.text || '').trim();
+      if (!qText) qText = `પ્રશ્ન ${q.questionNo || idx + 1}`;
+      return {
+        ...q,
+        questionNo: q.questionNo || idx + 1,
+        questionText: qText,
+      };
+    });
 
     const imageMsg = extractedImages.length > 0 ? ` (along with ${extractedImages.length} extracted question diagrams/images)` : '';
     const message = isFallback

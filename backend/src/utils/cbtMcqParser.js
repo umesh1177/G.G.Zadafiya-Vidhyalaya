@@ -762,9 +762,81 @@ function convertGopikaToUnicode(txt) {
     [/yu/g, 'એ'],
     [/\{tk/g, 'માં'],
 
-    // Chemistry specific phrases
+    // Chemistry specific phrases (Class 11 & 12)
     [/fÞku ík\]íkeÞf fkçkoLk Ähkðu Au \?/g, 'કયો તૃતીયક કાર્બન ધરાવે છે ?'],
     [/fÞku ík\]íkeÞf fkçkoLk/g, 'કયો તૃતીયક કાર્બન'],
+    [/fÞku ík\]íkeÞf ykÕfkunkì÷ Au \?/g, 'કયો તૃતીયક આલ્કોહોલ છે ?'],
+    [/ykÕfkunkì÷/g, 'આલ્કોહોલ'],
+    [/ykÕfkunkìr÷f/g, 'આલ્કોહોલિક'],
+    [/suLku þwt fnu Au \?/g, 'જેને શું કહે છે ?'],
+    [/he\{h–rx\{kLk/g, 'રીમર-ટીમાન'],
+    [/fkìÕçku-ÂM\{xT/g, 'કોલ્બે-શ્મિટ'],
+    [/yurMkrx÷uþLk/g, 'એસિટિલેશન'],
+    [/çkuLÍkuR÷uþLk/g, 'બેન્ઝોઇલેશન'],
+    [/EÚkh/g, 'ઈથર'],
+    [/MktÞkusLk/g, 'સંયોજન'],
+    [/\{kuLkkuçkúkur\{LkuþLk/g, 'મોનોબ્રોમિનેશન'],
+    [/\{wÏÞ LkeÃks/g, 'મુખ્ય નીપજ'],
+    [/\{wÏÞ/g, 'મુખ્ય'],
+    [/\{¤þu \?/g, 'મળશે ?'],
+    [/\{¤þu/g, 'મળશે'],
+    [/rðÄkLkLke/g, 'વિધાનની'],
+    [/rðÄkLk/g, 'વિધાન'],
+    [/fkhýðk¤wt/g, 'કારણવાળું'],
+    [/fkhý/g, 'કારણ'],
+    [/«&™ Lkt\./g, 'પ્રશ્ન નં.'],
+    [/«&™/g, 'પ્રશ્ન'],
+    [/Lkt\./g, 'નં.'],
+    [/ÞkuøÞ/g, 'યોગ્ય'],
+    [/rðfÕÃk/g, 'વિકલ્પ'],
+    [/ÃkMktË fhku/g, 'પસંદ કરો'],
+    [/ÃkMktË/g, 'પસંદ'],
+    [/fhku/g, 'કરો'],
+    [/Mkk\[wtt/g, 'સાચું'],
+    [/Mkk\[wt Au/g, 'સાચું છે'],
+    [/Mkk\[wt/g, 'સાચું'],
+    [/Mkk\[kt Au/g, 'સાચાં છે'],
+    [/Mkk\[kt/g, 'સાચાં'],
+    [/Mkk\[e Mk\{sqíke Au/g, 'સાચી સમજૂતી છે'],
+    [/Mkk\[e Mk\{sqíke LkÚke/g, 'સાચી સમજૂતી નથી'],
+    [/Mkk\[e/g, 'સાચી'],
+    [/Mk\{sqíke/g, 'સમજૂતી'],
+    [/¾kuxwt Au/g, 'ખોટું છે'],
+    [/¾kuxwt/g, 'ખોટું'],
+    [/fhíkkt/g, 'કરતાં'],
+    [/ðÄw/g, 'વધુ'],
+    [/r¢Þkþe÷/g, 'ક્રિયાશીલ'],
+    [/\{kxu/g, 'માટે'],
+    [/îkhk/g, 'દ્વારા'],
+    [/Ãký/g, 'પણ'],
+    [/çkuÂLÍLk/g, 'બેન્ઝીન'],
+    [/çktLku/g, 'બંને'],
+    [/yLku/g, 'અને'],
+    [/Lke\[u ykÃku÷/g, 'નીચે આપેલ'],
+    [/Lke\[u/g, 'નીચે'],
+    [/R÷uõxÙkìLkyLkwhkøke/g, 'ઇલેક્ટ્રોનઅનુરાગી'],
+    [/R÷uõxÙkìLk/g, 'ઇલેક્ટ્રોન'],
+    [/yLkwhkøke/g, 'અનુરાગી'],
+    [/rðMÚkkÃkLk/g, 'વિસ્થાપન'],
+    [/rVLkku÷/g, 'ફિનોલ'],
+    [/\{æÞMÚk/g, 'મધ્યસ્થ'],
+    [/fkçkkuofuxkÞLk/g, 'કાર્બોકેટાયન'],
+    [/MkMÃktËLk/g, 'સસ્પંદન'],
+    [/MÚkkÞe ÚkÞu÷/g, 'સ્થાયી થયેલ'],
+    [/MÚkkÞe/g, 'સ્થાયી'],
+    [/s÷eÞ/g, 'જલીય'],
+    [/s¤rð¼ksLk/g, 'જળવિભાજન'],
+    [/WÃkhkuõík/g, 'ઉપરોક્ત'],
+    [/Þkuøkþe÷/g, 'યોગશીલ'],
+    [/Mkr¢Þf\]ík/g, 'સક્રિયકૃત'],
+    [/fuLÿkLkwhkøke/g, 'કેન્દ્રાનુરાગી'],
+    [/çkuLÍkRLk/g, 'બેન્ઝાઇન'],
+    [/Lk¬e fhku/g, 'નક્કી કરો'],
+    [/Mkktÿ/g, 'સાંદ્ર'],
+    [/çkúku\{kuRÚkuLk/g, 'બ્રોમોઇથેન'],
+    [/r\{ÚkuLkku÷/g, 'મિથેનોલ'],
+    [/RÚkuLkku÷/g, 'ઇથેનોલ'],
+    [/MkÕVux/g, 'સલ્ફેટ'],
     [/ík\]íkeÞf/g, 'તૃતીયક'],
     [/fkçkoLk/g, 'કાર્બન'],
     [/Ähkðu Au \?/g, 'ધરાવે છે ?'],
@@ -779,6 +851,7 @@ function convertGopikaToUnicode(txt) {
     [/zkÞ/g, 'ડાય'],
     [/Mkkuzk÷kR{/g, 'સોડાલાઇમ'],
     [/þwt Au \?/g, 'શું છે ?'],
+    [/þwt fnu Au/g, 'શું કહે છે'],
     [/þwt/g, 'શું'],
     [/þkLkwt/g, 'શાનું'],
     [/Mkk\{kLÞ/g, 'સામાન્ય'],
@@ -818,6 +891,71 @@ function convertGopikaToUnicode(txt) {
     [/nþu \?/g, 'હશે ?'],
     [/çkÄks/g, 'બધાજ'],
     [/çkÄe s/g, 'બધી જ'],
+
+    // Mathematics specific phrases (Class 11 & 12)
+    [/©urýf/g, 'શ્રેણિક'],
+    [/ÔÞMík ©urýf/g, 'વ્યસ્ત શ્રેણિક'],
+    [/ÔÞMík/g, 'વ્યસ્ત'],
+    [/yMkíÞ Au/g, 'અસત્ય છે'],
+    [/yMkíÞ/g, 'અસત્ય'],
+    [/MkíÞ Au/g, 'સત્ય છે'],
+    [/MkíÞ/g, 'સત્ય'],
+    [/Mkíkík nkuÞ íkku/g, 'સતત હોય તો'],
+    [/Mkíkík nkuÞ/g, 'સતત હોય'],
+    [/Mkíkík Au/g, 'સતત છે'],
+    [/Mkíkík/g, 'સતત'],
+    [/rðf÷LkeÞ Au/g, 'વિકલનીય છે'],
+    [/rðf÷LkeÞ/g, 'વિકલનીય'],
+    [/rðÄuÞ/g, 'વિધેય'],
+    [/ykøk¤/g, 'આગળ'],
+
+    // Physics specific phrases (Class 11 & 12)
+    [/rðãwíkûkuºkLke íkeðúíkkLkwt/g, 'વિદ્યુતક્ષેત્રની તીવ્રતાનું'],
+    [/rðãwíkûkuºkLke/g, 'વિદ્યુતક્ષેત્રની'],
+    [/rðãwíkûkuºk\{kt/g, 'વિદ્યુતક્ષેત્રમાં'],
+    [/rðãwíkûkuºk/g, 'વિદ્યુતક્ષેત્ર'],
+    [/íkeðúíkkLkwt/g, 'તીવ્રતાનું'],
+    [/íkeðúíkk/g, 'તીવ્રતા'],
+    [/Ãkkrh\{krýf Mkqºk/g, 'પારિમાણિક સૂત્ર'],
+    [/Ãkkrh\{krýf/g, 'પારિમાણિક'],
+    [/ÃkíkLk Ãkk\{u Au/g, 'પતન પામે છે'],
+    [/ÃkíkLk/g, 'પતન'],
+    [/«ðuøk þwt nþu \?/g, 'પ્રવેગ શું હશે ?'],
+    [/«ðuøk/g, 'પ્રવેગ'],
+    [/rðãwík¼khku/g, 'વિદ્યુતભારો'],
+    [/rðãwík¼khLkwt/g, 'વિદ્યુતભારનું'],
+    [/rðãwík¼kh/g, 'વિદ્યુતભાર'],
+    [/®çkËwðíkT/g, 'બિંદુવત'],
+    [/\{n¥k{ nþu \?/g, 'મહત્તમ હશે ?'],
+    [/\{n¥k{/g, 'મહત્તમ'],
+    [/rð\[kh fhku/g, 'વિચાર કરો'],
+    [/VT÷õMk/g, 'ફ્લક્સ'],
+    [/þqLÞ/g, 'શૂન્ય'],
+    [/zkÞÃkku÷Lku/g, 'ડાયપોલને'],
+    [/zkÞÃkku÷/g, 'ડાયપોલ'],
+    [/s\{ýe íkhV/g, 'જમણી તરફ'],
+    [/zkçke íkhV/g, 'ડાબી તરફ'],
+    [/WÃkh íkhV/g, 'ઉપર તરફ'],
+    [/fw÷tçkeÞ çk¤/g, 'કુલંબીય બળ'],
+    [/fw÷tçkeÞ/g, 'કુલંબીય'],
+    [/økkuXððk\{kt ykÔÞk Au/g, 'ગોઠવવામાં આવ્યા છે'],
+    [/økkuXððk\{kt ykÔÞk/g, 'ગોઠવવામાં આવ્યા'],
+    [/Mk\{«\{ký\{kt nþu/g, 'સમપ્રમાણમાં હશે'],
+    [/Mk\{«\{ký\{kt/g, 'સમપ્રમાણમાં'],
+    [/÷xfkðu÷ Au/g, 'લટકાવેલ છે'],
+    [/÷xfkðu÷/g, 'લટકાવેલ'],
+    [/Ãk\]c/g, 'પૃષ્ઠ'],
+    [/½Lkíkk/g, 'ઘનતા'],
+    [/yk÷u¾ Au/g, 'આલેખ છે'],
+    [/yk÷u¾/g, 'આલેખ'],
+    [/ðknf/g, 'વાહક'],
+    [/Lk¬h økku¤ku/g, 'નક્કર ગોળો'],
+    [/Lk¬h ½Lk/g, 'નક્કર ઘન'],
+    [/Lk¬h/g, 'નક્કર'],
+    [/íkýkðçk¤ fux÷wt Úkþu \?/g, 'તણાવબળ કેટલું થશે ?'],
+    [/íkýkðçk¤/g, 'તણાવબળ'],
+    [/Úkþu \?/g, 'થશે ?'],
+    [/Úkþu/g, 'થશે'],
 
     // Physics specific phrases
     [/MkrËþku Au/g, 'સદિશો છે'],
@@ -933,6 +1071,8 @@ function convertGopikaToUnicode(txt) {
   s = s.replace(/æ\s*ö/g, '');
   s = s.replace(/è\s*ø/g, '');
   s = s.replace(/ç\s*÷/g, '');
+  s = s.replace(/[æçè]/g, '(');
+  s = s.replace(/[ö÷ø]/g, ')');
   s = s.replace(/é/g, '[');
   s = s.replace(/ù/g, ']');
   s = s.replace(/ê/g, '[');
@@ -1021,8 +1161,8 @@ function autoTrimCanvas(canvas) {
 
 /**
  * Full coordinate-based parser for Quantum Paper PDFs
- * Extracts questions, 4 options (text or cropped molecular structures), equations, fractions,
- * vector diagrams, and matches 100% of answer keys from the answer key table.
+ * Extracts questions across multiple pages, 4 options (text or cropped molecular structures),
+ * equations, fractions, vector diagrams, and matches 100% of answer keys from the answer key table.
  */
 async function parseQuantumPaperPdf(cleanPdfBuf, defaultSubject = 'Physics', marks = 4, negativeMarks = 1) {
   const { PDFParse } = require('pdf-parse');
@@ -1032,7 +1172,7 @@ async function parseQuantumPaperPdf(cleanPdfBuf, defaultSubject = 'Physics', mar
   const textRes = await parser.getText();
   const fullText = textRes.text;
 
-  // 1. Extract Answer Key table from Page 2
+  // 1. Extract Answer Key table from any page
   const keyMap = {};
   const qpTableRegex = /(?:^|\n)\s*([0-9]+)\.\s*([A-Da-dઅબકડ1-4૧-૪])(?:\s+(?:Chap|S\d+|QP|[A-Za-z0-9_]+))?/gi;
   let qpM;
@@ -1044,7 +1184,7 @@ async function parseQuantumPaperPdf(cleanPdfBuf, defaultSubject = 'Physics', mar
     }
   }
 
-  // 2. High-res page screenshot for diagrams and visual options
+  // 2. High-res page screenshots
   let screenshots = null;
   let createCanvas, loadImage;
   try {
@@ -1057,11 +1197,14 @@ async function parseQuantumPaperPdf(cleanPdfBuf, defaultSubject = 'Physics', mar
   }
 
   const numPages = parser.doc.numPages;
-  const allQuestions = [];
+  const questionsMap = new Map();
+  let lastSeenQ = 0;
 
   for (let pNum = 1; pNum <= numPages; pNum++) {
     const pageText = (textRes.pages[pNum - 1] && textRes.pages[pNum - 1].text) || '';
-    if (!/\(A\)/.test(pageText)) continue;
+    // Skip purely answer key summary pages
+    if (/Section\s*\[\s*[A-Z]\s*\]\s*:\s*\d+\s*Mark/i.test(pageText) && !/\(A\)/.test(pageText)) continue;
+    if (!/\(A\)/.test(pageText) && !/\([1-4]\)/.test(pageText) && !/•/.test(pageText)) continue;
 
     const page = await parser.doc.getPage(pNum);
     const tc = await page.getTextContent();
@@ -1085,11 +1228,33 @@ async function parseQuantumPaperPdf(cleanPdfBuf, defaultSubject = 'Physics', mar
     });
     qCoords.sort((a, b) => b.y - a.y);
 
+    const pageOptMarkers = [];
+    tc.items.forEach(it => {
+      const m = it.str && it.str.trim().match(/\(([A-D])\)/);
+      if (m) {
+        pageOptMarkers.push({
+          letter: m[1],
+          x: Math.round(it.transform[4]),
+          y: Math.round(it.transform[5]),
+          raw: it.str,
+        });
+      }
+    });
+
+    const firstAnchorY = qCoords.length > 0 ? qCoords[0].y : 0;
+    const topOptMarkers = pageOptMarkers.filter(o => o.y > firstAnchorY);
+
+    if (topOptMarkers.length >= 2 || (qCoords.length === 0 && pageOptMarkers.length >= 2)) {
+      const topQNum = qCoords.length > 0 ? (qCoords[0].qNum - 1) : (lastSeenQ || 1);
+      const topAnchorY = Math.max(...pageOptMarkers.map(o => o.y)) + 50;
+      qCoords.unshift({ qNum: topQNum, y: Math.min(topAnchorY, Math.round(H - 30)), isImplicit: true });
+    }
+
     for (let i = 0; i < qCoords.length; i++) {
       const cur = qCoords[i];
       const next = qCoords[i + 1];
       const topY = cur.y + 14;
-      const botY = next ? next.y + 14 : 45;
+      const botY = next ? next.y + 14 : 0;
 
       const items = tc.items.filter(it => {
         const y = Math.round(it.transform[5]);
@@ -1097,17 +1262,18 @@ async function parseQuantumPaperPdf(cleanPdfBuf, defaultSubject = 'Physics', mar
         if (x < 55) return false;
         if (y > topY || y <= botY) return false;
         const str = it.str.trim();
-        if (!str || str.includes('Wish You') || str.includes('Quantum Paper')) return false;
+        if (!str || str.includes('Wish You - All The Best') || str.includes('Quantum Paper')) return false;
+        if (str.replace(/[ંુે\s]/g, '').length === 0) return false;
         return true;
       });
 
-      // Find option markers (A), (B), (C), (D)
-      const optMarkers = [];
+      // Filter raw candidate markers
+      const rawMarkers = [];
       items.forEach(it => {
         const str = it.str.trim();
         const m = str.match(/\(([A-D])\)/);
         if (m) {
-          optMarkers.push({
+          rawMarkers.push({
             letter: m[1],
             x: Math.round(it.transform[4]),
             y: Math.round(it.transform[5]),
@@ -1116,15 +1282,50 @@ async function parseQuantumPaperPdf(cleanPdfBuf, defaultSubject = 'Physics', mar
         }
       });
 
+      // Pick best A, B, C, D if duplicates exist
+      const byLetter = { A: [], B: [], C: [], D: [] };
+      rawMarkers.forEach(m => byLetter[m.letter] && byLetter[m.letter].push(m));
+
+      let optMarkers = [];
+      if (byLetter.A && byLetter.A.length && byLetter.B && byLetter.B.length && byLetter.C && byLetter.C.length && byLetter.D && byLetter.D.length) {
+        if (byLetter.B.length === 1 && byLetter.C.length === 1 && byLetter.D.length === 1 && byLetter.A.length > 1) {
+          const avgY = (byLetter.B[0].y + byLetter.C[0].y + byLetter.D[0].y) / 3;
+          const bestA = byLetter.A.reduce((prev, curr) => Math.abs(curr.y - avgY) < Math.abs(prev.y - avgY) ? curr : prev, byLetter.A[0]);
+          optMarkers = [bestA, byLetter.B[0], byLetter.C[0], byLetter.D[0]];
+        } else {
+          optMarkers = [byLetter.A[0], byLetter.B[0], byLetter.C[0], byLetter.D[0]];
+        }
+      } else {
+        optMarkers = rawMarkers;
+      }
+
       const isHorizontal = optMarkers.length === 4 && Math.abs(optMarkers[0].y - optMarkers[3].y) <= 8;
       const isVertical = optMarkers.length === 4 && Math.abs(optMarkers[0].x - optMarkers[3].x) <= 15;
+
+      // 2x2 Grid detection
+      let isGrid2x2 = false;
+      let hasDiagramOnRight = false;
+      if (optMarkers.length === 4 && !isHorizontal && !isVertical) {
+        const yA = optMarkers[0].y, yB = optMarkers[1].y;
+        const yC = optMarkers[2].y, yD = optMarkers[3].y;
+        const xA = optMarkers[0].x, xB = optMarkers[1].x;
+        const xC = optMarkers[2].x, xD = optMarkers[3].x;
+        if (Math.abs(yA - yB) <= 10 && Math.abs(yC - yD) <= 10 && yA > yC + 10 && xB > xA + 50 && xD > xC + 50) {
+          isGrid2x2 = true;
+          if (optMarkers.every(m => m.x < 260)) {
+            hasDiagramOnRight = true;
+          }
+        }
+      }
 
       let stmtItems = [];
       let optAItems = [], optBItems = [], optCItems = [], optDItems = [];
       let diagCropNeeded = false;
       let diagCropRegion = null;
 
-      if (isHorizontal) {
+      if (optMarkers.length < 2) {
+        stmtItems = items;
+      } else if (isHorizontal) {
         const optY = optMarkers[0].y;
         stmtItems = items.filter(it => Math.round(it.transform[5]) > optY + 12);
         const optBandItems = items.filter(it => Math.round(it.transform[5]) <= optY + 12);
@@ -1138,6 +1339,29 @@ async function parseQuantumPaperPdf(cleanPdfBuf, defaultSubject = 'Physics', mar
         optBItems = optBandItems.filter(it => it.transform[4] >= xB && it.transform[4] < xC);
         optCItems = optBandItems.filter(it => it.transform[4] >= xC && it.transform[4] < xD);
         optDItems = optBandItems.filter(it => it.transform[4] >= xD);
+      } else if (isGrid2x2) {
+        const yA = optMarkers[0].y, yB = optMarkers[1].y;
+        const yC = optMarkers[2].y, yD = optMarkers[3].y;
+        const xA = optMarkers[0].x, xB = optMarkers[1].x;
+        const xC = optMarkers[2].x, xD = optMarkers[3].x;
+
+        const optTopY = Math.max(yA, yB) + 12;
+        const midY = (Math.min(yA, yB) + Math.max(yC, yD)) / 2;
+        const midX = (Math.min(xB, xD) + Math.max(xA, xC)) / 2;
+        const optXLimit = hasDiagramOnRight ? 270 : 1000;
+
+        stmtItems = items.filter(it => Math.round(it.transform[5]) > optTopY);
+        const optBand = items.filter(it => Math.round(it.transform[5]) <= optTopY && it.transform[4] < optXLimit);
+
+        optAItems = optBand.filter(it => it.transform[5] > midY && it.transform[4] < midX);
+        optBItems = optBand.filter(it => it.transform[5] > midY && it.transform[4] >= midX);
+        optCItems = optBand.filter(it => it.transform[5] <= midY && it.transform[4] < midX);
+        optDItems = optBand.filter(it => it.transform[5] <= midY && it.transform[4] >= midX);
+
+        if (hasDiagramOnRight) {
+          diagCropNeeded = true;
+          diagCropRegion = { xNorm: 0.45, topNorm: Math.max(0, (H - topY) / H), wNorm: 0.52, hNorm: Math.min(1, (topY - botY) / H) };
+        }
       } else if (isVertical) {
         const optXMax = optMarkers[0].x + 75;
         const optTopY = optMarkers[0].y + 10;
@@ -1156,7 +1380,7 @@ async function parseQuantumPaperPdf(cleanPdfBuf, defaultSubject = 'Physics', mar
         optDItems = optItems.filter(it => it.transform[5] <= (yC + yD) / 2);
 
         diagCropNeeded = true;
-        diagCropRegion = { xNorm: 0.38, topNorm: (H - topY) / H, wNorm: 0.58, hNorm: (topY - botY) / H };
+        diagCropRegion = { xNorm: 0.38, topNorm: Math.max(0, (H - topY) / H), wNorm: 0.58, hNorm: Math.min(1, (topY - botY) / H) };
       } else {
         const optXCut = 280;
         const optTopY = (optMarkers.length >= 2 ? Math.max(optMarkers[0].y, optMarkers[1].y) : cur.y) + 10;
@@ -1172,16 +1396,14 @@ async function parseQuantumPaperPdf(cleanPdfBuf, defaultSubject = 'Physics', mar
         optDItems = optItems.filter(it => it.transform[5] <= midY && it.transform[4] >= midX);
 
         diagCropNeeded = true;
-        diagCropRegion = { xNorm: 0.45, topNorm: (H - topY) / H, wNorm: 0.52, hNorm: (topY - botY) / H };
+        diagCropRegion = { xNorm: 0.45, topNorm: Math.max(0, (H - topY) / H), wNorm: 0.52, hNorm: Math.min(1, (topY - botY) / H) };
       }
 
-      const sortItems = arr => {
-        return [...arr].sort((a, b) => {
-          const dy = Math.round(b.transform[5]) - Math.round(a.transform[5]);
-          if (Math.abs(dy) > 3) return dy;
-          return a.transform[4] - b.transform[4];
-        });
-      };
+      const sortItems = arr => [...arr].sort((a, b) => {
+        const dy = Math.round(b.transform[5]) - Math.round(a.transform[5]);
+        if (Math.abs(dy) > 3) return dy;
+        return a.transform[4] - b.transform[4];
+      });
 
       let stmtRaw = sortItems(stmtItems).map(it => it.str).join(' ');
       let cleanStmt = convertGopikaToUnicode(stmtRaw).replace(/^[0-9]+\.\s*/, '').trim();
@@ -1189,8 +1411,8 @@ async function parseQuantumPaperPdf(cleanPdfBuf, defaultSubject = 'Physics', mar
       const formatOpt = (arr, optLetter) => {
         const sorted = sortItems(arr);
         let raw = sorted.map(it => it.str).join(' ').trim();
-        raw = raw.replace(new RegExp(`\\(${optLetter}\\)`, 'g'), '').trim();
-        raw = raw.replace(new RegExp(`\\([A-D]\\)`, 'g'), '').trim();
+        raw = raw.replace(new RegExp('\\(' + optLetter + '\\)', 'g'), '').trim();
+        raw = raw.replace(/\([A-D]\)/g, '').trim();
         raw = raw.replace(/^[YyXx]\s+(?=[A-Za-z0-9\(\[\–\-])/, '').trim();
         raw = raw.replace(/^=\s*0\s*/, '').trim();
 
@@ -1220,7 +1442,7 @@ async function parseQuantumPaperPdf(cleanPdfBuf, defaultSubject = 'Physics', mar
       let optC = formatOpt(optCItems, 'C');
       let optD = formatOpt(optDItems, 'D');
 
-      // Check for visual chemical structure options (e.g. Chemistry Q7)
+      // Check for visual chemical structure options
       const hasEmptyVisualOptions = isHorizontal && optMarkers.length === 4 && (
         (!optA.trim() && !optB.trim()) ||
         (!optA.trim() && optD.trim() && !optB.trim())
@@ -1282,25 +1504,50 @@ async function parseQuantumPaperPdf(cleanPdfBuf, defaultSubject = 'Physics', mar
         }
       }
 
-      const qAns = keyMap[cur.qNum] || 'A';
+      const finalQuestionText = cleanStmt || `પ્રશ્ન ${cur.qNum}`;
 
-      allQuestions.push({
+      const qObj = {
         id: `q_${defaultSubject.toLowerCase()}_${cur.qNum}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
         subject: defaultSubject,
         questionNo: cur.qNum,
         marks: Number(marks) || 4,
         negativeMarks: Number(negativeMarks) || 1,
-        questionText: cleanStmt,
+        questionText: finalQuestionText,
         imageUrl: qImageUrl,
         options: [optA || 'Option A', optB || 'Option B', optC || 'Option C', optD || 'Option D'],
-        correctAnswer: qAns,
+        correctAnswer: keyMap[cur.qNum] || 'A',
         explanation: '',
-      });
+      };
+
+      if (questionsMap.has(cur.qNum)) {
+        const prev = questionsMap.get(cur.qNum);
+        const prevOptsCount = prev.options.filter(o => o && !o.startsWith('Option ')).length;
+        const newOptsCount = qObj.options.filter(o => o && !o.startsWith('Option ')).length;
+
+        if (newOptsCount > prevOptsCount) {
+          if (prev.questionText.length > 20 && !prev.questionText.startsWith('પ્રશ્ન ')) {
+            if (qObj.questionText.length > 20 && !qObj.questionText.startsWith('પ્રશ્ન ') && !prev.questionText.includes(qObj.questionText.substring(0, 30))) {
+              qObj.questionText = `${prev.questionText}\n${qObj.questionText}`;
+            } else if (prev.questionText.length >= qObj.questionText.length) {
+              qObj.questionText = prev.questionText;
+            }
+          }
+          questionsMap.set(cur.qNum, qObj);
+        } else if (qObj.questionText.length > prev.questionText.length && prevOptsCount === 0) {
+          questionsMap.set(cur.qNum, qObj);
+        }
+      } else {
+        questionsMap.set(cur.qNum, qObj);
+      }
+
+      lastSeenQ = Math.max(lastSeenQ, cur.qNum);
     }
   }
 
   await parser.destroy().catch(() => {});
-  return allQuestions;
+  const result = Array.from(questionsMap.values());
+  result.sort((a, b) => a.questionNo - b.questionNo);
+  return result;
 }
 
 module.exports = {

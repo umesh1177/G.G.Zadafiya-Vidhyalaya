@@ -477,11 +477,21 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
 
     try {
       setSubmitting(true);
+      const sanitizedQuestions = (questions || []).map((q, idx) => {
+        let qText = (q.questionText || q.questionTextGujarati || q.question || q.text || '').trim();
+        if (!qText) qText = `પ્રશ્ન ${q.questionNo || idx + 1}`;
+        return {
+          ...q,
+          questionNo: q.questionNo || idx + 1,
+          questionText: qText,
+        };
+      });
+
       const payload = {
         ...formData,
         subjectMarksConfig,
         subjectPapers,
-        questions,
+        questions: sanitizedQuestions,
       };
 
       let res;
