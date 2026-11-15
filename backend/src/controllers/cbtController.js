@@ -8,6 +8,8 @@ const {
   extractImagesFromDocx,
   parseDocxWithImages,
   associateImagesWithQuestions,
+  isQuantumPaperOrGopika,
+  parseQuantumPaperPdf,
 } = require('../utils/cbtMcqParser');
 const { getSampleQuestionsForExam } = require('../data/cbtSampleQuestions');
 
@@ -1359,6 +1361,7 @@ exports.extractPaper = async (req, res) => {
     let textContent = rawText || '';
     let extractedImages = [];
     let imageMap = {};
+    let questions = [];
 
     // If file payload is provided (PDF or DOCX or TXT)
     if (pdfBase64 && typeof pdfBase64 === 'string') {
@@ -1390,17 +1393,35 @@ exports.extractPaper = async (req, res) => {
             const { PDFParse } = require('pdf-parse');
             const parser = new PDFParse({ data: cleanPdfBuf });
             const pdfResult = await parser.getText();
+            let rawPdfText = '';
             if (pdfResult && pdfResult.text && pdfResult.text.trim()) {
-              textContent = pdfResult.text;
+              rawPdfText = pdfResult.text;
             } else if (pdfResult && Array.isArray(pdfResult.pages) && pdfResult.pages.length > 0) {
-              textContent = pdfResult.pages.map(p => p.text || '').join('\n');
+              rawPdfText = pdfResult.pages.map(p => p.text || '').join('\n');
             } else if (typeof pdfResult === 'string' && pdfResult.trim()) {
-              textContent = pdfResult;
+              rawPdfText = pdfResult;
             }
             await parser.destroy().catch(() => {});
 
-            // Extract diagrams/images from PDF
-            extractedImages = await extractImagesFromPdf(cleanPdfBuf);
+            // Check if this is a Quantum Paper format or Gopika ASCII font PDF
+            if (isQuantumPaperOrGopika(rawPdfText)) {
+              try {
+                const qpQuestions = await parseQuantumPaperPdf(cleanPdfBuf, subject, Number(marks), Number(negativeMarks));
+                if (qpQuestions && qpQuestions.length > 0) {
+                  questions = qpQuestions;
+                  textContent = rawPdfText;
+                  extractedImages = qpQuestions.filter(q => q.imageUrl).map(q => ({ dataUrl: q.imageUrl }));
+                }
+              } catch (qpErr) {
+                console.warn('parseQuantumPaperPdf failed, falling back to standard:', qpErr.message);
+              }
+            }
+
+            if (questions.length === 0) {
+              textContent = rawPdfText;
+              // Extract diagrams/images from PDF
+              extractedImages = await extractImagesFromPdf(cleanPdfBuf);
+            }
           }
 
           // If textContent is still empty, check if it's UTF-8 plain text
@@ -1416,14 +1437,11 @@ exports.extractPaper = async (req, res) => {
       }
     }
 
-    let questions = [];
-    if (textContent && textContent.trim()) {
+    if (questions.length === 0 && textContent && textContent.trim()) {
       questions = parseMcqText(textContent, subject, Number(marks), Number(negativeMarks), imageMap);
-    }
-
-    // Auto-link extracted diagram images to questions
-    if (extractedImages.length > 0 && questions.length > 0) {
-      associateImagesWithQuestions(questions, extractedImages);
+      if (extractedImages.length > 0 && questions.length > 0) {
+        associateImagesWithQuestions(questions, extractedImages);
+      }
     }
 
     // If no questions could be parsed (e.g. scanned image PDF or non-standard format),

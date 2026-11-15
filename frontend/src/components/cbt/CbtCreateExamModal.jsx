@@ -579,7 +579,7 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
           {activeTab === 'setup' && (
             <div className="space-y-6">
               {/* Exam Classification */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 <div>
                   <label className="cbt-form-label">Exam Type</label>
                   <select
@@ -634,8 +634,8 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
               </div>
 
               {/* Title & Duration */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="md:col-span-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+                <div className="sm:col-span-2">
                   <label className="cbt-form-label">Exam Title</label>
                   <input
                     type="text"
@@ -671,7 +671,7 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
                   Set when the exam card becomes visible to students, the exact time students can enter the exam environment, and when the window closes.
                 </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                   {/* 1. Schedule Time */}
                   <div className="cbt-timing-field-box">
                     <label className="cbt-timing-field-title">
@@ -742,7 +742,7 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
                   Set the maximum total marks for each subject. Individual student scores and percentages will be calculated dynamically based on these totals.
                 </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {subjectMarksConfig.map((subCfg, idx) => {
                     const subQuestions = questions.filter(
                       (q) => q.subject && q.subject.toLowerCase() === subCfg.subject.toLowerCase()
@@ -777,7 +777,7 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
               </div>
 
               {/* Dynamic Marks Config */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 bg-slate-50 p-4 rounded-lg border border-slate-200">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 bg-slate-50 p-3 sm:p-4 rounded-xl border border-slate-200">
                 <div>
                   <label className="cbt-form-label">Marks Per Question (+)</label>
                   <input
@@ -863,7 +863,7 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
               </div>
 
               {/* 3 Subject Upload Cards Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {subjectPapers.map((paper, idx) => (
                   <div key={paper.subject} className="cbt-pdf-upload-box">
                     <div className="cbt-pdf-box-header">
@@ -999,17 +999,17 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
                   Paste raw text from question paper / PDF with questions and options (e.g. 1. Question... A. Opt1 B. Opt2... Ans: B):
                 </div>
 
-                <div className="flex gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <textarea
                     rows={3}
-                    className="cbt-form-textarea text-xs font-mono"
+                    className="cbt-form-textarea text-xs font-mono flex-1"
                     placeholder="Paste question paper text here to automatically extract MCQs..."
                     value={rawText}
                     onChange={(e) => setRawText(e.target.value)}
                   />
                   <button
                     type="button"
-                    className="cbt-btn-primary px-4 self-center text-xs whitespace-nowrap"
+                    className="cbt-btn-primary px-4 py-2 sm:self-center text-xs whitespace-nowrap"
                     onClick={handleParseRawText}
                   >
                     Extract MCQs
@@ -1084,7 +1084,7 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
 
                           {/* Extracted Diagram / Image preview */}
                           {(q.imageUrl || q.image || q.diagramUrl) ? (
-                            <div className="flex items-center gap-3 p-2 bg-indigo-50/70 border border-indigo-200 rounded-lg mb-2">
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-2.5 bg-indigo-50/70 border border-indigo-200 rounded-lg mb-2">
                               <img
                                 src={q.imageUrl || q.image || q.diagramUrl}
                                 alt={`Q${idx + 1} Diagram`}
@@ -1142,7 +1142,7 @@ export default function CbtCreateExamModal({ examToEdit, onClose, onExamSaved })
                           )}
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                           {q.options?.map((opt, oIdx) => (
                             <div
                               key={oIdx}
