@@ -1,9 +1,19 @@
 /**
  * G.G. Zadafiya Vidhyalaya - Authentication & Role-Based Authorization Middleware
+ *
+ * Primary Auth: Server-side session authentication stored in MongoDB (via express-session + connect-mongo)
+ * - Verifies active session on every request against the Faculty database record.
+ * - Enforces account active status (disabled accounts are immediately terminated).
+ * - Enforces session invalidation upon role or password changes via sessionVersion.
+ * - Enforces session idle timeout.
+ * - Removes query-parameter authentication (?token=...) to eliminate credential leakage in URLs.
  */
 
 const { verifyAuthToken } = require('../utils/security');
 const Faculty = require('../models/Faculty');
+
+// Idle session timeout: 2 hours of inactivity
+const IDLE_TIMEOUT_MS = 2 * 60 * 60 * 1000;
 
 function normalizeRole(raw) {
   const r = String(raw || '').toLowerCase().trim();
@@ -14,42 +24,111 @@ function normalizeRole(raw) {
 }
 
 /**
- * Middleware: Verify user authentication token
- * Extracts token from Authorization header (Bearer <token>), x-auth-token header, or query token
+ * Middleware: Verify user authentication
+ * Primary: req.session.userId (server-side session cookie)
+ * Fallback: Bearer token header (during migration transition)
  */
 async function authenticate(req, res, next) {
   try {
-    let token = null;
+    // 1. Primary: Check server-side session
+    if (req.session && req.session.userId) {
+      // Check idle timeout
+      if (req.session.lastActive && Date.now() - req.session.lastActive > IDLE_TIMEOUT_MS) {
+        req.session.destroy(() => {});
+        return res.status(401).json({
+          success: false,
+          message: 'Session has expired due to inactivity. Please log in again.',
+        });
+      }
 
+      // Verify active user record in database
+      const faculty = await Faculty.findById(req.session.userId);
+      if (!faculty || faculty.status === 'DEACTIVATED') {
+        req.session.destroy(() => {});
+        return res.status(401).json({
+          success: false,
+          message: 'Account is deactivated or no longer exists. Session terminated.',
+        });
+      }
+
+      // Check session version (invalidated on password change or admin reset)
+      if (faculty.sessionVersion && req.session.sessionVersion !== faculty.sessionVersion) {
+        req.session.destroy(() => {});
+        return res.status(401).json({
+          success: false,
+          message: 'Your session has been invalidated due to a security update. Please log in again.',
+        });
+      }
+
+      // Keep role synchronized in session
+      const normalizedRole = normalizeRole(faculty.role);
+      req.session.role = normalizedRole;
+      req.session.facultyRole = faculty.role;
+      req.session.subject = faculty.subject;
+      req.session.lastActive = Date.now();
+
+      req.user = {
+        id: faculty._id.toString(),
+        _id: faculty._id.toString(),
+        empCode: faculty.empCode,
+        role: normalizedRole,
+        facultyRole: faculty.role,
+        subject: faculty.subject,
+        fullName: faculty.fullName,
+        name: faculty.fullName,
+        email: faculty.email,
+      };
+
+      return next();
+    }
+
+    // 2. Fallback: Authorization Bearer header (for seamless transition during reload)
     const authHeader = req.headers.authorization || req.headers.Authorization;
+    let token = null;
     if (authHeader && typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
       token = authHeader.slice(7).trim();
     } else if (req.headers['x-auth-token']) {
       token = String(req.headers['x-auth-token']).trim();
-    } else if (req.query && req.query.token) {
-      token = String(req.query.token).trim();
     }
 
-    if (!token) {
-      return res.status(401).json({
-        success: false,
-        message: 'Authentication required. Please log in with your credentials.',
-      });
+    if (token) {
+      const decoded = verifyAuthToken(token);
+      if (decoded && decoded.id) {
+        const faculty = await Faculty.findById(decoded.id);
+        if (faculty && faculty.status !== 'DEACTIVATED') {
+          const normalizedRole = normalizeRole(faculty.role);
+          req.user = {
+            id: faculty._id.toString(),
+            _id: faculty._id.toString(),
+            empCode: faculty.empCode,
+            role: normalizedRole,
+            facultyRole: faculty.role,
+            subject: faculty.subject,
+            fullName: faculty.fullName,
+            name: faculty.fullName,
+            email: faculty.email,
+          };
+
+          // Migrate user into current session seamlessly if session exists
+          if (req.session) {
+            req.session.userId = faculty._id.toString();
+            req.session.role = normalizedRole;
+            req.session.facultyRole = faculty.role;
+            req.session.subject = faculty.subject;
+            req.session.sessionVersion = faculty.sessionVersion || 1;
+            req.session.lastActive = Date.now();
+          }
+
+          return next();
+        }
+      }
     }
 
-    const decoded = verifyAuthToken(token);
-    if (!decoded || !decoded.id) {
-      return res.status(401).json({
-        success: false,
-        message: 'Session has expired or token is invalid. Please log in again.',
-      });
-    }
-
-    req.user = decoded;
-    if (req.user && req.user.role) {
-      req.user.role = normalizeRole(req.user.role);
-    }
-    next();
+    // No valid session or token found
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication required. Please log in with your credentials.',
+    });
   } catch (err) {
     console.error('Authentication middleware error:', err);
     return res.status(500).json({
@@ -62,25 +141,27 @@ async function authenticate(req, res, next) {
 /**
  * Middleware: Optional authentication (does not reject if unauthenticated, but attaches req.user if present)
  */
-function optionalAuth(req, res, next) {
-  let token = null;
-  const authHeader = req.headers.authorization || req.headers.Authorization;
-  if (authHeader && typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
-    token = authHeader.slice(7).trim();
-  } else if (req.headers['x-auth-token']) {
-    token = String(req.headers['x-auth-token']).trim();
-  } else if (req.query && req.query.token) {
-    token = String(req.query.token).trim();
-  }
-
-  if (token) {
-    const decoded = verifyAuthToken(token);
-    if (decoded && decoded.id) {
-      req.user = decoded;
-      if (req.user && req.user.role) {
-        req.user.role = normalizeRole(req.user.role);
+async function optionalAuth(req, res, next) {
+  try {
+    if (req.session && req.session.userId) {
+      const faculty = await Faculty.findById(req.session.userId);
+      if (faculty && faculty.status !== 'DEACTIVATED') {
+        const normalizedRole = normalizeRole(faculty.role);
+        req.user = {
+          id: faculty._id.toString(),
+          _id: faculty._id.toString(),
+          empCode: faculty.empCode,
+          role: normalizedRole,
+          facultyRole: faculty.role,
+          subject: faculty.subject,
+          fullName: faculty.fullName,
+          name: faculty.fullName,
+          email: faculty.email,
+        };
       }
     }
+  } catch (e) {
+    // Ignore optional auth error
   }
   next();
 }
@@ -138,7 +219,6 @@ function requireSubjectScope(subjectField = 'subject') {
       const userSubject = String(req.user.subject || '').trim();
 
       if (requestedSubject && userSubject) {
-        // Normalize for comparison (e.g. "Chemistry (Board)" matches "Chemistry" or exact)
         const normReq = String(requestedSubject).toLowerCase().trim();
         const normUser = userSubject.toLowerCase().trim();
 
@@ -197,5 +277,5 @@ module.exports = {
   requireRole,
   requireSubjectScope,
   isSubjectAuthorized,
+  normalizeRole,
 };
-

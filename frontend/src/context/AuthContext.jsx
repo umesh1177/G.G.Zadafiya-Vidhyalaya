@@ -1,11 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { API_ROOT, authFetch } from '../services/apiConfig';
+import { API_ROOT, authFetch, setCsrfToken } from '../services/apiConfig';
 
 const AuthContext = createContext(null);
 
 const SCHOOL_NAME = 'G.G. Zadafiya Vidhyalaya';
 
-function normalizeStoredUser(raw) {
+function normalizeUserData(raw) {
   if (!raw || typeof raw !== 'object') return null;
   const oldSchool = String(raw.school || '');
   const normalizedSchool =
@@ -22,28 +22,24 @@ function normalizeStoredUser(raw) {
 }
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    try {
-      const saved = localStorage.getItem('sms_auth_user');
-      if (!saved) return null;
-      return normalizeStoredUser(JSON.parse(saved));
-    } catch {
-      return null;
-    }
-  });
-
+  // Never treat cached user objects as proof of authentication.
+  // Initial state is null until backend verifies the active server-side session.
+  const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Validate session token with backend on application startup
+  // Validate active session with backend via /api/auth/me on app load
   useEffect(() => {
     let isMounted = true;
-    const verifySession = async () => {
-      const token = localStorage.getItem('sms_auth_token');
-      if (!token) {
-        if (isMounted) setIsLoading(false);
-        return;
-      }
 
+    // Purge legacy client-side tokens from localStorage
+    try {
+      localStorage.removeItem('sms_auth_token');
+      localStorage.removeItem('sms_auth_user');
+    } catch (e) {
+      // Ignore storage errors
+    }
+
+    const verifySession = async () => {
       try {
         const res = await authFetch(`${API_ROOT}/api/auth/me`, {
           method: 'GET',
@@ -53,21 +49,21 @@ export function AuthProvider({ children }) {
         if (res.ok) {
           const data = await res.json();
           if (data.success && data.user && isMounted) {
-            const normalized = normalizeStoredUser(data.user);
+            if (data.csrfToken) setCsrfToken(data.csrfToken);
+            const normalized = normalizeUserData(data.user);
             setUser(normalized);
-            localStorage.setItem('sms_auth_user', JSON.stringify(normalized));
+          } else if (isMounted) {
+            setUser(null);
           }
-        } else if (res.status === 401 || res.status === 403) {
-          // Token expired or invalidated
+        } else {
+          // 401 or other status -> not authenticated
           if (isMounted) {
             setUser(null);
-            localStorage.removeItem('sms_auth_user');
-            localStorage.removeItem('sms_auth_token');
           }
         }
       } catch (err) {
-        // If server is temporarily unreachable, retain local session but do not fabricate data
-        console.warn('Session verification ping error:', err.message);
+        console.warn('Session verification error:', err.message);
+        if (isMounted) setUser(null);
       } finally {
         if (isMounted) setIsLoading(false);
       }
@@ -81,28 +77,27 @@ export function AuthProvider({ children }) {
 
   const login = async (identifier, password) => {
     const trimmedId = (identifier || '').trim();
-    const trimmedPass = (password || '').trim();
+    // Do not trim password to preserve exact user input
+    const rawPass = typeof password === 'string' ? password : '';
 
-    if (!trimmedId || !trimmedPass) {
+    if (!trimmedId || !rawPass) {
       return { success: false, error: 'Please enter both username/email/employee code and password.' };
     }
 
     try {
       const res = await fetch(`${API_ROOT}/api/auth/login`, {
         method: 'POST',
+        credentials: 'include', // Send and receive session cookies
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier: trimmedId, password: trimmedPass }),
+        body: JSON.stringify({ identifier: trimmedId, password: rawPass }),
       });
 
       const data = await res.json().catch(() => ({}));
 
       if (res.ok && data.success && data.user) {
-        const normalized = normalizeStoredUser(data.user);
+        if (data.csrfToken) setCsrfToken(data.csrfToken);
+        const normalized = normalizeUserData(data.user);
         setUser(normalized);
-        if (data.token) {
-          localStorage.setItem('sms_auth_token', data.token);
-        }
-        localStorage.setItem('sms_auth_user', JSON.stringify(normalized));
         return { success: true, redirect: normalized.redirect || `/${normalized.role}` };
       }
 
@@ -122,13 +117,7 @@ export function AuthProvider({ children }) {
   const updateUser = useCallback((updatedFields) => {
     setUser((prev) => {
       if (!prev) return null;
-      const next = { ...prev, ...updatedFields };
-      try {
-        localStorage.setItem('sms_auth_user', JSON.stringify(next));
-      } catch (e) {
-        console.error('Failed to save updated user in storage', e);
-      }
-      return next;
+      return { ...prev, ...updatedFields };
     });
   }, []);
 
@@ -137,8 +126,12 @@ export function AuthProvider({ children }) {
       await authFetch(`${API_ROOT}/api/auth/logout`, { method: 'POST' }).catch(() => {});
     } finally {
       setUser(null);
-      localStorage.removeItem('sms_auth_user');
-      localStorage.removeItem('sms_auth_token');
+      try {
+        localStorage.removeItem('sms_auth_user');
+        localStorage.removeItem('sms_auth_token');
+      } catch (e) {
+        // Ignore
+      }
     }
   };
 

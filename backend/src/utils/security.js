@@ -8,8 +8,8 @@
 
 const crypto = require('crypto');
 
-// Server secret for signing tokens. In production, load from process.env.JWT_SECRET
-const TOKEN_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'ggzv_super_secret_auth_key_2026_local_production_safety';
+// Server secret for signing tokens. In production, load from process.env.JWT_SECRET or SESSION_SECRET
+const TOKEN_SECRET = process.env.JWT_SECRET || process.env.SESSION_SECRET || 'ggzv_super_secret_auth_key_2026_local_safety';
 const TOKEN_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 /**

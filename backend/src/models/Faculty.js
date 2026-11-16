@@ -77,6 +77,14 @@ const facultySchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    sessionVersion: {
+      type: Number,
+      default: 1,
+    },
+    passwordChangedAt: {
+      type: Date,
+      default: Date.now,
+    },
   },
   {
     timestamps: true,

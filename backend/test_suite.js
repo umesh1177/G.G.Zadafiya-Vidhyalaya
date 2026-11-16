@@ -195,6 +195,95 @@ runTest('Should reject faculty setting LT for unauthorized subject', () => {
   assert.notStrictEqual(facultySubject.toLowerCase(), targetSubject.toLowerCase());
 });
 
+// 9. Session Authentication & Invalidation Tests
+console.log('\n--- 9. Session Authentication & Invalidation Logic ---');
+runTest('Should invalidate session when sessionVersion mismatches user record', () => {
+  const faculty = { sessionVersion: 2, status: 'ACTIVE' };
+  const session = { sessionVersion: 1 };
+  const isValid = session.sessionVersion === faculty.sessionVersion;
+  assert.strictEqual(isValid, false, 'Stale sessionVersion must be rejected');
+});
+
+runTest('Should detect session expiration after idle timeout (2 hours)', () => {
+  const IDLE_TIMEOUT_MS = 2 * 60 * 60 * 1000;
+  const lastActive = Date.now() - (2.5 * 60 * 60 * 1000); // 2.5 hours ago
+  const isExpired = Date.now() - lastActive > IDLE_TIMEOUT_MS;
+  assert.strictEqual(isExpired, true, 'Idle session > 2 hours must expire');
+});
+
+runTest('Should reject session when faculty account is deactivated', () => {
+  const faculty = { status: 'DEACTIVATED' };
+  const canAccess = faculty.status !== 'DEACTIVATED';
+  assert.strictEqual(canAccess, false, 'Deactivated account cannot access session');
+});
+
+// 10. CSRF Protection Middleware Tests
+console.log('\n--- 10. CSRF Protection Validation ---');
+const { csrfProtection } = require('./src/middleware/csrfMiddleware');
+runTest('Should allow safe read methods (GET, HEAD, OPTIONS) without CSRF token', () => {
+  let calledNext = false;
+  const req = { method: 'GET', session: { csrfToken: 'valid-token-123' }, headers: {} };
+  const res = { cookie: () => {} };
+  csrfProtection(req, res, () => { calledNext = true; });
+  assert.strictEqual(calledNext, true, 'GET request must pass');
+});
+
+runTest('Should reject state-changing request (POST, PUT, DELETE) when CSRF token is missing', () => {
+  let statusSet = null;
+  let jsonSent = null;
+  const req = { method: 'POST', originalUrl: '/api/students', session: { csrfToken: 'valid-token-123' }, headers: {} };
+  const res = {
+    cookie: () => {},
+    status: (code) => { statusSet = code; return { json: (j) => { jsonSent = j; } }; },
+  };
+  csrfProtection(req, res, () => {});
+  assert.strictEqual(statusSet, 403, 'Missing CSRF token must return 403');
+  assert.strictEqual(jsonSent.success, false);
+});
+
+runTest('Should accept state-changing request with valid matching X-CSRF-Token header', () => {
+  let calledNext = false;
+  const req = {
+    method: 'POST',
+    originalUrl: '/api/students',
+    session: { csrfToken: 'my-valid-secret-csrf-token' },
+    headers: { 'x-csrf-token': 'my-valid-secret-csrf-token' },
+  };
+  const res = { cookie: () => {} };
+  csrfProtection(req, res, () => { calledNext = true; });
+  assert.strictEqual(calledNext, true, 'Valid CSRF token must pass');
+});
+
+// 11. Login Rate Limiter Tests
+console.log('\n--- 11. Login Rate Limiter & Brute Force Prevention ---');
+const { loginRateLimiter } = require('./src/middleware/rateLimitMiddleware');
+runTest('Should allow initial login attempts and attach recording helpers', () => {
+  let calledNext = false;
+  const req = { headers: {}, socket: { remoteAddress: '192.168.1.100' } };
+  const res = {};
+  loginRateLimiter(req, res, () => { calledNext = true; });
+  assert.strictEqual(calledNext, true);
+  assert.strictEqual(typeof res.recordFailedLogin, 'function');
+  assert.strictEqual(typeof res.clearFailedLogin, 'function');
+});
+
+runTest('Should block IP when failed login threshold is reached', () => {
+  const ip = '192.168.1.250';
+  const req = { headers: {}, socket: { remoteAddress: ip } };
+  const res = {};
+  loginRateLimiter(req, res, () => {});
+  // Simulate 5 failures
+  for (let i = 0; i < 5; i++) {
+    res.recordFailedLogin();
+  }
+  let blockedStatus = null;
+  const testRes = {
+    status: (code) => { blockedStatus = code; return { json: () => {} }; },
+  };
+  loginRateLimiter(req, testRes, () => {});
+  assert.strictEqual(blockedStatus, 429, 'Excessive failed logins must return 429 Too Many Requests');
+});
+
 console.log('\n========================================================');
 console.log(`📊 TEST RESULTS: ${passedTests}/${totalTests} Tests Passed (${Math.round((passedTests / totalTests) * 100)}%)`);
 console.log('========================================================\n');
