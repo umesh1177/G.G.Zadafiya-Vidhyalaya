@@ -107,5 +107,51 @@ export const studentApi = {
     const json = await res.json();
     return json.data;
   },
+
+  /**
+   * Get direct URL to download Student Excel Template
+   */
+  getTemplateDownloadUrl() {
+    return `${API_BASE_URL}/template`;
+  },
+
+  /**
+   * Download Student Excel Template
+   */
+  async downloadTemplate() {
+    const res = await fetch(`${API_BASE_URL}/template`);
+    if (!res.ok) {
+      throw new Error('Failed to download student Excel template');
+    }
+    const blob = await res.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    a.download = 'Student_Import_Template.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    }, 200);
+    return true;
+  },
+
+  /**
+   * Bulk upload students from Excel (supports previewOnly flag)
+   */
+  async bulkUpload(payload = {}) {
+    const res = await fetch(`${API_BASE_URL}/bulk-upload`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      throw new Error(json.message || 'Failed to process bulk upload');
+    }
+    return json;
+  },
 };
 

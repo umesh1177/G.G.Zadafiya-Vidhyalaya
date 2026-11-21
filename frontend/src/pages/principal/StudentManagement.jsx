@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useOutletContext } from 'react-router-dom';
+import { FileSpreadsheet } from 'lucide-react';
 import { studentApi } from '../../services/studentApi';
+import BulkStudentUpload from '../../components/principal/BulkStudentUpload';
 
 // Reusable Table Pagination Component
 function getWindowedPages(safePage, totalPages) {
@@ -779,6 +781,30 @@ export default function StudentManagement() {
           >
             + Register Alumni
           </button>
+
+          {/* Bulk Upload (Excel) Tab */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('bulk-upload')}
+            style={{
+              padding: '8px 18px',
+              borderRadius: 8,
+              fontSize: 13.5,
+              fontWeight: 700,
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              background: activeTab === 'bulk-upload' ? '#047857' : '#FFFFFF',
+              color: activeTab === 'bulk-upload' ? '#FFFFFF' : '#047857',
+              border: activeTab === 'bulk-upload' ? '1px solid #047857' : '1px solid #A7F3D0',
+              boxShadow: activeTab === 'bulk-upload' ? '0 2px 8px rgba(4, 120, 87, 0.25)' : 'none',
+            }}
+          >
+            <FileSpreadsheet size={15} />
+            <span>Bulk Upload (Excel)</span>
+          </button>
         </div>
 
         {isLoading && (
@@ -893,7 +919,7 @@ export default function StudentManagement() {
                 </select>
               </div>
 
-              <div style={{ paddingTop: 18 }}>
+              <div style={{ paddingTop: 18, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                 {(searchTerm || filterStandard || filterDivision || filterGroup || sortBy !== 'roll-asc') ? (
                   <button
                     type="button"
@@ -908,6 +934,28 @@ export default function StudentManagement() {
                     {filteredActiveStudents.length} students
                   </span>
                 )}
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('bulk-upload')}
+                  className="btn btn-ghost btn-sm"
+                  style={{
+                    height: 38,
+                    padding: '0 12px',
+                    borderRadius: 8,
+                    color: '#047857',
+                    borderColor: '#A7F3D0',
+                    background: '#ECFDF5',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    fontWeight: 700,
+                  }}
+                  title="Bulk upload students using Excel spreadsheet"
+                >
+                  <FileSpreadsheet size={15} />
+                  <span>Bulk Upload Excel</span>
+                </button>
               </div>
             </div>
           </div>
@@ -1545,6 +1593,17 @@ export default function StudentManagement() {
             </div>
           </form>
         </div>
+      )}
+
+      {/* ── 6. BULK STUDENT UPLOAD TAB ── */}
+      {activeTab === 'bulk-upload' && (
+        <BulkStudentUpload
+          onComplete={() => {
+            loadStudents();
+            setActiveTab('active-students');
+          }}
+          onShowToast={showToast}
+        />
       )}
 
       {/* ── 7. VIEW PROFILE MODAL (WITH DIRECT UPDATE BUTTON!) ── */}

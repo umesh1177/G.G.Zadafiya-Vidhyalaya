@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useOutletContext } from 'react-router-dom';
+import { FileSpreadsheet } from 'lucide-react';
 import { facultyApi } from '../../services/facultyApi';
 import { normalizeBaseSubject } from '../../utils/syllabusUtils';
+import BulkFacultyUpload from '../../components/principal/BulkFacultyUpload';
 
 const SUBJECT_TRACK_OPTIONS = [
   'Physics',
@@ -715,6 +717,30 @@ export default function FacultyManagement() {
           >
             + Register Faculty
           </button>
+
+          {/* Bulk Upload (Excel) Tab */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('bulk-upload')}
+            style={{
+              padding: '8px 18px',
+              borderRadius: 8,
+              fontSize: 13.5,
+              fontWeight: 700,
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              background: activeTab === 'bulk-upload' ? '#047857' : '#FFFFFF',
+              color: activeTab === 'bulk-upload' ? '#FFFFFF' : '#047857',
+              border: activeTab === 'bulk-upload' ? '1px solid #047857' : '1px solid #A7F3D0',
+              boxShadow: activeTab === 'bulk-upload' ? '0 2px 8px rgba(4, 120, 87, 0.25)' : 'none',
+            }}
+          >
+            <FileSpreadsheet size={15} />
+            <span>Bulk Upload (Excel)</span>
+          </button>
         </div>
 
         {isLoading && (
@@ -726,7 +752,7 @@ export default function FacultyManagement() {
       </div>
 
       {/* ── 3. FACULTY TABLE TABS ── */}
-      {activeTab !== 'register-faculty' && (
+      {activeTab !== 'register-faculty' && activeTab !== 'bulk-upload' && (
         <div style={{ marginTop: 0 }}>
           {multiFacultySubjects.length > 0 && (
             <div style={{
@@ -851,13 +877,13 @@ export default function FacultyManagement() {
               </div>
 
               {/* Reset or Count */}
-              <div style={{ paddingTop: 18 }}>
+              <div style={{ paddingTop: 18, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                 {(searchTerm || filterSubject || filterRole || sortBy !== 'name-asc') ? (
                   <button
                     type="button"
                     className="btn btn-ghost btn-sm"
                     onClick={resetFilters}
-                    style={{ height: 38, padding: '0 14px', borderRadius: 8, color: '#EF4444', borderColor: '#FCA5A5', width: '100%' }}
+                    style={{ height: 38, padding: '0 14px', borderRadius: 8, color: '#EF4444', borderColor: '#FCA5A5' }}
                   >
                     Reset Filters
                   </button>
@@ -866,6 +892,28 @@ export default function FacultyManagement() {
                     {filteredFaculty.length} records
                   </span>
                 )}
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('bulk-upload')}
+                  className="btn btn-ghost btn-sm"
+                  style={{
+                    height: 38,
+                    padding: '0 12px',
+                    borderRadius: 8,
+                    color: '#047857',
+                    borderColor: '#A7F3D0',
+                    background: '#ECFDF5',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    fontWeight: 700,
+                  }}
+                  title="Bulk upload faculty members using Excel spreadsheet"
+                >
+                  <FileSpreadsheet size={15} />
+                  <span>Bulk Upload Excel</span>
+                </button>
               </div>
             </div>
           </div>
@@ -1219,6 +1267,17 @@ export default function FacultyManagement() {
             </div>
           </form>
         </div>
+      )}
+
+      {/* ── 4B. BULK FACULTY UPLOAD TAB ── */}
+      {activeTab === 'bulk-upload' && (
+        <BulkFacultyUpload
+          onComplete={() => {
+            loadFaculty();
+            setActiveTab('active-faculty');
+          }}
+          onShowToast={showToast}
+        />
       )}
 
       {/* ── 5. VIEW FACULTY MODAL (WITH UPDATE BUTTON) ── */}

@@ -65,3 +65,30 @@ exports.getStatistics = async (req, res, next) => {
   }
 };
 
+exports.getTemplate = async (req, res, next) => {
+  try {
+    const { buffer, fileName } = facultyService.generateTemplate();
+    if (req.query.format === 'json') {
+      return res.json({
+        success: true,
+        fileName,
+        fileBase64: buffer.toString('base64'),
+      });
+    }
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.send(buffer);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.bulkUpload = async (req, res, next) => {
+  try {
+    const result = await facultyService.bulkUpload(req.body);
+    res.status(200).json({ success: true, ...result });
+  } catch (err) {
+    next(err);
+  }
+};
+
