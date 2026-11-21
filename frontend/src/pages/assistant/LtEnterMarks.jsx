@@ -22,6 +22,17 @@ export default function LtEnterMarks() {
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 10;
 
+  const allowedLtSubjects = user?.permissions?.allowedLtSubjects;
+  const isSubjectPermitted = React.useMemo(() => {
+    if (!user || user.role === 'principal') return true;
+    if (!allowedLtSubjects || !Array.isArray(allowedLtSubjects) || allowedLtSubjects.length === 0) return true;
+    const ltSub = String(ltDetail?.subject || '').trim().toLowerCase();
+    return allowedLtSubjects.some((s) => {
+      const target = s.toLowerCase();
+      return target === 'all' || target === 'all subjects' || ltSub.includes(target) || target.includes(ltSub);
+    });
+  }, [user, allowedLtSubjects, ltDetail]);
+
   const normalizeGrade = (g) => {
     const up = String(g || '').trim().toUpperCase();
     if (up === 'EXCELLENT') return 'Excellent';
@@ -212,6 +223,37 @@ export default function LtEnterMarks() {
         </div>
       )}
 
+      {!isSubjectPermitted && ltDetail && (
+        <div
+          style={{
+            background: '#FEF2F2',
+            border: '1.5px solid #FCA5A5',
+            color: '#991B1B',
+            padding: '12px 16px',
+            borderRadius: 10,
+            marginBottom: 16,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            fontSize: 13.5,
+          }}
+        >
+          <AlertTriangle size={20} color="#DC2626" style={{ flexShrink: 0 }} />
+          <div>
+            <strong>Restricted Access:</strong> You are not authorized to enter LT marks for{' '}
+            <strong>{ltDetail.subject}</strong>.
+            {allowedLtSubjects?.length > 0 && (
+              <span style={{ marginLeft: 6 }}>
+                Your authorized LT subjects: <strong>{allowedLtSubjects.join(', ')}</strong>.
+              </span>
+            )}
+            <span style={{ marginLeft: 6 }}>
+              Please request the Principal to enable this subject in <em>Manage Access</em>.
+            </span>
+          </div>
+        </div>
+      )}
+
       {isLoading ? (
         <div className="card" style={{ padding: 30, textAlign: 'center', color: 'var(--slate)' }}>
           Loading Lecture Test &amp; Student roster...
@@ -367,7 +409,12 @@ export default function LtEnterMarks() {
 
               <div style={{ padding: '14px 20px', borderTop: '1px solid var(--line-soft)', display: 'flex', justifyContent: 'flex-end', gap: 10, background: '#FAFBFD', flexWrap: 'wrap' }}>
                 <Link to="/assistant/lt" className="btn btn-ghost">Cancel</Link>
-                <button type="submit" className="btn btn-primary" disabled={isSaving || marksState.length === 0}>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={isSaving || marksState.length === 0 || !isSubjectPermitted}
+                  title={!isSubjectPermitted ? 'Subject marks entry restricted' : undefined}
+                >
                   {isSaving ? 'Saving...' : 'Save All Student Marks'}
                 </button>
               </div>

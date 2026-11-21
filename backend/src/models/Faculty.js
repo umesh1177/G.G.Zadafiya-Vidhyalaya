@@ -75,6 +75,20 @@ const facultySchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    permissions: {
+      accessibleTabs: {
+        type: [String],
+        default: [],
+      },
+      allowedExamSubjects: {
+        type: [String],
+        default: [],
+      },
+      allowedLtSubjects: {
+        type: [String],
+        default: [],
+      },
+    },
   },
   {
     timestamps: true,

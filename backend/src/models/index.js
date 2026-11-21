@@ -11,6 +11,7 @@ const DisciplineType = require('./DisciplineType');
 const Notice = require('./Notice');
 const CbtExam = require('./CbtExam');
 const CbtAttempt = require('./CbtAttempt');
+const AccessHistory = require('./AccessHistory');
 
 module.exports = {
   User,
@@ -26,4 +27,5 @@ module.exports = {
   Notice,
   CbtExam,
   CbtAttempt,
+  AccessHistory,
 };

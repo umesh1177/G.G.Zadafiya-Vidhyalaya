@@ -1,9 +1,10 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
 export default function ProtectedRoute({ role, children }) {
   const { user } = useAuth();
+  const location = useLocation();
 
   if (!user) {
     return <Navigate to="/login?error=Please+log+in+first" replace />;
@@ -19,10 +20,29 @@ export default function ProtectedRoute({ role, children }) {
     return s;
   };
 
-  if (role && normalizeRole(user.role) !== normalizeRole(role)) {
-    return <Navigate to={user.redirect || `/${normalizeRole(user.role)}`} replace />;
+  const userRole = normalizeRole(user.role);
+  const targetRole = normalizeRole(role);
+
+  // If user role matches route role, allow directly
+  if (!targetRole || userRole === targetRole) {
+    return children;
   }
 
-  return children;
-}
+  // Check if faculty/assistant has explicit granted tab access from Principal
+  const grantedTabs = Array.isArray(user.permissions?.accessibleTabs)
+    ? user.permissions.accessibleTabs
+    : [];
 
+  const currentPath = location.pathname.replace(/\/$/, '');
+  const hasTabPermission = grantedTabs.some((tab) => {
+    if (!tab) return false;
+    const cleanTab = tab.replace(/\/$/, '');
+    return currentPath === cleanTab || currentPath.startsWith(cleanTab + '/');
+  });
+
+  if (hasTabPermission) {
+    return children;
+  }
+
+  return <Navigate to={user.redirect || `/${userRole}`} replace />;
+}

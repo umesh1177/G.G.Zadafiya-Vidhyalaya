@@ -17,6 +17,7 @@ import {
   LayoutGrid,
   X,
   ChevronRight,
+  ShieldCheck,
 } from 'lucide-react';
 
 export default function MobileBottomNav() {
@@ -38,6 +39,14 @@ export default function MobileBottomNav() {
         { to: '/principal/exam-analysis', label: 'Exam Analysis', icon: BarChart2 },
       ],
       moreGrid: [
+        {
+          to: '/principal/manage-access',
+          label: 'Manage Access',
+          subtitle: 'Staff tab & marks entry permissions',
+          icon: ShieldCheck,
+          color: '#10B981',
+          bg: '#ECFDF5',
+        },
         {
           to: '/principal/lt-analysis',
           label: 'LT Analysis',
@@ -229,8 +238,109 @@ export default function MobileBottomNav() {
 
   const currentConfig = roleConfig[role] || roleConfig.faculty;
   const primaryItems = currentConfig.primary || [];
-  const moreGridItems = currentConfig.moreGrid || [];
+  const baseMoreGridItems = currentConfig.moreGrid || [];
   const moreListItems = currentConfig.moreList || [];
+
+  // Append any extra granted tabs from Principal for faculty / assistant
+  const accessibleTabs = Array.isArray(user?.permissions?.accessibleTabs)
+    ? user.permissions.accessibleTabs
+    : [];
+
+  const extraMobileItems = [];
+  if (role !== 'principal' && accessibleTabs.length > 0) {
+    if (accessibleTabs.includes('/principal/manage-access')) {
+      extraMobileItems.push({
+        to: '/principal/manage-access',
+        label: 'Manage Access',
+        subtitle: 'Staff tab & marks entry permissions',
+        icon: ShieldCheck,
+        color: '#10B981',
+        bg: '#ECFDF5',
+      });
+    }
+    if (accessibleTabs.includes('/principal/student-management')) {
+      extraMobileItems.push({
+        to: '/principal/student-management',
+        label: 'Students',
+        subtitle: 'Student directory and records',
+        icon: GraduationCap,
+        color: '#0284C7',
+        bg: '#E0F2FE',
+      });
+    }
+    if (accessibleTabs.includes('/principal/faculty-management')) {
+      extraMobileItems.push({
+        to: '/principal/faculty-management',
+        label: 'Faculty',
+        subtitle: 'Staff directory and credentials',
+        icon: Users,
+        color: '#7C3AED',
+        bg: '#EDE9FE',
+      });
+    }
+    if (accessibleTabs.includes('/principal/exam-analysis')) {
+      extraMobileItems.push({
+        to: '/principal/exam-analysis',
+        label: 'Exam Analysis',
+        subtitle: 'Institutional exam charts and metrics',
+        icon: BarChart2,
+        color: '#059669',
+        bg: '#D1FAE5',
+      });
+    }
+    if (accessibleTabs.includes('/principal/lt-analysis')) {
+      extraMobileItems.push({
+        to: '/principal/lt-analysis',
+        label: 'LT Analysis',
+        subtitle: 'Lecture test analytics & reports',
+        icon: Clock,
+        color: '#0284C7',
+        bg: '#E0F2FE',
+      });
+    }
+    if (accessibleTabs.includes('/principal/syllabus-tracking')) {
+      extraMobileItems.push({
+        to: '/principal/syllabus-tracking',
+        label: 'Syllabus',
+        subtitle: 'Curriculum & topic progress',
+        icon: BookOpen,
+        color: '#D97706',
+        bg: '#FEF3C7',
+      });
+    }
+    if (accessibleTabs.includes('/principal/progress-report')) {
+      extraMobileItems.push({
+        to: '/principal/progress-report',
+        label: 'Progress Report',
+        subtitle: 'Student academic growth dossiers',
+        icon: TrendingUp,
+        color: '#7C3AED',
+        bg: '#EDE9FE',
+      });
+    }
+    if (accessibleTabs.includes('/assistant/cbt-exam') && role === 'faculty') {
+      extraMobileItems.push({
+        to: '/assistant/cbt-exam',
+        label: 'CBT Exam',
+        subtitle: 'Online tests and PDF extraction',
+        icon: Award,
+        color: '#10B981',
+        bg: '#ECFDF5',
+      });
+    }
+    if (accessibleTabs.includes('/faculty/set-lt') && role === 'assistant') {
+      extraMobileItems.push({
+        to: '/faculty/set-lt',
+        label: 'Set LT',
+        subtitle: 'Create & set daily lecture tests',
+        icon: Clock,
+        color: '#0284C7',
+        bg: '#E0F2FE',
+      });
+    }
+  }
+
+  const moreGridItems = [...baseMoreGridItems, ...extraMobileItems];
   const allMoreItems = [...moreGridItems, ...moreListItems];
 
   // Auto-close sheet when route changes

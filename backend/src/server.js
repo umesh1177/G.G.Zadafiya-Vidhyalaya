@@ -16,6 +16,7 @@ const examRoutes = require('./routes/examRoutes');
 const disciplineRoutes = require('./routes/disciplineRoutes');
 const noticeRoutes = require('./routes/noticeRoutes');
 const cbtRoutes = require('./routes/cbtRoutes');
+const accessRoutes = require('./routes/accessRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -53,6 +54,7 @@ app.use('/api/exams', examRoutes);
 app.use('/api/discipline', disciplineRoutes);
 app.use('/api/notices', noticeRoutes);
 app.use('/api/cbt', cbtRoutes);
+app.use('/api/access', accessRoutes);
 
 // Error Handling Middleware
 app.use((err, req, res, next) => {

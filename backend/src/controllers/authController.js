@@ -1,6 +1,7 @@
 const Faculty = require('../models/Faculty');
 const Student = require('../models/Student');
 const SystemSetting = require('../models/SystemSetting');
+const accessService = require('../services/accessService');
 
 const SCHOOL_NAME = 'G.G. Zadafiya Vidhyalaya';
 
@@ -84,6 +85,7 @@ class AuthController {
               school: SCHOOL_NAME,
               initials: (faculty.fullName || 'FC').split(' ').map((n) => n[0]).slice(0, 2).join(''),
               redirect,
+              permissions: accessService.resolveEffectivePermissions(faculty),
             },
           });
         }
@@ -176,6 +178,10 @@ class AuthController {
       }
 
       if (lower === 'faculty' && pass === 'faculty123') {
+        const demoUser = {
+          role: 'Subject Faculty',
+          subject: 'Physics',
+        };
         return res.json({
           success: true,
           user: {
@@ -193,6 +199,7 @@ class AuthController {
             school: SCHOOL_NAME,
             initials: 'PU',
             redirect: '/faculty',
+            permissions: accessService.resolveEffectivePermissions(demoUser),
           },
         });
       }
@@ -286,6 +293,10 @@ class AuthController {
       }
 
       if (lower === 'assistant' && pass === 'asst123') {
+        const demoAsst = {
+          role: 'Assistant Faculty',
+          subject: 'Lab — Physics/Chemistry',
+        };
         return res.json({
           success: true,
           user: {
@@ -303,6 +314,7 @@ class AuthController {
             school: SCHOOL_NAME,
             initials: 'RM',
             redirect: '/assistant',
+            permissions: accessService.resolveEffectivePermissions(demoAsst),
           },
         });
       }

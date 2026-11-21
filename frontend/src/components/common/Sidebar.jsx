@@ -1,7 +1,31 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { X, LogOut } from 'lucide-react';
+import { X, LogOut, ShieldCheck } from 'lucide-react';
+
+const EXTRA_TAB_LOOKUP = [
+  { to: '/principal/student-management', label: 'Student Management' },
+  { to: '/principal/faculty-management', label: 'Faculty Management' },
+  { to: '/principal/manage-access', label: 'Manage Access' },
+  { to: '/principal/exam-analysis', label: 'Exam Analysis' },
+  { to: '/principal/lt-analysis', label: 'LT Analysis' },
+  { to: '/principal/syllabus-tracking', label: 'Syllabus Tracking' },
+  { to: '/principal/progress-report', label: 'Progress Report' },
+  { to: '/principal/discipline-remark', label: 'Discipline Remark' },
+  { to: '/principal/notice-message', label: 'Notice Message' },
+  { to: '/assistant/lt', label: 'LT & Timer' },
+  { to: '/assistant/cbt-exam', label: 'CBT Exam' },
+  { to: '/assistant/exam', label: 'Exam Unit' },
+  { to: '/assistant/result', label: 'Result Generation' },
+  { to: '/assistant/hall-ticket', label: 'Hall Ticket' },
+  { to: '/assistant/notice', label: 'Notice Message' },
+  { to: '/assistant/discipline-remark', label: 'Discipline Remark' },
+  { to: '/faculty/set-lt', label: 'Set LT' },
+  { to: '/faculty/exam-unit', label: 'Exam Unit' },
+  { to: '/faculty/syllabus', label: 'Syllabus' },
+  { to: '/faculty/reports', label: 'Reports' },
+  { to: '/faculty/notice', label: 'Notice Message' },
+];
 
 export default function Sidebar({ isOpen, onClose }) {
   const { user, logout } = useAuth();
@@ -16,6 +40,18 @@ export default function Sidebar({ isOpen, onClose }) {
   };
 
   const role = user?.role || 'faculty';
+
+  const accessibleTabs = Array.isArray(user?.permissions?.accessibleTabs)
+    ? user.permissions.accessibleTabs
+    : [];
+
+  const extraGrantedTabs = EXTRA_TAB_LOOKUP.filter((item) => {
+    if (!accessibleTabs.includes(item.to)) return false;
+    if (role === 'faculty' && item.to.startsWith('/faculty')) return false;
+    if (role === 'assistant' && item.to.startsWith('/assistant')) return false;
+    if (role === 'principal' && item.to.startsWith('/principal')) return false;
+    return true;
+  });
 
   const workspaceTitle = {
     principal: 'Principal Workspace',
@@ -119,6 +155,31 @@ export default function Sidebar({ isOpen, onClose }) {
                 </svg>
                 Profile
               </NavLink>
+
+              {/* Extra Granted Tabs by Principal */}
+              {extraGrantedTabs.length > 0 && (
+                <>
+                  <div className="sidebar__group-label" style={{ color: '#059669', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <ShieldCheck size={14} />
+                    <span>Granted Access</span>
+                  </div>
+                  {extraGrantedTabs.map((item) => (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      className={({ isActive }) => `navlink ${isActive ? 'is-active' : ''}`}
+                      onClick={onClose}
+                      style={{ borderLeft: '3px solid #10B981', paddingLeft: '11px' }}
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
+                        <path d="m9 12 2 2 4-4" />
+                      </svg>
+                      {item.label}
+                    </NavLink>
+                  ))}
+                </>
+              )}
             </>
           )}
 
@@ -152,6 +213,14 @@ export default function Sidebar({ isOpen, onClose }) {
                   <path d="M17.5 4.5 19 6l2-2" />
                 </svg>
                 Faculty Management
+              </NavLink>
+
+              <NavLink to="/principal/manage-access" className={({ isActive }) => `navlink ${isActive ? 'is-active' : ''}`} onClick={onClose}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
+                  <path d="m9 12 2 2 4-4" />
+                </svg>
+                Manage Access
               </NavLink>
 
               <NavLink to="/principal/exam-analysis" className={({ isActive }) => `navlink ${isActive ? 'is-active' : ''}`} onClick={onClose}>
@@ -298,6 +367,31 @@ export default function Sidebar({ isOpen, onClose }) {
                 </svg>
                 Profile
               </NavLink>
+
+              {/* Extra Granted Tabs by Principal */}
+              {extraGrantedTabs.length > 0 && (
+                <>
+                  <div className="sidebar__group-label" style={{ color: '#059669', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <ShieldCheck size={14} />
+                    <span>Granted Access</span>
+                  </div>
+                  {extraGrantedTabs.map((item) => (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      className={({ isActive }) => `navlink ${isActive ? 'is-active' : ''}`}
+                      onClick={onClose}
+                      style={{ borderLeft: '3px solid #10B981', paddingLeft: '11px' }}
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
+                        <path d="m9 12 2 2 4-4" />
+                      </svg>
+                      {item.label}
+                    </NavLink>
+                  ))}
+                </>
+              )}
             </>
           )}
 

@@ -11,6 +11,7 @@ import Login from './pages/Login'
 import PrincipalHome from './pages/principal/Home'
 import StudentManagement from './pages/principal/StudentManagement'
 import FacultyManagement from './pages/principal/FacultyManagement'
+import ManageAccess from './pages/principal/ManageAccess'
 import ExamAnalysis from './pages/principal/ExamAnalysis'
 import ExamAnalysisDetail from './pages/principal/ExamAnalysisDetail'
 import LtAnalysis from './pages/principal/LtAnalysis'
@@ -80,6 +81,7 @@ export default function App() {
               <Route path="student-management" element={<StudentManagement />} />
               <Route path="faculty-management" element={<FacultyManagement />} />
               <Route path="faculty-management/new" element={<FacultyManagement defaultTab="add-faculty" />} />
+              <Route path="manage-access" element={<ManageAccess />} />
               <Route path="exam-analysis" element={<ExamAnalysis />} />
               <Route path="exam-analysis/:id" element={<ExamAnalysisDetail />} />
               <Route path="cbt-exam/analysis/:id" element={<CbtAnalysisPage userRole="principal" />} />

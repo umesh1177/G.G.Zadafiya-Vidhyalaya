@@ -39,6 +39,17 @@ export default function ExamEnterMarks() {
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 10;
 
+  const allowedExamSubjects = user?.permissions?.allowedExamSubjects;
+  const isExamPermitted = React.useMemo(() => {
+    if (!user || user.role === 'principal') return true;
+    if (!allowedExamSubjects || !Array.isArray(allowedExamSubjects) || allowedExamSubjects.length === 0) return true;
+    const examSub = String(exam?.subject || '').trim().toLowerCase();
+    return allowedExamSubjects.some((s) => {
+      const target = s.toLowerCase();
+      return target === 'all' || target === 'all subjects' || examSub.includes(target) || target.includes(examSub);
+    });
+  }, [user, allowedExamSubjects, exam]);
+
   const loadMarksSheet = useCallback(
     async (groupToLoad, forceAllStd = includeAllStd) => {
       setIsLoading(true);
@@ -222,6 +233,37 @@ export default function ExamEnterMarks() {
 
   return (
     <>
+      {!isExamPermitted && exam && (
+        <div
+          style={{
+            background: '#FEF2F2',
+            border: '1.5px solid #FCA5A5',
+            color: '#991B1B',
+            padding: '12px 16px',
+            borderRadius: 10,
+            marginBottom: 16,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            fontSize: 13.5,
+          }}
+        >
+          <div style={{ fontWeight: 800, fontSize: 18 }}>⚠️</div>
+          <div>
+            <strong>Restricted Access:</strong> You are not authorized to enter exam marks for{' '}
+            <strong>{exam.subject}</strong>.
+            {allowedExamSubjects?.length > 0 && (
+              <span style={{ marginLeft: 6 }}>
+                Your authorized exam subjects: <strong>{allowedExamSubjects.join(', ')}</strong>.
+              </span>
+            )}
+            <span style={{ marginLeft: 6 }}>
+              Please request the Principal to enable this subject in <em>Manage Access</em>.
+            </span>
+          </div>
+        </div>
+      )}
+
       <div
         style={{
           display: 'flex',
@@ -727,7 +769,12 @@ export default function ExamEnterMarks() {
             />
 
             <div style={{ padding: '16px 20px', borderTop: '1px solid var(--line-soft)' }}>
-              <button type="submit" className="btn btn-primary" disabled={isSaving}>
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={isSaving || !isExamPermitted}
+                title={!isExamPermitted ? 'Subject marks entry restricted' : undefined}
+              >
                 {isSaving ? 'Submitting Marks...' : 'Submit Marks'}
               </button>
             </div>
