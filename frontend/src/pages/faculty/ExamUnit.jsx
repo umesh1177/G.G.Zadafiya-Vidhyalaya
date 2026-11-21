@@ -11,6 +11,7 @@ import {
   normalizeBaseSubject,
 } from '../../utils/syllabusUtils';
 import PaginationBar from '../../components/common/PaginationBar';
+import { FileText, Upload } from 'lucide-react';
 
 const SUBJECT_OPTIONS = [
   'Physics',
@@ -1553,7 +1554,7 @@ export default function ExamUnit() {
             </div>
           </div>
 
-          <div className="table-wrap" style={{ border: 'none', borderRadius: 0 }}>
+          <div className="table-wrap desktop-only" style={{ border: 'none', borderRadius: 0 }}>
             <table>
               <thead>
                 <tr>
@@ -1670,6 +1671,100 @@ export default function ExamUnit() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Cards View */}
+          <div className="mobile-only" style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 12 }}>
+            {isLoadingHistory ? (
+              <div style={{ textAlign: 'center', padding: 24, color: 'var(--slate)' }}>Loading exams...</div>
+            ) : filteredHistory.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 24, color: 'var(--slate)' }}>No submitted exams found.</div>
+            ) : (
+              paginatedHistory.map((ex) => {
+                const exId = ex.id || ex._id;
+                const isPdfUploaded = ex.questionPaperStatus === 'UPLOADED';
+                const statusBadge =
+                  ex.status === 'MARKS_ENTERED' || ex.status === 'RESULT_PUBLISHED'
+                    ? { cls: 'chip-success', label: 'Completed' }
+                    : ex.status === 'CONDUCTED'
+                    ? { cls: 'chip-warning', label: 'Pending Marks' }
+                    : { cls: 'chip-neutral', label: 'Upcoming' };
+
+                return (
+                  <div
+                    key={exId}
+                    style={{
+                      background: '#FFFFFF',
+                      borderRadius: 10,
+                      border: '1px solid #E2E8F0',
+                      padding: 14,
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 15, fontWeight: 800, color: '#123B5D' }}>#{ex.examNo}</span>
+                        <span className="chip chip-neutral" style={{ fontSize: 11 }}>{formatExamTypeLabel(ex.examType)}</span>
+                      </div>
+                      <span className={`chip ${statusBadge.cls}`} style={{ fontSize: 11 }}>{statusBadge.label}</span>
+                    </div>
+
+                    <div style={{ fontSize: 12.5, color: '#334155', marginBottom: 8, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      <div><strong>Date:</strong> {formatExamDate(ex.examDate)} • {ex.examTime || '10:00 AM'} ({ex.durationMinutes || 60}m)</div>
+                      <div><strong>Class:</strong> Std {ex.standard === 'STD_11' ? '11' : '12'} - Div {ex.division || 'ALL'} • <strong>Subject:</strong> {ex.subject}</div>
+                      {ex.unitSummary && (
+                        <div style={{ fontSize: 12, color: '#64748B', marginTop: 2 }}>
+                          <strong>Units:</strong> {ex.unitSummary}
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, paddingTop: 10, borderTop: '1px solid #F1F5F9' }}>
+                      {isPdfUploaded ? (
+                        <>
+                          <a
+                            href={getQuestionPaperUrl(exId)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="btn btn-primary btn-sm"
+                            style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
+                          >
+                            <FileText size={13} />
+                            <span>View PDF</span>
+                          </a>
+                          <button
+                            type="button"
+                            className="btn btn-ghost btn-sm"
+                            onClick={() => triggerRowPdfUpload(exId)}
+                          >
+                            Replace PDF
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          className="btn btn-primary btn-sm"
+                          style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
+                          onClick={() => triggerRowPdfUpload(exId)}
+                        >
+                          <Upload size={13} />
+                          <span>Upload PDF</span>
+                        </button>
+                      )}
+                      {ex.status === 'SCHEDULED' && (
+                        <button
+                          type="button"
+                          className="btn btn-danger-ghost btn-sm"
+                          onClick={() => handleDeleteExam(ex)}
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
 
           <PaginationBar

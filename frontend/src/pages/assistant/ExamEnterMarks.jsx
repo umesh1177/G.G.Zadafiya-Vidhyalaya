@@ -3,6 +3,7 @@ import { Link, useParams, useNavigate, useOutletContext } from 'react-router-dom
 import { useAuth } from '../../context/AuthContext';
 import { examApi, getQuestionPaperUrl } from '../../services/examApi';
 import PaginationBar from '../../components/common/PaginationBar';
+import { X, CheckCircle2 } from 'lucide-react';
 import { triggerBrowserExcelDownload } from '../../utils/excelDownloadHelper';
 
 function formatExamTypeLabel(t) {
@@ -403,7 +404,7 @@ export default function ExamEnterMarks() {
           </div>
         ) : (
           <form onSubmit={handleSubmitMarks}>
-            <div className="table-wrap" style={{ border: 'none', borderRadius: 0 }}>
+            <div className="table-wrap desktop-only" style={{ border: 'none', borderRadius: 0 }}>
               <table>
                 <thead>
                   <tr>
@@ -596,6 +597,125 @@ export default function ExamEnterMarks() {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Cards View */}
+            <div className="mobile-only" style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 12 }}>
+              {paginatedRows.map((m) => (
+                <div
+                  key={m.studentId}
+                  style={{
+                    background: m.ab ? '#FFF5F5' : '#FFFFFF',
+                    borderRadius: 10,
+                    border: `1.5px solid ${m.ab ? '#FCA5A5' : '#E2E8F0'}`,
+                    padding: 14,
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 13, fontWeight: 800, color: '#123B5D', background: '#E8F1F8', padding: '2px 8px', borderRadius: 4 }}>
+                        Roll #{m.rollNo}
+                      </span>
+                      <strong style={{ fontSize: 14, color: '#0F172A' }}>{m.name}</strong>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => toggleAb(m.studentId)}
+                      style={{
+                        padding: '4px 12px',
+                        fontSize: 12,
+                        fontWeight: 700,
+                        borderRadius: 6,
+                        border: `1.5px solid ${m.ab ? 'var(--danger)' : '#CBD5E1'}`,
+                        background: m.ab ? 'var(--danger)' : '#FFFFFF',
+                        color: m.ab ? '#FFFFFF' : '#475569',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      {m.ab ? 'Marked Absent' : 'Mark AB'}
+                    </button>
+                  </div>
+
+                  <div style={{ fontSize: 11.5, color: '#64748B', marginBottom: 10 }}>
+                    Div {m.division} • {m.streamGroup}
+                  </div>
+
+                  {groupMeta.isMulti ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#475569', marginBottom: 4 }}>
+                          Physics (0–{maxPerSub})
+                        </label>
+                        <input
+                          type="number"
+                          className="field-input w-full"
+                          style={{ textAlign: 'center', height: 38, fontSize: 14, background: m.ab ? '#F1F5F9' : '#FFFFFF' }}
+                          min={0}
+                          max={maxPerSub}
+                          value={m.ab ? '' : m.phy}
+                          disabled={m.ab}
+                          onChange={(e) => updateRowField(m.studentId, 'phy', e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#475569', marginBottom: 4 }}>
+                          Chemistry (0–{maxPerSub})
+                        </label>
+                        <input
+                          type="number"
+                          className="field-input w-full"
+                          style={{ textAlign: 'center', height: 38, fontSize: 14, background: m.ab ? '#F1F5F9' : '#FFFFFF' }}
+                          min={0}
+                          max={maxPerSub}
+                          value={m.ab ? '' : m.chem}
+                          disabled={m.ab}
+                          onChange={(e) => updateRowField(m.studentId, 'chem', e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#475569', marginBottom: 4 }}>
+                          {groupMeta.thirdLabel} (0–{maxPerSub})
+                        </label>
+                        <input
+                          type="number"
+                          className="field-input w-full"
+                          style={{ textAlign: 'center', height: 38, fontSize: 14, background: m.ab ? '#F1F5F9' : '#FFFFFF' }}
+                          min={0}
+                          max={maxPerSub}
+                          value={m.ab ? '' : m.third}
+                          disabled={m.ab}
+                          onChange={(e) => updateRowField(m.studentId, 'third', e.target.value)}
+                        />
+                      </div>
+                      <div style={{ gridColumn: 'span 3', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: '#123B5D' }}>Total Obtained:</span>
+                        <span style={{ fontSize: 14, fontWeight: 800, color: '#16A34A' }}>
+                          {m.ab ? '0 (AB)' : m.totalObtained ?? 0} / {maxPerSub * 3}
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#475569', marginBottom: 4 }}>
+                          Marks (0–{maxPerSub})
+                        </label>
+                        <input
+                          type="number"
+                          className="field-input w-full"
+                          style={{ textAlign: 'center', height: 40, fontSize: 15, background: m.ab ? '#F1F5F9' : '#FFFFFF' }}
+                          min={0}
+                          max={maxPerSub}
+                          value={m.ab ? '' : m.single}
+                          disabled={m.ab}
+                          onChange={(e) => updateRowField(m.studentId, 'single', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
 
             <PaginationBar

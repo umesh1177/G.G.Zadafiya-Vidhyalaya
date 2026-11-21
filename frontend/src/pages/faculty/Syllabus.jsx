@@ -548,7 +548,7 @@ export default function FacultySyllabus() {
   );
 
   return (
-    <div style={{ maxWidth: 980, margin: '0 auto', paddingBottom: 40 }}>
+    <div className="module-container" style={{ width: '100%', paddingBottom: 40 }}>
       {/* ── Top Feedback Banners ── */}
       {successMsg && (
         <div className="banner banner-success" style={{ marginBottom: 16, justifyContent: 'space-between', alignItems: 'center' }}>

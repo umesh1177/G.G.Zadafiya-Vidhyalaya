@@ -6,6 +6,7 @@ import { ltApi } from '../../services/ltApi';
 import PaginationBar from '../../components/common/PaginationBar';
 import ViewFullLtModal from '../../components/common/ViewFullLtModal';
 import VoiceInputControl from '../../components/common/VoiceInputControl';
+import { Eye, Pencil } from 'lucide-react';
 
 export default function SetLt() {
   const { setHeader } = useOutletContext();
@@ -656,7 +657,8 @@ export default function SetLt() {
             <div className="card__desc">Synchronized directly with Assistant Faculty LT Evaluation Portal</div>
           </div>
 
-          <div className="table-wrap" style={{ margin: 0 }}>
+          {/* Desktop Table View */}
+          <div className="table-wrap desktop-only" style={{ margin: 0 }}>
             <table>
               <thead>
                 <tr>
@@ -744,6 +746,142 @@ export default function SetLt() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Card View */}
+          <div
+            className="mobile-only"
+            style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 12 }}
+          >
+            {isLoadingHistory ? (
+              <div style={{ textAlign: 'center', padding: 24, color: 'var(--slate)' }}>Loading LT history...</div>
+            ) : ltHistory.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 28, color: 'var(--slate)' }}>No Lecture Tests scheduled yet.</div>
+            ) : (
+              paginatedHistory.map((lt) => (
+                <div
+                  key={lt.id || lt._id}
+                  style={{
+                    background: '#FFFFFF',
+                    borderRadius: 10,
+                    border: '1px solid #E2E8F0',
+                    padding: 14,
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: 10,
+                    }}
+                  >
+                    <span style={{ fontSize: 15, fontWeight: 800, color: '#123B5D' }}>
+                      LT #{lt.ltNo}
+                    </span>
+                    <span
+                      className={`chip ${
+                        lt.status === 'EVALUATED'
+                          ? 'chip-success'
+                          : lt.status === 'CONDUCTED'
+                          ? 'chip-neutral'
+                          : 'chip-warning'
+                      }`}
+                      style={{ fontSize: 11 }}
+                    >
+                      {lt.status === 'EVALUATED'
+                        ? 'Evaluated'
+                        : lt.status === 'CONDUCTED'
+                        ? 'Pending Marks'
+                        : 'Scheduled'}
+                    </span>
+                  </div>
+
+                  <div style={{ fontSize: 12.5, color: '#334155', marginBottom: 8 }}>
+                    <div>
+                      <strong>Date:</strong>{' '}
+                      {lt.examDate
+                        ? new Date(lt.examDate).toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                          })
+                        : '—'}
+                    </div>
+                    <div>
+                      <strong>Class:</strong>{' '}
+                      {lt.standard === 'STD_11' ? 'Std 11' : 'Std 12'}
+                      {lt.division && lt.division !== 'ALL' ? ` (Div ${lt.division})` : ''}
+                    </div>
+                    <div>
+                      <strong>Subject:</strong> {lt.subject}
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      background: '#F8FAFC',
+                      borderRadius: 6,
+                      padding: 8,
+                      fontSize: 12,
+                      marginBottom: 12,
+                    }}
+                  >
+                    <strong style={{ color: '#123B5D', display: 'block', marginBottom: 4 }}>
+                      Questions ({(lt.questions || []).length}):
+                    </strong>
+                    {(lt.questions || []).slice(0, 2).map((q, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        Q{q.questionNo || idx + 1}: {q.questionText}
+                      </div>
+                    ))}
+                    {(lt.questions || []).length > 2 && (
+                      <div style={{ color: '#64748B', fontStyle: 'italic', marginTop: 2 }}>
+                        +{(lt.questions || []).length - 2} more question(s)...
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-sm"
+                      style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
+                      onClick={() => setViewingLt(lt)}
+                    >
+                      <Eye size={13} />
+                      <span>View</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-ghost btn-sm"
+                      style={{ flex: 1, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
+                      onClick={() => handleStartEditLt(lt)}
+                    >
+                      <Pencil size={13} />
+                      <span>Edit</span>
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn-danger-ghost btn-sm"
+                      style={{ padding: '4px 10px' }}
+                      onClick={() => handleDeleteLt(lt.id || lt._id)}
+                      title="Delete"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
 
           <PaginationBar
