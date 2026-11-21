@@ -1242,6 +1242,110 @@ body,
   }
 }
 
+/* Mobile "More" Drawer & Bottom Sheet (matching modern civic/app UI) */
+@keyframes slideUpSheet {
+  from {
+    transform: translateY(100%);
+    opacity: 0.7;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeInOverlay {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.mobile-more-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 9998;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: fadeInOverlay 0.2s ease-out;
+}
+
+.mobile-more-sheet {
+  width: 100%;
+  max-width: 520px;
+  background: #FFFFFF;
+  border-radius: 24px 24px 0 0;
+  padding: 12px 18px calc(24px + env(safe-area-inset-bottom, 0));
+  max-height: 84dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.28);
+  animation: slideUpSheet 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.mobile-more-card {
+  border: 1.5px solid #E2E8F0;
+  border-radius: 16px;
+  padding: 14px 12px;
+  background: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-more-card:hover,
+.mobile-more-card:active {
+  background: #F8FAFC;
+  border-color: #CBD5E1;
+  transform: translateY(-1px);
+}
+
+.mobile-more-card.is-active {
+  border-color: #123B5D;
+  background: #F0F7FC;
+  box-shadow: 0 2px 8px rgba(18, 59, 93, 0.12);
+}
+
+.mobile-more-list-item {
+  border: 1.5px solid #E2E8F0;
+  border-radius: 16px;
+  padding: 12px 14px;
+  background: #FFFFFF;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-more-list-item:hover,
+.mobile-more-list-item:active {
+  background: #F8FAFC;
+  border-color: #CBD5E1;
+}
+
+.mobile-more-list-item.is-active {
+  border-color: #123B5D;
+  background: #F0F7FC;
+  box-shadow: 0 2px 8px rgba(18, 59, 93, 0.12);
+}
+
 @media (max-width: 640px) {
   .kpi-grid-5,
   .kpi-grid-4,

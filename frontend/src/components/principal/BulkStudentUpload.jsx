@@ -133,37 +133,30 @@ export default function BulkStudentUpload({ onComplete, onShowToast }) {
           background: 'linear-gradient(135deg, #0F2B48 0%, #123B5D 100%)',
           color: '#FFFFFF',
           borderRadius: 14,
-          padding: '20px 24px',
+          padding: '14px 22px',
           boxShadow: '0 4px 16px rgba(18, 59, 93, 0.12)',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: 'wrap',
-          gap: 16,
+          gap: 14,
         }}
       >
-        <div style={{ maxWidth: 680 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-            <span
-              style={{
-                background: 'rgba(255, 255, 255, 0.15)',
-                padding: '6px 10px',
-                borderRadius: 8,
-                display: 'inline-flex',
-                alignItems: 'center',
-              }}
-            >
-              <FileSpreadsheet size={20} color="#6EE7B7" />
-            </span>
-            <h2 style={{ margin: 0, fontSize: 19, fontWeight: 800, color: '#FFFFFF' }}>
-              Bulk Student Upload via Excel
-            </h2>
-          </div>
-          <p style={{ margin: 0, fontSize: 13, lineHeight: 1.5, color: '#CBD5E1' }}>
-            Upload multiple student records simultaneously using an Excel spreadsheet (.xlsx, .xls, .csv).
-            Download the pre-formatted template with exact column names below so students are mapped accurately
-            without any errors.
-          </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span
+            style={{
+              background: 'rgba(255, 255, 255, 0.15)',
+              padding: '6px 10px',
+              borderRadius: 8,
+              display: 'inline-flex',
+              alignItems: 'center',
+            }}
+          >
+            <FileSpreadsheet size={20} color="#6EE7B7" />
+          </span>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#FFFFFF' }}>
+            Bulk Student Upload via Excel
+          </h2>
         </div>
 
         {/* Quick Download Button in Banner */}
@@ -178,7 +171,7 @@ export default function BulkStudentUpload({ onComplete, onShowToast }) {
             color: '#FFFFFF',
             fontWeight: 700,
             fontSize: 13.5,
-            padding: '10px 18px',
+            padding: '9px 18px',
             borderRadius: 8,
             display: 'inline-flex',
             alignItems: 'center',
