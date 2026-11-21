@@ -335,6 +335,77 @@ export function AuthProvider({ children }) {
     };
   }, [user?.role]);
 
+  // Real-time synchronization of staff permissions (tabs & marks access)
+  useEffect(() => {
+    if (!user || user.role === 'student' || user.role === 'principal') return;
+
+    let isMounted = true;
+    const syncPermissions = async () => {
+      try {
+        const empCode = user.empCode || user.username || '';
+        const email = user.email || '';
+        const id = user.id || user._id || '';
+
+        // Check local override first for instant zero-lag update
+        const localOverride = localStorage.getItem(`sms_perm_sync_${empCode}`);
+        if (localOverride) {
+          try {
+            const parsed = JSON.parse(localOverride);
+            if (parsed && Array.isArray(parsed.accessibleTabs)) {
+              const currentTabs = JSON.stringify(user.permissions?.accessibleTabs || []);
+              if (currentTabs !== JSON.stringify(parsed.accessibleTabs)) {
+                updateUser({ permissions: parsed });
+              }
+            }
+          } catch (e) {}
+        }
+
+        const res = await fetch(
+          `${API_ROOT}/api/access/my-permissions?empCode=${encodeURIComponent(empCode)}&email=${encodeURIComponent(email)}&id=${encodeURIComponent(id)}`,
+          { cache: 'no-store' }
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        if (isMounted && data && data.success && data.permissions) {
+          const newPerms = data.permissions;
+          const currentPerms = user.permissions || {};
+
+          const isTabsDiff = JSON.stringify(newPerms.accessibleTabs || []) !== JSON.stringify(currentPerms.accessibleTabs || []);
+          const isExamDiff = JSON.stringify(newPerms.allowedExamSubjects || []) !== JSON.stringify(currentPerms.allowedExamSubjects || []);
+          const isLtDiff = JSON.stringify(newPerms.allowedLtSubjects || []) !== JSON.stringify(currentPerms.allowedLtSubjects || []);
+
+          if (isTabsDiff || isExamDiff || isLtDiff) {
+            updateUser({ permissions: newPerms });
+          }
+        }
+      } catch (err) {
+        // silent retry on transient connection
+      }
+    };
+
+    syncPermissions();
+    const interval = setInterval(syncPermissions, 3000);
+
+    const handleFocus = () => syncPermissions();
+    const handleStorage = (e) => {
+      if (e.key === 'sms_permissions_last_updated' || e.key?.startsWith('sms_perm_sync_')) {
+        syncPermissions();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('storage', handleStorage);
+    document.addEventListener('visibilitychange', handleFocus);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('storage', handleStorage);
+      document.removeEventListener('visibilitychange', handleFocus);
+    };
+  }, [user?.empCode, user?.role]);
+
   return (
     <AuthContext.Provider value={{ user, login, logout, updateUser, credentialsList: CREDENTIALS }}>
       {children}

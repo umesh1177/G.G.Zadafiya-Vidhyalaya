@@ -3,6 +3,7 @@ const router = express.Router();
 const accessController = require('../controllers/accessController');
 
 router.get('/config', accessController.getConfig);
+router.get('/my-permissions', accessController.getMyPermissions);
 router.get('/faculties', accessController.getFaculties);
 router.get('/faculty/:id', accessController.getFacultyAccess);
 router.put('/faculty/:id', accessController.updateFacultyAccess);

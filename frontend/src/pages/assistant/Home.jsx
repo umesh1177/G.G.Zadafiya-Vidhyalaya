@@ -8,6 +8,7 @@ import { examApi } from '../../services/examApi';
 import { API_ROOT } from '../../services/apiConfig';
 import PaginationBar from '../../components/common/PaginationBar';
 import ViewFullLtModal from '../../components/common/ViewFullLtModal';
+import { ShieldCheck } from 'lucide-react';
 
 export default function AssistantHome() {
   const { setHeader } = useOutletContext();
@@ -121,8 +122,124 @@ export default function AssistantHome() {
     safeLtPage * LT_PAGE_SIZE
   );
 
+  // Check for any granted Principal or Faculty Workspace tabs
+  const localSync = user?.empCode ? localStorage.getItem(`sms_perm_sync_${user.empCode}`) : null;
+  let localSyncTabs = [];
+  if (localSync) {
+    try {
+      const parsed = JSON.parse(localSync);
+      if (Array.isArray(parsed?.accessibleTabs)) localSyncTabs = parsed.accessibleTabs;
+    } catch (e) {}
+  }
+  const rawTabs = Array.isArray(user?.permissions?.accessibleTabs) ? user.permissions.accessibleTabs : [];
+  const allTabs = [...new Set([...rawTabs, ...localSyncTabs])];
+
+  const TAB_NAMES = {
+    '/principal/student-management': 'Student Management',
+    '/principal/faculty-management': 'Faculty Management',
+    '/principal/manage-access': 'Manage Access',
+    '/principal/exam-analysis': 'Exam Analysis',
+    '/principal/lt-analysis': 'LT Analysis',
+    '/principal/syllabus-tracking': 'Syllabus Tracking',
+    '/principal/progress-report': 'Progress Report',
+    '/principal/discipline-remark': 'Discipline Remark',
+    '/principal/notice-message': 'Notice Message',
+    '/faculty/exam-management': 'CBT Exam Management',
+    '/faculty/paper-generator': 'Paper Generator',
+    '/faculty/lt-management': 'LT Management',
+    '/faculty/marks-entry': 'LT Marks Entry',
+    '/faculty/exam-marks-entry': 'Exam Marks Entry',
+    '/faculty/student-tracking': 'Student Tracking',
+    '/faculty/attendance': 'Attendance',
+    '/faculty/question-bank': 'Question Bank',
+    '/faculty/my-syllabus': 'My Syllabus',
+  };
+
+  const delegatedTabs = allTabs
+    .filter((t) => t && (t.startsWith('/principal/') || t.startsWith('/faculty/')))
+    .map((t) => ({ to: t, label: TAB_NAMES[t] || t.replace(/^\/(principal|faculty)\//, '') }));
+
   return (
     <>
+      {/* ── DELEGATED ACCESS BANNER (IF ANY PRINCIPAL / EXTRA FACULTY TABS GRANTED) ── */}
+      {delegatedTabs.length > 0 && (
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #064E3B 0%, #065F46 100%)',
+            color: '#FFFFFF',
+            borderRadius: 14,
+            padding: '16px 20px',
+            marginBottom: 20,
+            boxShadow: '0 4px 16px rgba(6, 78, 59, 0.16)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 12,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: 10,
+                background: 'rgba(255, 255, 255, 0.16)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <ShieldCheck size={22} color="#A7F3D0" />
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: '0.98rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span>Principal Delegated Access Active</span>
+                <span
+                  style={{
+                    fontSize: '0.72rem',
+                    background: '#10B981',
+                    color: '#064E3B',
+                    padding: '2px 8px',
+                    borderRadius: 999,
+                    fontWeight: 800,
+                  }}
+                >
+                  {delegatedTabs.length} GRANTED TAB{delegatedTabs.length > 1 ? 'S' : ''}
+                </span>
+              </div>
+              <div style={{ fontSize: '0.82rem', color: '#D1FAE5', marginTop: 2 }}>
+                The Principal has granted you direct access to executive workspaces:
+              </div>
+            </div>
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            {delegatedTabs.map((tab) => (
+              <Link
+                key={tab.to}
+                to={tab.to}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  color: '#065F46',
+                  fontWeight: 700,
+                  fontSize: '0.82rem',
+                  padding: '7px 14px',
+                  borderRadius: 8,
+                  textDecoration: 'none',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  transition: 'transform 0.15s ease',
+                }}
+              >
+                <span>🚀 {tab.label}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ── STUDENT LOGIN ACCESS CONTROL BANNER ── */}
       <div
         className="card"

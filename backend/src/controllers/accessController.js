@@ -10,6 +10,16 @@ class AccessController {
     }
   }
 
+  async getMyPermissions(req, res, next) {
+    try {
+      const { empCode = '', email = '', id = '' } = req.query;
+      const permissions = await accessService.getPermissionsForUser({ empCode, email, id });
+      res.json({ success: true, permissions });
+    } catch (err) {
+      next(err);
+    }
+  }
+
   async getFaculties(req, res, next) {
     try {
       const result = await accessService.getAllFacultiesWithAccess(req.query);

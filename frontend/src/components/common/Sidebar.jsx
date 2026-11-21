@@ -41,12 +41,28 @@ export default function Sidebar({ isOpen, onClose }) {
 
   const role = user?.role || 'faculty';
 
-  const accessibleTabs = Array.isArray(user?.permissions?.accessibleTabs)
+  // Check user permissions directly, or local sync override if present
+  const localSync = user?.empCode ? localStorage.getItem(`sms_perm_sync_${user.empCode}`) : null;
+  let localSyncTabs = [];
+  if (localSync) {
+    try {
+      const parsed = JSON.parse(localSync);
+      if (Array.isArray(parsed?.accessibleTabs)) localSyncTabs = parsed.accessibleTabs;
+    } catch (e) {}
+  }
+
+  const rawTabs = Array.isArray(user?.permissions?.accessibleTabs)
     ? user.permissions.accessibleTabs
     : [];
 
+  const accessibleTabs = [...new Set([...rawTabs, ...localSyncTabs])];
+
   const extraGrantedTabs = EXTRA_TAB_LOOKUP.filter((item) => {
-    if (!accessibleTabs.includes(item.to)) return false;
+    const isGranted = accessibleTabs.some((t) => {
+      if (!t) return false;
+      return t.replace(/\/$/, '') === item.to.replace(/\/$/, '');
+    });
+    if (!isGranted) return false;
     if (role === 'faculty' && item.to.startsWith('/faculty')) return false;
     if (role === 'assistant' && item.to.startsWith('/assistant')) return false;
     if (role === 'principal' && item.to.startsWith('/principal')) return false;
@@ -127,6 +143,54 @@ export default function Sidebar({ isOpen, onClose }) {
                 Syllabus
               </NavLink>
 
+              {/* Extra Granted Tabs by Principal */}
+              {extraGrantedTabs.length > 0 && (
+                <>
+                  <div
+                    className="sidebar__group-label"
+                    style={{
+                      color: '#6EE7B7',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      fontWeight: 800,
+                      letterSpacing: '0.06em',
+                    }}
+                  >
+                    <ShieldCheck size={14} color="#6EE7B7" />
+                    <span>Principal Access</span>
+                  </div>
+                  {extraGrantedTabs.map((item) => (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      className={({ isActive }) => `navlink ${isActive ? 'is-active' : ''}`}
+                      onClick={onClose}
+                      style={{
+                        borderLeft: '3px solid #10B981',
+                        paddingLeft: '11px',
+                        background: 'rgba(16, 185, 129, 0.08)',
+                        marginBottom: 4,
+                      }}
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#10B981"
+                        strokeWidth="2.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        style={{ width: 17, height: 17, flexShrink: 0 }}
+                      >
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
+                        <path d="m9 12 2 2 4-4" />
+                      </svg>
+                      <span style={{ fontWeight: 700, color: '#FFFFFF' }}>{item.label}</span>
+                    </NavLink>
+                  ))}
+                </>
+              )}
+
               <div className="sidebar__group-label">Communication</div>
 
               <NavLink to="/faculty/reports" className={({ isActive }) => `navlink ${isActive ? 'is-active' : ''}`} onClick={onClose}>
@@ -155,31 +219,6 @@ export default function Sidebar({ isOpen, onClose }) {
                 </svg>
                 Profile
               </NavLink>
-
-              {/* Extra Granted Tabs by Principal */}
-              {extraGrantedTabs.length > 0 && (
-                <>
-                  <div className="sidebar__group-label" style={{ color: '#059669', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <ShieldCheck size={14} />
-                    <span>Granted Access</span>
-                  </div>
-                  {extraGrantedTabs.map((item) => (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      className={({ isActive }) => `navlink ${isActive ? 'is-active' : ''}`}
-                      onClick={onClose}
-                      style={{ borderLeft: '3px solid #10B981', paddingLeft: '11px' }}
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-                        <path d="m9 12 2 2 4-4" />
-                      </svg>
-                      {item.label}
-                    </NavLink>
-                  ))}
-                </>
-              )}
             </>
           )}
 
@@ -342,6 +381,54 @@ export default function Sidebar({ isOpen, onClose }) {
                 Hall Ticket
               </NavLink>
 
+              {/* Extra Granted Tabs by Principal */}
+              {extraGrantedTabs.length > 0 && (
+                <>
+                  <div
+                    className="sidebar__group-label"
+                    style={{
+                      color: '#6EE7B7',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      fontWeight: 800,
+                      letterSpacing: '0.06em',
+                    }}
+                  >
+                    <ShieldCheck size={14} color="#6EE7B7" />
+                    <span>Principal Access</span>
+                  </div>
+                  {extraGrantedTabs.map((item) => (
+                    <NavLink
+                      key={item.to}
+                      to={item.to}
+                      className={({ isActive }) => `navlink ${isActive ? 'is-active' : ''}`}
+                      onClick={onClose}
+                      style={{
+                        borderLeft: '3px solid #10B981',
+                        paddingLeft: '11px',
+                        background: 'rgba(16, 185, 129, 0.08)',
+                        marginBottom: 4,
+                      }}
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="#10B981"
+                        strokeWidth="2.2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        style={{ width: 17, height: 17, flexShrink: 0 }}
+                      >
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
+                        <path d="m9 12 2 2 4-4" />
+                      </svg>
+                      <span style={{ fontWeight: 700, color: '#FFFFFF' }}>{item.label}</span>
+                    </NavLink>
+                  ))}
+                </>
+              )}
+
               <div className="sidebar__group-label">Communication</div>
 
               <NavLink to="/assistant/notice" className={({ isActive }) => `navlink ${isActive ? 'is-active' : ''}`} onClick={onClose}>
@@ -367,31 +454,6 @@ export default function Sidebar({ isOpen, onClose }) {
                 </svg>
                 Profile
               </NavLink>
-
-              {/* Extra Granted Tabs by Principal */}
-              {extraGrantedTabs.length > 0 && (
-                <>
-                  <div className="sidebar__group-label" style={{ color: '#059669', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <ShieldCheck size={14} />
-                    <span>Granted Access</span>
-                  </div>
-                  {extraGrantedTabs.map((item) => (
-                    <NavLink
-                      key={item.to}
-                      to={item.to}
-                      className={({ isActive }) => `navlink ${isActive ? 'is-active' : ''}`}
-                      onClick={onClose}
-                      style={{ borderLeft: '3px solid #10B981', paddingLeft: '11px' }}
-                    >
-                      <svg viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" />
-                        <path d="m9 12 2 2 4-4" />
-                      </svg>
-                      {item.label}
-                    </NavLink>
-                  ))}
-                </>
-              )}
             </>
           )}
 

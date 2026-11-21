@@ -242,13 +242,25 @@ export default function MobileBottomNav() {
   const moreListItems = currentConfig.moreList || [];
 
   // Append any extra granted tabs from Principal for faculty / assistant
-  const accessibleTabs = Array.isArray(user?.permissions?.accessibleTabs)
+  const localSync = user?.empCode ? localStorage.getItem(`sms_perm_sync_${user.empCode}`) : null;
+  let localSyncTabs = [];
+  if (localSync) {
+    try {
+      const parsed = JSON.parse(localSync);
+      if (Array.isArray(parsed?.accessibleTabs)) localSyncTabs = parsed.accessibleTabs;
+    } catch (e) {}
+  }
+
+  const rawTabs = Array.isArray(user?.permissions?.accessibleTabs)
     ? user.permissions.accessibleTabs
     : [];
 
+  const accessibleTabs = [...new Set([...rawTabs, ...localSyncTabs])];
+  const hasTab = (path) => accessibleTabs.some((t) => t && t.replace(/\/$/, '') === path.replace(/\/$/, ''));
+
   const extraMobileItems = [];
   if (role !== 'principal' && accessibleTabs.length > 0) {
-    if (accessibleTabs.includes('/principal/manage-access')) {
+    if (hasTab('/principal/manage-access')) {
       extraMobileItems.push({
         to: '/principal/manage-access',
         label: 'Manage Access',
@@ -258,7 +270,7 @@ export default function MobileBottomNav() {
         bg: '#ECFDF5',
       });
     }
-    if (accessibleTabs.includes('/principal/student-management')) {
+    if (hasTab('/principal/student-management')) {
       extraMobileItems.push({
         to: '/principal/student-management',
         label: 'Students',
@@ -268,7 +280,7 @@ export default function MobileBottomNav() {
         bg: '#E0F2FE',
       });
     }
-    if (accessibleTabs.includes('/principal/faculty-management')) {
+    if (hasTab('/principal/faculty-management')) {
       extraMobileItems.push({
         to: '/principal/faculty-management',
         label: 'Faculty',
@@ -278,7 +290,7 @@ export default function MobileBottomNav() {
         bg: '#EDE9FE',
       });
     }
-    if (accessibleTabs.includes('/principal/exam-analysis')) {
+    if (hasTab('/principal/exam-analysis')) {
       extraMobileItems.push({
         to: '/principal/exam-analysis',
         label: 'Exam Analysis',
@@ -288,7 +300,7 @@ export default function MobileBottomNav() {
         bg: '#D1FAE5',
       });
     }
-    if (accessibleTabs.includes('/principal/lt-analysis')) {
+    if (hasTab('/principal/lt-analysis')) {
       extraMobileItems.push({
         to: '/principal/lt-analysis',
         label: 'LT Analysis',
@@ -298,7 +310,7 @@ export default function MobileBottomNav() {
         bg: '#E0F2FE',
       });
     }
-    if (accessibleTabs.includes('/principal/syllabus-tracking')) {
+    if (hasTab('/principal/syllabus-tracking')) {
       extraMobileItems.push({
         to: '/principal/syllabus-tracking',
         label: 'Syllabus',
@@ -308,7 +320,7 @@ export default function MobileBottomNav() {
         bg: '#FEF3C7',
       });
     }
-    if (accessibleTabs.includes('/principal/progress-report')) {
+    if (hasTab('/principal/progress-report')) {
       extraMobileItems.push({
         to: '/principal/progress-report',
         label: 'Progress Report',
@@ -318,7 +330,27 @@ export default function MobileBottomNav() {
         bg: '#EDE9FE',
       });
     }
-    if (accessibleTabs.includes('/assistant/cbt-exam') && role === 'faculty') {
+    if (hasTab('/principal/discipline-remark')) {
+      extraMobileItems.push({
+        to: '/principal/discipline-remark',
+        label: 'Discipline',
+        subtitle: 'Student conduct and remarks',
+        icon: Award,
+        color: '#DC2626',
+        bg: '#FEE2E2',
+      });
+    }
+    if (hasTab('/principal/notice-message')) {
+      extraMobileItems.push({
+        to: '/principal/notice-message',
+        label: 'Notice Message',
+        subtitle: 'Official circulars & alerts',
+        icon: FileText,
+        color: '#059669',
+        bg: '#D1FAE5',
+      });
+    }
+    if (hasTab('/assistant/cbt-exam') && role === 'faculty') {
       extraMobileItems.push({
         to: '/assistant/cbt-exam',
         label: 'CBT Exam',
@@ -328,7 +360,7 @@ export default function MobileBottomNav() {
         bg: '#ECFDF5',
       });
     }
-    if (accessibleTabs.includes('/faculty/set-lt') && role === 'assistant') {
+    if (hasTab('/faculty/set-lt') && role === 'assistant') {
       extraMobileItems.push({
         to: '/faculty/set-lt',
         label: 'Set LT',

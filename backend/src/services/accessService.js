@@ -6,6 +6,9 @@
 const Faculty = require('../models/Faculty');
 const AccessHistory = require('../models/AccessHistory');
 
+// In-memory cache for fast sync and resilient persistence across sessions
+const inMemoryCustomPermissions = new Map();
+
 // Master Catalog of Configurable Tabs across Workspaces
 const MASTER_TABS = [
   // Principal Workspace Tabs
@@ -274,7 +277,21 @@ class AccessService {
    */
   resolveEffectivePermissions(faculty) {
     const defaults = this.getDefaultPermissions(faculty);
-    const saved = faculty.permissions || {};
+    const code = String(faculty.empCode || '').toUpperCase();
+    const email = String(faculty.email || '').toLowerCase();
+    const id = String(faculty._id || faculty.id || '');
+
+    const memCached =
+      inMemoryCustomPermissions.get(code) ||
+      inMemoryCustomPermissions.get(email) ||
+      inMemoryCustomPermissions.get(id);
+
+    const saved =
+      faculty.permissions &&
+      ((Array.isArray(faculty.permissions.accessibleTabs) && faculty.permissions.accessibleTabs.length > 0) ||
+        (Array.isArray(faculty.permissions.allowedExamSubjects) && faculty.permissions.allowedExamSubjects.length > 0))
+        ? faculty.permissions
+        : memCached || faculty.permissions || {};
 
     const accessibleTabs =
       Array.isArray(saved.accessibleTabs) && saved.accessibleTabs.length > 0
@@ -301,6 +318,51 @@ class AccessService {
         (saved.allowedLtSubjects && saved.allowedLtSubjects.length > 0)
       ),
     };
+  }
+
+  /**
+   * Fast permission query by user employee code, email, or id
+   */
+  async getPermissionsForUser({ empCode = '', email = '', id = '' }) {
+    let faculty = null;
+    if (id && id.match(/^[0-9a-fA-F]{24}$/)) {
+      faculty = await Faculty.findById(id);
+    }
+    if (!faculty && empCode) {
+      faculty = await Faculty.findOne({ empCode: empCode.toUpperCase() });
+    }
+    if (!faculty && email) {
+      faculty = await Faculty.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
+    }
+
+    if (faculty) {
+      return this.resolveEffectivePermissions(faculty);
+    }
+
+    const code = String(empCode || '').toUpperCase();
+    const mail = String(email || '').toLowerCase();
+    const cached =
+      inMemoryCustomPermissions.get(code) ||
+      inMemoryCustomPermissions.get(mail) ||
+      inMemoryCustomPermissions.get(id);
+
+    if (cached) {
+      return this.resolveEffectivePermissions({
+        empCode: code,
+        email: mail,
+        role: code === 'FAC105' || code === 'FAC106' ? 'Assistant Faculty' : 'Subject Faculty',
+        permissions: cached,
+      });
+    }
+
+    // Role defaults
+    const isAsst = code === 'FAC105' || code === 'FAC106' || mail.includes('mehta') || mail.includes('desai');
+    return this.resolveEffectivePermissions({
+      empCode: code,
+      email: mail,
+      role: isAsst ? 'Assistant Faculty' : 'Subject Faculty',
+      subject: 'Physics',
+    });
   }
 
   /**
@@ -483,6 +545,11 @@ class AccessService {
       allowedLtSubjects: newAllowedLtSubjects,
     };
     await faculty.save();
+
+    // Cache in memory for instant multi-session retrieval
+    inMemoryCustomPermissions.set(faculty.empCode.toUpperCase(), faculty.permissions);
+    inMemoryCustomPermissions.set(faculty._id.toString(), faculty.permissions);
+    if (faculty.email) inMemoryCustomPermissions.set(faculty.email.toLowerCase(), faculty.permissions);
 
     // Create AccessHistory record
     const historyRecord = await AccessHistory.create({

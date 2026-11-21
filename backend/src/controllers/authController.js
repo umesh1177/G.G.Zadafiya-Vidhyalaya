@@ -178,18 +178,18 @@ class AuthController {
       }
 
       if (lower === 'faculty' && pass === 'faculty123') {
-        const demoUser = {
-          role: 'Subject Faculty',
-          subject: 'Physics',
-        };
+        const facDoc = await Faculty.findOne({ empCode: 'FAC101' });
+        const perms = facDoc
+          ? accessService.resolveEffectivePermissions(facDoc)
+          : accessService.resolveEffectivePermissions({ empCode: 'FAC101', role: 'Subject Faculty', subject: 'Physics' });
         return res.json({
           success: true,
           user: {
-            id: 'demo_faculty',
+            id: facDoc ? facDoc._id.toString() : 'demo_faculty',
             empCode: 'FAC101',
             username: 'faculty',
-            name: 'Pal Umesh',
-            email: 'umesh.pal@ggzv.edu.in',
+            name: facDoc?.fullName || 'Pal Umesh',
+            email: facDoc?.email || 'umesh.pal@ggzv.edu.in',
             role: 'faculty',
             facultyRole: 'Subject Faculty',
             subject: 'Physics',
@@ -199,20 +199,24 @@ class AuthController {
             school: SCHOOL_NAME,
             initials: 'PU',
             redirect: '/faculty',
-            permissions: accessService.resolveEffectivePermissions(demoUser),
+            permissions: perms,
           },
         });
       }
 
-      if ((lower === 'chem.board' || lower === 'nisha.rao@ggzv.edu.in') && pass === 'faculty123') {
+      if ((lower === 'chem.board' || lower === 'nisha.rao@ggzv.edu.in' || lower === 'fac102') && pass === 'faculty123') {
+        const facDoc = await Faculty.findOne({ empCode: 'FAC102' });
+        const perms = facDoc
+          ? accessService.resolveEffectivePermissions(facDoc)
+          : accessService.resolveEffectivePermissions({ empCode: 'FAC102', role: 'Subject Faculty', subject: 'Chemistry (Board)' });
         return res.json({
           success: true,
           user: {
-            id: 'demo_chem_board',
+            id: facDoc ? facDoc._id.toString() : 'demo_chem_board',
             empCode: 'FAC102',
             username: 'chem.board',
-            name: 'Dr. Nisha R. Rao',
-            email: 'nisha.rao@ggzv.edu.in',
+            name: facDoc?.fullName || 'Dr. Nisha R. Rao',
+            email: facDoc?.email || 'nisha.rao@ggzv.edu.in',
             role: 'faculty',
             facultyRole: 'Subject Faculty',
             subject: 'Chemistry (Board)',
@@ -222,19 +226,24 @@ class AuthController {
             school: SCHOOL_NAME,
             initials: 'NR',
             redirect: '/faculty',
+            permissions: perms,
           },
         });
       }
 
-      if ((lower === 'chem.jee' || lower === 'harsh.patel@ggzv.edu.in') && pass === 'faculty123') {
+      if ((lower === 'chem.jee' || lower === 'harsh.patel@ggzv.edu.in' || lower === 'fac108') && pass === 'faculty123') {
+        const facDoc = await Faculty.findOne({ empCode: 'FAC108' });
+        const perms = facDoc
+          ? accessService.resolveEffectivePermissions(facDoc)
+          : accessService.resolveEffectivePermissions({ empCode: 'FAC108', role: 'Subject Faculty', subject: 'Chemistry (JEE)' });
         return res.json({
           success: true,
           user: {
-            id: 'demo_chem_jee',
+            id: facDoc ? facDoc._id.toString() : 'demo_chem_jee',
             empCode: 'FAC108',
             username: 'chem.jee',
-            name: 'Prof. Harsh D. Patel',
-            email: 'harsh.patel@ggzv.edu.in',
+            name: facDoc?.fullName || 'Prof. Harsh D. Patel',
+            email: facDoc?.email || 'harsh.patel@ggzv.edu.in',
             role: 'faculty',
             facultyRole: 'Subject Faculty',
             subject: 'Chemistry (JEE)',
@@ -244,19 +253,24 @@ class AuthController {
             school: SCHOOL_NAME,
             initials: 'HP',
             redirect: '/faculty',
+            permissions: perms,
           },
         });
       }
 
       if ((lower === 'maths' || lower === 'fac103' || lower.includes('ketan')) && pass === 'faculty123') {
+        const facDoc = await Faculty.findOne({ empCode: 'FAC103' });
+        const perms = facDoc
+          ? accessService.resolveEffectivePermissions(facDoc)
+          : accessService.resolveEffectivePermissions({ empCode: 'FAC103', role: 'Subject Faculty', subject: 'Mathematics' });
         return res.json({
           success: true,
           user: {
-            id: 'demo_maths',
+            id: facDoc ? facDoc._id.toString() : 'demo_maths',
             empCode: 'FAC103',
             username: 'maths',
-            name: 'Prof. Ketan M. Joshi',
-            email: 'ketan.j@ggzv.edu.in',
+            name: facDoc?.fullName || 'Prof. Ketan M. Joshi',
+            email: facDoc?.email || 'ketan.j@ggzv.edu.in',
             role: 'faculty',
             facultyRole: 'Subject Faculty',
             subject: 'Mathematics',
@@ -266,19 +280,24 @@ class AuthController {
             school: SCHOOL_NAME,
             initials: 'KJ',
             redirect: '/faculty',
+            permissions: perms,
           },
         });
       }
 
       if ((lower === 'biology' || lower === 'fac104' || lower.includes('heena')) && pass === 'faculty123') {
+        const facDoc = await Faculty.findOne({ empCode: 'FAC104' });
+        const perms = facDoc
+          ? accessService.resolveEffectivePermissions(facDoc)
+          : accessService.resolveEffectivePermissions({ empCode: 'FAC104', role: 'Subject Faculty', subject: 'Biology' });
         return res.json({
           success: true,
           user: {
-            id: 'demo_biology',
+            id: facDoc ? facDoc._id.toString() : 'demo_biology',
             empCode: 'FAC104',
             username: 'biology',
-            name: 'Dr. Heena S. Patel',
-            email: 'heena.p@ggzv.edu.in',
+            name: facDoc?.fullName || 'Dr. Heena S. Patel',
+            email: facDoc?.email || 'heena.p@ggzv.edu.in',
             role: 'faculty',
             facultyRole: 'Subject Faculty',
             subject: 'Biology',
@@ -288,23 +307,24 @@ class AuthController {
             school: SCHOOL_NAME,
             initials: 'HP',
             redirect: '/faculty',
+            permissions: perms,
           },
         });
       }
 
       if (lower === 'assistant' && pass === 'asst123') {
-        const demoAsst = {
-          role: 'Assistant Faculty',
-          subject: 'Lab — Physics/Chemistry',
-        };
+        const facDoc = await Faculty.findOne({ empCode: 'FAC105' });
+        const perms = facDoc
+          ? accessService.resolveEffectivePermissions(facDoc)
+          : accessService.resolveEffectivePermissions({ empCode: 'FAC105', role: 'Assistant Faculty', subject: 'Lab — Physics/Chemistry' });
         return res.json({
           success: true,
           user: {
-            id: 'demo_assistant',
+            id: facDoc ? facDoc._id.toString() : 'demo_assistant',
             empCode: 'FAC105',
             username: 'assistant',
-            name: 'Rajiv Mehta',
-            email: 'rajiv.mehta@ggzv.edu.in',
+            name: facDoc?.fullName || 'Rajiv Mehta',
+            email: facDoc?.email || 'rajiv.mehta@ggzv.edu.in',
             role: 'assistant',
             facultyRole: 'Assistant Faculty',
             subject: 'Lab — Physics/Chemistry',
@@ -314,7 +334,7 @@ class AuthController {
             school: SCHOOL_NAME,
             initials: 'RM',
             redirect: '/assistant',
-            permissions: accessService.resolveEffectivePermissions(demoAsst),
+            permissions: perms,
           },
         });
       }

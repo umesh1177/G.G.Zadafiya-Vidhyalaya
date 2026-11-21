@@ -240,6 +240,12 @@ export default function ManageAccess() {
 
       showToast(`Permissions updated successfully for ${editingFaculty.fullName}!`, 'success');
 
+      // Save local sync flag for instant multi-tab notification
+      if (editingFaculty.empCode) {
+        localStorage.setItem(`sms_perm_sync_${editingFaculty.empCode}`, JSON.stringify(res.faculty.permissions));
+      }
+      localStorage.setItem('sms_permissions_last_updated', Date.now().toString());
+
       // If current logged-in user is this faculty, update local AuthContext & localStorage
       if (user && (user.id === editingFaculty.id || user.empCode === editingFaculty.empCode)) {
         if (typeof updateUser === 'function') {

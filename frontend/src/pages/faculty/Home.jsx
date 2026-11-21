@@ -8,6 +8,7 @@ import { ltApi } from '../../services/ltApi';
 import { calculateSyllabusCompletion } from '../../utils/syllabusUtils';
 import PaginationBar from '../../components/common/PaginationBar';
 import ViewFullLtModal from '../../components/common/ViewFullLtModal';
+import { ShieldCheck } from 'lucide-react';
 
 export default function FacultyHome() {
   const { setHeader } = useOutletContext();
@@ -114,8 +115,98 @@ export default function FacultyHome() {
     safeLtPage * LT_PAGE_SIZE
   );
 
+  // Check for any granted Principal Workspace tabs
+  const localSync = user?.empCode ? localStorage.getItem(`sms_perm_sync_${user.empCode}`) : null;
+  let localSyncTabs = [];
+  if (localSync) {
+    try {
+      const parsed = JSON.parse(localSync);
+      if (Array.isArray(parsed?.accessibleTabs)) localSyncTabs = parsed.accessibleTabs;
+    } catch (e) {}
+  }
+  const rawTabs = Array.isArray(user?.permissions?.accessibleTabs) ? user.permissions.accessibleTabs : [];
+  const allTabs = [...new Set([...rawTabs, ...localSyncTabs])];
+
+  const TAB_NAMES = {
+    '/principal/student-management': 'Student Management',
+    '/principal/faculty-management': 'Faculty Management',
+    '/principal/manage-access': 'Manage Access',
+    '/principal/exam-analysis': 'Exam Analysis',
+    '/principal/lt-analysis': 'LT Analysis',
+    '/principal/syllabus-tracking': 'Syllabus Tracking',
+    '/principal/progress-report': 'Progress Report',
+    '/principal/discipline-remark': 'Discipline Remark',
+    '/principal/notice-message': 'Notice Message',
+  };
+
+  const delegatedPrincipalTabs = allTabs
+    .filter((t) => t && t.startsWith('/principal/'))
+    .map((t) => ({ to: t, label: TAB_NAMES[t] || t.replace(/^\/principal\//, '') }));
+
   return (
     <>
+      {/* ── PRINCIPAL DELEGATED ACCESS BANNER (IF ANY GRANTED) ── */}
+      {delegatedPrincipalTabs.length > 0 && (
+        <div
+          style={{
+            background: 'linear-gradient(135deg, #064E3B 0%, #065F46 100%)',
+            color: '#FFFFFF',
+            borderRadius: 14,
+            padding: '16px 20px',
+            marginBottom: 20,
+            boxShadow: '0 4px 16px rgba(6, 78, 59, 0.16)',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 12,
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div
+              style={{
+                background: 'rgba(255, 255, 255, 0.18)',
+                padding: '8px 10px',
+                borderRadius: 10,
+                display: 'inline-flex',
+                color: '#6EE7B7',
+              }}
+            >
+              <ShieldCheck size={22} />
+            </div>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: 15, color: '#FFFFFF' }}>
+                Principal Delegated Access Active
+              </div>
+              <div style={{ fontSize: 12.5, color: '#D1FAE5' }}>
+                You have been granted access to {delegatedPrincipalTabs.length} Principal Workspace module(s).
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {delegatedPrincipalTabs.map((tab) => (
+              <Link
+                key={tab.to}
+                to={tab.to}
+                className="btn btn--outline"
+                style={{
+                  background: '#FFFFFF',
+                  color: '#065F46',
+                  borderColor: '#FFFFFF',
+                  fontWeight: 700,
+                  fontSize: 12.5,
+                  padding: '6px 14px',
+                  borderRadius: 8,
+                }}
+              >
+                {tab.label} →
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ── KPI GRID (DYNAMIC METRICS) ── */}
       <div className="kpi-grid">
         <div className="kpi-card">
